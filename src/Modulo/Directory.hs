@@ -7,8 +7,12 @@ import qualified System.Directory as Dir
 import qualified System.FilePath as FilePath
 import qualified System.Posix.Files as Posix
 
-foldDirectory :: (a -> FilePath -> IO a) -> a -> FilePath -> IO a
-foldDirectory handleFile initial =
+foldDirectory :: (FilePath -> Bool)
+              -> (a -> FilePath -> IO a)
+              -> a
+              -> FilePath
+              -> IO a
+foldDirectory isFileOfInterest handleFile initial =
   go initial
     where
       foldEntry accum path = do
@@ -16,7 +20,7 @@ foldDirectory handleFile initial =
 
         if Posix.isDirectory status
         then go accum path
-        else if Posix.isRegularFile status
+        else if Posix.isRegularFile status && isFileOfInterest path
         then handleFile accum path
         else pure accum
 

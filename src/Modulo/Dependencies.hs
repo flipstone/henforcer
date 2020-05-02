@@ -11,6 +11,7 @@ import qualified Data.Set as Set
 import qualified Language.Haskell.Exts.Parser as Parse
 import qualified Language.Haskell.Exts.Syntax as Syntax
 import qualified Language.Haskell.Exts.SrcLoc as SrcLoc
+import qualified System.FilePath as FilePath
 
 import qualified Modulo.Directory as Dir
 
@@ -43,9 +44,13 @@ parseDependencies parseMode moduleSource = do
           in
             pure $ Set.fromList dependencies
 
+isHaskellFile :: FilePath -> Bool
+isHaskellFile filePath =
+  FilePath.takeExtension filePath == ".hs"
+
 loadSourceTreeDependencies :: FilePath -> IO (Parse.ParseResult (Set.Set Dependency))
 loadSourceTreeDependencies baseDir =
-  Dir.foldDirectory handleFile (Parse.ParseOk Set.empty) baseDir
+  Dir.foldDirectory isHaskellFile handleFile (Parse.ParseOk Set.empty) baseDir
     where
       addNewDependencies filePath accum = do
         let
