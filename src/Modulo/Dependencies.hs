@@ -26,31 +26,22 @@ formatModuleName (Syntax.ModuleName _ moduleName) =
 
 parseDependencies :: Parse.ParseMode -> String -> Parse.ParseResult (Set.Set Dependency)
 parseDependencies parseMode moduleSource = do
-  hsModule <- Parse.parseModuleWithMode parseMode moduleSource
+  moduleHeadAndImports <- Parse.parseWithMode parseMode moduleSource
 
-  case hsModule of
-    Syntax.Module _ (Just moduleHead) _ importDecls _ ->
-      let
-        Syntax.ModuleHead _ srcModule _ _ = moduleHead
-        targetModules = map Syntax.importModule importDecls
-        dependencies = map (Dependency srcModule) targetModules
-      in
-        pure $ Set.fromList dependencies
+  case moduleHeadAndImports of
+    Parse.NonGreedy (Parse.ModuleHeadAndImports srcInfo _ maybeHead importDecls) ->
+      case maybeHead of
+        Nothing ->
+          Parse.ParseFailed
+          (SrcLoc.fromSrcInfo srcInfo)
+          "Modulo does not yet support modules files without a module head"
 
-    Syntax.Module _ Nothing _ _ _ ->
-      Parse.ParseFailed
-        (SrcLoc.SrcLoc (Parse.parseFilename parseMode) 0 0)
-        "Module does not yet support modules files with a module head"
-
-    Syntax.XmlPage _ _ _ _ _ _ _ ->
-      Parse.ParseFailed
-        (SrcLoc.SrcLoc (Parse.parseFilename parseMode) 0 0)
-        "Module does not support XmlPage modules"
-
-    Syntax.XmlHybrid _ _ _ _ _ _ _ _ _ ->
-      Parse.ParseFailed
-        (SrcLoc.SrcLoc (Parse.parseFilename parseMode) 0 0)
-        "Module does not support XmlHybrid modules"
+        Just (Syntax.ModuleHead _ srcModule _ _) ->
+          let
+            targetModules = map Syntax.importModule importDecls
+            dependencies = map (Dependency srcModule) targetModules
+          in
+            pure $ Set.fromList dependencies
 
 loadSourceTreeDependencies :: FilePath -> IO (Parse.ParseResult (Set.Set Dependency))
 loadSourceTreeDependencies baseDir =
