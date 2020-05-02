@@ -5,6 +5,7 @@ import qualified Language.Haskell.Exts.Parser as Parse
 import qualified System.Environment as Env
 import qualified System.Exit as Exit
 
+import qualified Modulo.Dependencies as Dependencies
 import qualified Modulo.Imports as Imports
 
 main :: IO ()
@@ -29,14 +30,20 @@ printDirectoryImports directoryPath = do
     Parse.ParseOk allImports ->
       let
         localImports = Imports.removeNonLocalImports allImports
+        graph = Dependencies.buildDependencyGraph localImports
       in
-        Fold.traverse_ printImport localImports
+        printDependencies graph
 
-printImport :: Imports.Import -> IO ()
-printImport imp =
-  putStrLn $ concat
-    [ Imports.formatModuleName (Imports.importSource imp)
-    , " imports "
-    , Imports.formatModuleName (Imports.importTarget imp)
-    ]
+printDependencies :: Dependencies.DependencyGraph -> IO ()
+printDependencies graph =
+  Fold.traverse_ printNode (Dependencies.nodes graph)
+    where
+      printNode node = do
+        putStrLn $ concat
+          [ Dependencies.formatTreeName node
+          , " depends on "
+          ]
+
+        Fold.forM_ (Dependencies.dependencyTargets node graph) $ \target ->
+          putStrLn $ concat [ " - ", Dependencies.formatTreeName target ]
 

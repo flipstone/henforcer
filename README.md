@@ -45,6 +45,16 @@ We want to prevent this because:
 
 * Trees A and A.B depend on each other in a cycle
 
+### Example 5
+
+* A.B imports A
+
+We want to prevent this because
+
+* Our model essential assumes A depends on A.B (even if it does not in reality),
+  so this direct import of a parent is a cycle by default. Note that this is
+  not currently detected: see the known issue below)
+
 ### Counterexample
 
 * A.Module1 imports A.B.Module
@@ -59,6 +69,10 @@ This is perfectly fine for these reasons:
 
 ## Known Issues
 
-Currently imports of modules that contain no imports themselves end up getting
-ignored when we filter out non-local imports. Eventually we can improve this
-logic.
+* Currently imports of modules that contain no imports themselves end up getting
+  ignored when we filter out non-local imports. Eventually we can improve this
+  logic.
+
+* Currently we filter out parent trees when determining how the import statements
+  lead to tree dependencies. This ends up filtering out an edge case when a module
+  _actually_ imports its parent.
