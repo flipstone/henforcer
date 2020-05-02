@@ -4,16 +4,16 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f44b919d3ce1e3a6c4984ab000a13a7c0e8ca10475d4bfa7632bcdd20343f3d7
+-- hash: 5190477f0bfa97d3d894c17a9e3bf1be6f38ddf374cbfe2412131f18aaf9e77d
 
-name:           module
+name:           modulo
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/module#readme>
-homepage:       https://github.com/githubuser/module#readme
-bug-reports:    https://github.com/githubuser/module/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2020 Author name here
+description:    Please see the README on GitHub at <https://github.com/flipstone/modulo#readme>
+homepage:       https://github.com/flipstone/modulo#readme
+bug-reports:    https://github.com/flipstone/modulo/issues
+author:         Flipstone Technology Partners
+maintainer:     development@flipstone.com
+copyright:      2020 Flipstone Technology Partners
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -23,14 +23,14 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/module
+  location: https://github.com/flipstone/modulo
 
 library
   exposed-modules:
       Modulo.Dependencies
       Modulo.Directory
   other-modules:
-      Paths_module
+      Paths_modulo
   hs-source-dirs:
       src
   ghc-options: -Wall -Werror
@@ -43,10 +43,10 @@ library
     , unix
   default-language: Haskell2010
 
-executable module-exe
+executable modulo-exe
   main-is: Main.hs
   other-modules:
-      Paths_module
+      Paths_modulo
   hs-source-dirs:
       app
   ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
@@ -56,15 +56,15 @@ executable module-exe
     , directory
     , filepath
     , haskell-src-exts
-    , module
+    , modulo
     , unix
   default-language: Haskell2010
 
-test-suite module-test
+test-suite modulo-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_module
+      Paths_modulo
   hs-source-dirs:
       test
   ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
@@ -74,6 +74,6 @@ test-suite module-test
     , directory
     , filepath
     , haskell-src-exts
-    , module
+    , modulo
     , unix
   default-language: Haskell2010
