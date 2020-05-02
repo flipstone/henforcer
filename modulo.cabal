@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5190477f0bfa97d3d894c17a9e3bf1be6f38ddf374cbfe2412131f18aaf9e77d
+-- hash: 8b06781b372a4389326b64b682364d935196634c4b5f11a70b058e5dd0109009
 
 name:           modulo
 version:        0.1.0.0
@@ -27,8 +27,8 @@ source-repository head
 
 library
   exposed-modules:
-      Modulo.Dependencies
       Modulo.Directory
+      Modulo.Imports
   other-modules:
       Paths_modulo
   hs-source-dirs:

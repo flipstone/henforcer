@@ -1,8 +1,8 @@
-module Modulo.Dependencies
-  ( Dependency
-  , dependencySource
-  , dependencyTarget
-  , loadSourceTreeDependencies
+module Modulo.Imports
+  ( Import
+  , importSource
+  , importTarget
+  , loadSourceTreeImports
   , formatModuleName
   ) where
 
@@ -15,18 +15,18 @@ import qualified System.FilePath as FilePath
 
 import qualified Modulo.Directory as Dir
 
-data Dependency =
-  Dependency
-    { dependencySource :: Syntax.ModuleName SrcLoc.SrcSpanInfo
-    , dependencyTarget :: Syntax.ModuleName SrcLoc.SrcSpanInfo
+data Import =
+  Import
+    { importSource :: Syntax.ModuleName SrcLoc.SrcSpanInfo
+    , importTarget :: Syntax.ModuleName SrcLoc.SrcSpanInfo
     } deriving (Show, Eq, Ord)
 
 formatModuleName :: Syntax.ModuleName a -> String
 formatModuleName (Syntax.ModuleName _ moduleName) =
   moduleName
 
-parseDependencies :: Parse.ParseMode -> String -> Parse.ParseResult (Set.Set Dependency)
-parseDependencies parseMode moduleSource = do
+parseImports :: Parse.ParseMode -> String -> Parse.ParseResult (Set.Set Import)
+parseImports parseMode moduleSource = do
   moduleHeadAndImports <- Parse.parseWithMode parseMode moduleSource
 
   case moduleHeadAndImports of
@@ -40,25 +40,25 @@ parseDependencies parseMode moduleSource = do
         Just (Syntax.ModuleHead _ srcModule _ _) ->
           let
             targetModules = map Syntax.importModule importDecls
-            dependencies = map (Dependency srcModule) targetModules
+            imports = map (Import srcModule) targetModules
           in
-            pure $ Set.fromList dependencies
+            pure $ Set.fromList imports
 
 isHaskellFile :: FilePath -> Bool
 isHaskellFile filePath =
   FilePath.takeExtension filePath == ".hs"
 
-loadSourceTreeDependencies :: FilePath -> IO (Parse.ParseResult (Set.Set Dependency))
-loadSourceTreeDependencies baseDir =
+loadSourceTreeImports :: FilePath -> IO (Parse.ParseResult (Set.Set Import))
+loadSourceTreeImports baseDir =
   Dir.foldDirectory isHaskellFile handleFile (Parse.ParseOk Set.empty) baseDir
     where
-      addNewDependencies filePath accum = do
+      addNewImports filePath accum = do
         let
           parseMode = Parse.defaultParseMode
                         { Parse.parseFilename = filePath
                         }
 
-        parseResult <- fmap (parseDependencies parseMode) $ readFile filePath
+        parseResult <- fmap (parseImports parseMode) $ readFile filePath
         pure $ fmap (Set.union accum) parseResult
 
       -- We effectively have two monad layers to deal with here, IO and
@@ -68,11 +68,11 @@ loadSourceTreeDependencies baseDir =
       -- every file in the tree.
       handleFile currentResult filePath =
         fmap Monad.join $
-          traverseParseResult (addNewDependencies filePath) currentResult
+          traverseParseResult (addNewImports filePath) currentResult
 
 
 -- ParseResult dosen't provide a traversable instance, so we provide our
--- own helper here to cut down on the noise in loadSourceTreeDependencies
+-- own helper here to cut down on the noise in loadSourceTreeImports
 traverseParseResult :: Applicative f
                     => (a -> f b)
                     -> Parse.ParseResult a

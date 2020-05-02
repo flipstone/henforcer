@@ -5,35 +5,35 @@ import qualified Language.Haskell.Exts.Parser as Parse
 import qualified System.Environment as Env
 import qualified System.Exit as Exit
 
-import qualified Modulo.Dependencies as Deps
+import qualified Modulo.Imports as Imports
 
 main :: IO ()
 main = do
   directoriesToScan <- Env.getArgs
-  Fold.traverse_ printDirectoryDeps directoriesToScan
+  Fold.traverse_ printDirectoryImports directoriesToScan
 
-printDirectoryDeps :: FilePath -> IO ()
-printDirectoryDeps directoryPath = do
-  result <- Deps.loadSourceTreeDependencies directoryPath
+printDirectoryImports :: FilePath -> IO ()
+printDirectoryImports directoryPath = do
+  result <- Imports.loadSourceTreeImports directoryPath
 
   case result of
     Parse.ParseFailed srcLoc errMsg -> do
       putStrLn $ concat
-        [ "Unable to load dependencies due to parse failure at "
+        [ "Unable to load imports due to parse failure at "
         , show srcLoc
         , ": "
         , errMsg
         ]
       Exit.exitWith (Exit.ExitFailure 1)
 
-    Parse.ParseOk deps ->
-      Fold.traverse_ printDependency deps
+    Parse.ParseOk imps ->
+      Fold.traverse_ printImport imps
 
-printDependency :: Deps.Dependency -> IO ()
-printDependency dependency =
+printImport :: Imports.Import -> IO ()
+printImport imp =
   putStrLn $ concat
-    [ Deps.formatModuleName (Deps.dependencySource dependency)
-    , " depends on "
-    , Deps.formatModuleName (Deps.dependencyTarget dependency)
+    [ Imports.formatModuleName (Imports.importSource imp)
+    , " imports "
+    , Imports.formatModuleName (Imports.importTarget imp)
     ]
 
