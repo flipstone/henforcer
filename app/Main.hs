@@ -26,8 +26,11 @@ printDirectoryImports directoryPath = do
         ]
       Exit.exitWith (Exit.ExitFailure 1)
 
-    Parse.ParseOk imps ->
-      Fold.traverse_ printImport imps
+    Parse.ParseOk allImports ->
+      let
+        localImports = Imports.removeNonLocalImports allImports
+      in
+        Fold.traverse_ printImport localImports
 
 printImport :: Imports.Import -> IO ()
 printImport imp =
