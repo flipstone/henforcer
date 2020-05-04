@@ -8,20 +8,22 @@ module Modulo.Dependencies
   ) where
 
 import qualified Control.Monad as Monad
-import qualified Data.List as List
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 import qualified Language.Haskell.Exts.Syntax as Syntax
 
 import qualified Modulo.Imports as Imports
 
-newtype TreeName =
-  TreeName String
+data TreeName =
+  TreeName String (Maybe TreeName)
   deriving (Show, Ord, Eq)
 
 formatTreeName :: TreeName -> String
-formatTreeName (TreeName name) =
-  name
+formatTreeName (TreeName name maybeRest) =
+  maybe name joinName maybeRest
+    where
+      joinName rest =
+        name ++ ('.' : formatTreeName rest)
 
 newtype DependencyGraph =
   DependencyGraph (Map.Map TreeName (Set.Set Dependency))
@@ -66,8 +68,22 @@ singletonGraph dep =
     Map.singleton (dependencySource dep) (Set.singleton dep)
 
 isParentTreeOf :: TreeName -> TreeName -> Bool
-isParentTreeOf (TreeName parent) (TreeName child) =
-  List.isPrefixOf parent child
+isParentTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
+  if parent /= child
+  then False
+  else
+    case (mbParentRest, mbChildRest) of
+      (Nothing, Just _) ->
+        True
+
+      (Just _, Nothing) ->
+        False
+
+      (Nothing, Nothing) ->
+        False
+
+      (Just parentRest, Just childRest) ->
+        isParentTreeOf parentRest childRest
 
 mkImportDependencies :: Imports.Import -> DependencyGraph
 mkImportDependencies imp =
@@ -93,18 +109,19 @@ mkImportDependencies imp =
 
 treeNamesForModule :: Syntax.ModuleName a -> [TreeName]
 treeNamesForModule (Syntax.ModuleName _ name) =
-  fmap mkName $ go $ moduleNameParts name
+  go $ moduleNameParts name
     where
-      mkName =
-        TreeName . List.intercalate "."
-
       go parts =
         case parts of
           [] ->
             []
 
           (firstPart : restParts) ->
-            [firstPart] : (map (firstPart:) (go restParts))
+            let
+              standaloneName = TreeName firstPart Nothing
+              prependName = TreeName firstPart . Just
+            in
+              standaloneName : (map prependName (go restParts))
 
 moduleNameParts :: String -> [String]
 moduleNameParts moduleName =
