@@ -5,6 +5,9 @@ module Modulo.Dependencies
   , formatTreeName
   , treeNameDepth
   , nodes
+  , Target
+  , targetTreeName
+  , targetCauses
   , dependencyTargets
   ) where
 
@@ -39,8 +42,16 @@ treeNameDepth =
           Just treeName ->
             go (depth + 1) treeName
 
+newtype Targets =
+  Targets (Map.Map TreeName (Set.Set Imports.Import))
+  deriving (Show)
+
+instance Semigroup Targets where
+  (Targets t1) <> (Targets t2) =
+    Targets (Map.unionWith (<>) t1 t2)
+
 newtype DependencyGraph =
-  DependencyGraph (Map.Map TreeName (Set.Set Dependency))
+  DependencyGraph (Map.Map TreeName Targets)
   deriving (Show)
 
 instance Semigroup DependencyGraph where
@@ -51,35 +62,44 @@ instance Monoid DependencyGraph where
   mempty =
     DependencyGraph mempty
 
-data Dependency =
-  Dependency
-    { dependencySource :: TreeName
-    , dependencyTarget :: TreeName
-    , dependencyCause :: Imports.Import
-    } deriving (Show, Eq, Ord)
+data Target =
+  Target TreeName (Set.Set Imports.Import)
+  deriving (Show, Eq, Ord)
+
+targetTreeName :: Target -> TreeName
+targetTreeName (Target treeName _) =
+  treeName
+
+targetCauses :: Target -> Set.Set Imports.Import
+targetCauses (Target _ causes) =
+  causes
 
 nodes :: DependencyGraph -> Set.Set TreeName
 nodes (DependencyGraph graph) =
   Set.fromList $ Map.keys graph
 
-dependencyTargets :: TreeName -> DependencyGraph -> Set.Set TreeName
+dependencyTargets :: TreeName -> DependencyGraph -> [Target]
 dependencyTargets name (DependencyGraph graph) =
-  Set.fromList $
-  fmap dependencyTarget $
-  Set.toList $
+  targetsToList $
   Map.findWithDefault
-    Set.empty
+    (Targets Map.empty)
     name
     graph
+
+targetsToList :: Targets -> [Target]
+targetsToList (Targets targetMap) =
+  fmap (uncurry Target) $ Map.toList $ targetMap
+
 
 buildDependencyGraph :: Set.Set Imports.Import -> DependencyGraph
 buildDependencyGraph =
   foldMap mkImportDependencies
 
-singletonGraph :: Dependency -> DependencyGraph
-singletonGraph dep =
+singletonGraph :: TreeName -> TreeName -> Imports.Import -> DependencyGraph
+singletonGraph source target cause =
   DependencyGraph $
-    Map.singleton (dependencySource dep) (Set.singleton dep)
+    Map.singleton source $
+      Targets (Map.singleton target (Set.singleton cause))
 
 isSuperTreeOf :: TreeName -> TreeName -> Bool
 isSuperTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
@@ -114,12 +134,7 @@ mkImportDependencies imp =
     Monad.guard $ not $ isSuperTreeOf targetTree sourceTree
 
     pure $
-      singletonGraph $
-          Dependency
-            { dependencySource = sourceTree
-            , dependencyTarget = targetTree
-            , dependencyCause = imp
-            }
+      singletonGraph sourceTree targetTree imp
 
 treeNamesForModule :: Syntax.ModuleName a -> [TreeName]
 treeNamesForModule (Syntax.ModuleName _ name) =

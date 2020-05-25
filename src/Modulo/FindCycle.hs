@@ -1,15 +1,64 @@
 module Modulo.FindCycle
   ( findCycle
+  , cyclePairs
+  , Cycle
   ) where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.State as ST
 import qualified Data.DList as DL
+import qualified Data.List.NonEmpty as NonEmpty
+import           Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Set as Set
 
 import qualified Modulo.Dependencies as Deps
 
-type Cycle = [Deps.TreeName]
+type Cycle = NonEmpty.NonEmpty Deps.Target
+
+cyclePairs :: Cycle -> [(Deps.TreeName, Deps.Target)]
+cyclePairs (root :| rest) =
+  go DL.empty root rest
+    where
+      go result prev remaining =
+        case remaining of
+          [] ->
+            let
+              pair = (Deps.targetTreeName prev, root)
+            in
+              DL.toList (DL.snoc result pair)
+
+          (next : remainingRest) ->
+            let
+              pair = (Deps.targetTreeName prev, next)
+            in
+              go (DL.snoc result pair) next remainingRest
+
+data CycleInProgress
+  = Start Deps.TreeName
+  | ImportTarget Deps.Target CycleInProgress
+
+checkCycle :: Deps.Target -> CycleInProgress -> Maybe Cycle
+checkCycle newTarget =
+  go (newTarget :| [])
+  where
+    newName = Deps.targetTreeName newTarget
+
+    go possibleCycle inProgress =
+      case inProgress of
+        Start name
+          | name == newName ->
+            Just possibleCycle
+
+          | otherwise ->
+            Nothing
+
+        ImportTarget target previousProgress
+          | Deps.targetTreeName target == newName ->
+            Just possibleCycle
+
+          | otherwise ->
+            go (NonEmpty.cons target possibleCycle) previousProgress
+
 
 type CycleSearch a = ST.State (Set.Set Deps.TreeName) a
 
@@ -23,34 +72,64 @@ findCycle graph =
   in
     DL.toList $ ST.evalState search Set.empty
 
+data VisitationState
+  = PreviouslyVisited
+  | NewlyVisited
+
+checkAndMarkedVisited :: Deps.TreeName -> CycleSearch VisitationState
+checkAndMarkedVisited treeName = do
+  previouslyVisited <- ST.gets (Set.member treeName)
+  ST.modify (Set.insert treeName)
+
+  pure $
+    if
+      previouslyVisited
+    then
+      PreviouslyVisited
+    else
+      NewlyVisited
+
 findCycleFrom :: Deps.DependencyGraph
               -> Deps.TreeName
               -> CycleSearch (DL.DList Cycle)
 findCycleFrom graph =
-  go []
+  start
     where
-      go :: [Deps.TreeName]
-         -> Deps.TreeName
-         -> CycleSearch (DL.DList Cycle)
-      go parentPath treeName = do
-        visited <- ST.gets (Set.member treeName)
-        ST.modify (Set.insert treeName)
+      start :: Deps.TreeName -> CycleSearch (DL.DList Cycle)
+      start treeName = do
+        visitation <- checkAndMarkedVisited treeName
+        continue
+          visitation
+          treeName
+          (Start treeName)
 
+      visitTarget :: CycleInProgress
+                  -> Deps.Target
+                  -> CycleSearch (DL.DList Cycle)
+      visitTarget parentPath target = do
         let
-          pathToHere = (treeName : parentPath)
+          treeName = Deps.targetTreeName target
 
-        if
-          treeName `elem` parentPath
-        then
-          pure $ DL.singleton pathToHere
-        else
-          if
-            visited
-          then
+        visitation <- checkAndMarkedVisited treeName
+
+        case checkCycle target parentPath of
+          Just foundCycle ->
+            pure $ DL.singleton foundCycle
+
+          Nothing ->
+            continue
+              visitation
+              treeName
+              (ImportTarget target parentPath)
+
+      continue visitation treeName pathToHere =
+        case visitation of
+          PreviouslyVisited ->
             pure mempty
-          else
+
+          NewlyVisited ->
             foldMapM
-              (go pathToHere)
+              (visitTarget pathToHere)
               (Deps.dependencyTargets treeName graph)
 
 foldMapM :: (Monoid b, Foldable t, Monad m)
