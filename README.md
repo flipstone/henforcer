@@ -1,6 +1,6 @@
-# modulo
+# modulint
 
-`modulo` is a tool to help us keep dependencies amongs entire trees of Haskell
+`modulint` is a tool to help us keep dependencies amongs entire trees of Haskell
 modules from becoming hopelessly engangled.
 
 ## Examples

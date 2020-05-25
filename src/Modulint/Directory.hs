@@ -1,4 +1,4 @@
-module Modulo.Directory
+module Modulint.Directory
   ( foldDirectory
   ) where
 

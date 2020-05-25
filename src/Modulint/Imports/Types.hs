@@ -1,4 +1,4 @@
-module Modulo.Imports.Types
+module Modulint.Imports.Types
   ( Import(..)
   , formatModuleName
   , formatModuleNameSrcLoc

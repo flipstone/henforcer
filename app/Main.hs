@@ -7,9 +7,9 @@ import qualified Language.Haskell.Exts.Parser as Parse
 import qualified System.Environment as Env
 import qualified System.Exit as Exit
 
-import qualified Modulo.Dependencies as Deps
-import qualified Modulo.FindCycle as FindCycle
-import qualified Modulo.Imports as Imports
+import qualified Modulint.Dependencies as Deps
+import qualified Modulint.FindCycle as FindCycle
+import qualified Modulint.Imports as Imports
 
 main :: IO ()
 main = do

@@ -1,4 +1,4 @@
-module Modulo.FindCycle
+module Modulint.FindCycle
   ( findCycle
   , cyclePairs
   , Cycle
@@ -11,7 +11,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import           Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Set as Set
 
-import qualified Modulo.Dependencies as Deps
+import qualified Modulint.Dependencies as Deps
 
 type Cycle = NonEmpty.NonEmpty Deps.Target
 

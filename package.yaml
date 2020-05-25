@@ -1,6 +1,6 @@
-name:                modulo
+name:                modulint
 version:             0.1.0.0
-github:              "flipstone/modulo"
+github:              "flipstone/modulint"
 license:             BSD3
 author:              "Flipstone Technology Partners"
 maintainer:          "development@flipstone.com"
@@ -17,7 +17,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/flipstone/modulo#readme>
+description:         Please see the README on GitHub at <https://github.com/flipstone/modulint#readme>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -35,7 +35,7 @@ library:
 ghc-options: -Wall -Werror
 
 executables:
-  modulo-exe:
+  modulint:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -43,10 +43,9 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - modulo
-
+    - modulint
 tests:
-  modulo-test:
+  modulint-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -54,5 +53,5 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - modulo
+    - modulint
 

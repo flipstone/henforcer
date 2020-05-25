@@ -1,4 +1,4 @@
-module Modulo.Imports.Load
+module Modulint.Imports.Load
   ( loadSourceTreeImports
   ) where
 
@@ -9,8 +9,8 @@ import qualified Language.Haskell.Exts.Syntax as Syntax
 import qualified Language.Haskell.Exts.SrcLoc as SrcLoc
 import qualified System.FilePath as FilePath
 
-import qualified Modulo.Directory as Dir
-import qualified Modulo.Imports.Types as Types
+import qualified Modulint.Directory as Dir
+import qualified Modulint.Imports.Types as Types
 
 parseImports :: Parse.ParseMode -> String -> Parse.ParseResult (Set.Set Types.Import)
 parseImports parseMode moduleSource = do
@@ -22,7 +22,7 @@ parseImports parseMode moduleSource = do
         Nothing ->
           Parse.ParseFailed
           (SrcLoc.fromSrcInfo srcInfo)
-          "Modulo does not yet support modules files without a module head"
+          "Modulint does not yet support modules files without a module head"
 
         Just (Syntax.ModuleHead _ srcModule _ _) ->
           let

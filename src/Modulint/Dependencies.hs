@@ -1,4 +1,4 @@
-module Modulo.Dependencies
+module Modulint.Dependencies
   ( DependencyGraph
   , buildDependencyGraph
   , TreeName
@@ -17,7 +17,7 @@ import qualified Data.Map.Strict as Map
 import qualified Language.Haskell.Exts.Syntax as Syntax
 import qualified Numeric.Natural as Nat
 
-import qualified Modulo.Imports as Imports
+import qualified Modulint.Imports as Imports
 
 data TreeName =
   TreeName String (Maybe TreeName)
