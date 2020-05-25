@@ -3,6 +3,7 @@ module Modulo.Dependencies
   , buildDependencyGraph
   , TreeName
   , formatTreeName
+  , treeNameDepth
   , nodes
   , dependencyTargets
   ) where
@@ -11,6 +12,7 @@ import qualified Control.Monad as Monad
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 import qualified Language.Haskell.Exts.Syntax as Syntax
+import qualified Numeric.Natural as Nat
 
 import qualified Modulo.Imports as Imports
 
@@ -24,6 +26,18 @@ formatTreeName (TreeName name maybeRest) =
     where
       joinName rest =
         name ++ ('.' : formatTreeName rest)
+
+treeNameDepth :: TreeName -> Nat.Natural
+treeNameDepth =
+  go 1
+    where
+      go depth (TreeName _ child) =
+        case child of
+          Nothing ->
+            depth
+
+          Just treeName ->
+            go (depth + 1) treeName
 
 newtype DependencyGraph =
   DependencyGraph (Map.Map TreeName (Set.Set Dependency))
@@ -67,8 +81,8 @@ singletonGraph dep =
   DependencyGraph $
     Map.singleton (dependencySource dep) (Set.singleton dep)
 
-isParentTreeOf :: TreeName -> TreeName -> Bool
-isParentTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
+isSuperTreeOf :: TreeName -> TreeName -> Bool
+isSuperTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
   if parent /= child
   then False
   else
@@ -80,10 +94,10 @@ isParentTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
         False
 
       (Nothing, Nothing) ->
-        False
+        True
 
       (Just parentRest, Just childRest) ->
-        isParentTreeOf parentRest childRest
+        isSuperTreeOf parentRest childRest
 
 mkImportDependencies :: Imports.Import -> DependencyGraph
 mkImportDependencies imp =
@@ -97,7 +111,7 @@ mkImportDependencies imp =
     -- filter out cases where the dependency was explicitly rather than implied
     -- (i.e. when A.B.C actually imports A.B), which I've noted in the README
     -- as a known issue for us to fix later.
-    Monad.guard $ not $ isParentTreeOf targetTree sourceTree
+    Monad.guard $ not $ isSuperTreeOf targetTree sourceTree
 
     pure $
       singletonGraph $

@@ -5,7 +5,8 @@ import qualified Language.Haskell.Exts.Parser as Parse
 import qualified System.Environment as Env
 import qualified System.Exit as Exit
 
-import qualified Modulo.Dependencies as Dependencies
+import qualified Modulo.Dependencies as Deps
+import qualified Modulo.FindCycle as FindCycle
 import qualified Modulo.Imports as Imports
 
 main :: IO ()
@@ -30,20 +31,15 @@ printDirectoryImports directoryPath = do
     Parse.ParseOk allImports ->
       let
         localImports = Imports.removeNonLocalImports allImports
-        graph = Dependencies.buildDependencyGraph localImports
+        graph = Deps.buildDependencyGraph localImports
+        cycles = FindCycle.findCycle graph
       in
-        printDependencies graph
+        case length cycles of
+          0 ->
+            putStrLn "No cycles found!"
 
-printDependencies :: Dependencies.DependencyGraph -> IO ()
-printDependencies graph =
-  Fold.traverse_ printNode (Dependencies.nodes graph)
-    where
-      printNode node = do
-        putStrLn $ concat
-          [ Dependencies.formatTreeName node
-          , " depends on "
-          ]
-
-        Fold.forM_ (Dependencies.dependencyTargets node graph) $ \target ->
-          putStrLn $ concat [ " - ", Dependencies.formatTreeName target ]
+          count -> do
+            putStrLn $ "Found " <> show count <> " cycles"
+            mapM_ print $ map (map Deps.formatTreeName) cycles
+            Exit.exitWith (Exit.ExitFailure 1)
 
