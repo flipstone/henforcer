@@ -14,6 +14,7 @@ import qualified Modulint.TreeName as TreeName
 data Config =
   Config
     { dependencyDeclarations :: [DependencyDeclaration]
+    , encapsulatedTrees :: [TreeName.TreeName]
     } deriving (Show)
 
 data DependencyDeclaration =
@@ -30,7 +31,8 @@ configDecoder :: Dhall.Decoder Config
 configDecoder =
   Dhall.record $
     Config
-      <$> Dhall.field (T.pack "treeDependencies") (Dhall.list dependencyDeclarationDecoder)
+      <$> Dhall.field (T.pack "treeDependencies")   (Dhall.list dependencyDeclarationDecoder)
+      <*> Dhall.field (T.pack "encapsulatedTrees")  (Dhall.list treeName)
 
 dependencyDeclarationDecoder :: Dhall.Decoder DependencyDeclaration
 dependencyDeclarationDecoder =

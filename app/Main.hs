@@ -1,6 +1,7 @@
 module Main where
 
 import qualified Data.Foldable as Fold
+import qualified Data.List as List
 import qualified Language.Haskell.Exts.Parser as Parse
 import qualified System.Exit as Exit
 
@@ -38,10 +39,14 @@ printDirectoryImports importChecker directoryPath = do
 
     Parse.ParseOk allImports -> do
       let
-        localImports  = Imports.removeNonLocalImports allImports
-        checkFailures = Check.checkImports importChecker localImports
+        localImports =
+          Imports.removeNonLocalImports allImports
 
-      Fold.traverse_ showCheckFailure checkFailures
+        checkFailures =
+          Check.checkImports importChecker localImports
+
+        errorOutput =
+          List.intercalate "\n\n" (map formatCheckFailure checkFailures)
 
       case length checkFailures of
         0 -> do
@@ -49,29 +54,53 @@ printDirectoryImports importChecker directoryPath = do
           Exit.exitWith Exit.ExitSuccess
 
         errCount -> do
+          putStrLn errorOutput
           putStrLn $ "\nmodulint: " <> show errCount <> " errors found!"
           Exit.exitWith (Exit.ExitFailure 1)
 
-
-showCheckFailure :: Check.CheckFailure -> IO ()
-showCheckFailure result =
-  case result of
+formatCheckFailure :: Check.CheckFailure -> String
+formatCheckFailure failure =
+  case failure of
     Check.DependencyViolation imp dep ->
-      let
-        depSource = Check.dependencySource dep
-        depTarget = Check.dependencyTarget dep
-        impSource = Imports.importSource imp
-        impTarget = Imports.importTarget imp
-      in
-        putStrLn $ unwords
-          [ "The import of"
-          , Imports.formatModuleName impTarget
-          , "by"
-          , Imports.formatModuleName impSource
-          , "at"
-          , Imports.formatModuleNameSrcLoc impTarget
-          , "is forbidden by the declaration that the module tree"
-          , TreeName.formatTreeName depSource
-          , "depends on"
-          , TreeName.formatTreeName depTarget
-          ]
+      formatDependencyViolation imp dep
+
+    Check.EncapsulationViolation imp treeName ->
+      formatEncapsulationViolation imp treeName
+
+formatDependencyViolation :: Imports.Import -> Check.CheckedDependency -> String
+formatDependencyViolation imp dep =
+  let
+    depSource = Check.dependencySource dep
+    depTarget = Check.dependencyTarget dep
+    impSource = Imports.importSource imp
+    impTarget = Imports.importTarget imp
+  in
+    unwords
+      [ "The import of"
+      , Imports.formatModuleName impTarget
+      , "by"
+      , Imports.formatModuleName impSource
+      , "at"
+      , Imports.formatModuleNameSrcLoc impTarget
+      , "is forbidden by the declaration that the module tree"
+      , TreeName.formatTreeName depSource
+      , "depends on"
+      , TreeName.formatTreeName depTarget
+      ]
+
+formatEncapsulationViolation :: Imports.Import -> TreeName.TreeName -> String
+formatEncapsulationViolation imp treeName =
+  let
+    impSource = Imports.importSource imp
+    impTarget = Imports.importTarget imp
+  in
+    unwords
+      [ "The import of"
+      , Imports.formatModuleName impTarget
+      , "by"
+      , Imports.formatModuleName impSource
+      , "at"
+      , Imports.formatModuleNameSrcLoc impTarget
+      , "is forbidden because it is an internal module of the encapsulated tree"
+      , TreeName.formatTreeName treeName
+      ]

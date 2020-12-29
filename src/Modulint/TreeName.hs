@@ -5,6 +5,7 @@ module Modulint.TreeName
   , treeNamesForModule
   , parseTreeName
   , treeContainsModule
+  , treeStrictlyContainsModule
   ) where
 
 import qualified Language.Haskell.Exts.Syntax as Syntax
@@ -41,6 +42,14 @@ isSuperTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
 treeContainsModule :: TreeName -> Syntax.ModuleName s -> Bool
 treeContainsModule treeName moduleName =
   isSuperTreeOf treeName (treeNameOfModule moduleName)
+
+treeStrictlyContainsModule :: TreeName -> Syntax.ModuleName s -> Bool
+treeStrictlyContainsModule treeName moduleName =
+  let
+    moduleTree = treeNameOfModule moduleName
+  in
+    not (treeName == moduleTree) &&
+    isSuperTreeOf treeName moduleTree
 
 treeNameOfModule :: Syntax.ModuleName s -> TreeName
 treeNameOfModule (Syntax.ModuleName _ stringName) =

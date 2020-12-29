@@ -3,4 +3,8 @@
     , dependencies = ["Service"]
     }
   ]
+
+, encapsulatedTrees =
+  [ "Service.ThirdPartyPetsSite"
+  ]
 }

@@ -1,3 +1,5 @@
-module Service.ThirdPartyPetsSite where
+module Service.ThirdPartyPetsSite
+  ( module Export
+  ) where
 
-import qualified PetStore.Pet.Model as Model
+import Service.ThirdPartyPetsSite.Implementation as Export
