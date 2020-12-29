@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ef65a9d494220b2ca0642144586eff1ca94ef93d2619db910f74cb92750efed0
+-- hash: 1ef4cd29803c4390000455aefb9833b3e4a1dfbb0267fde7ce52901295ac1728
 
 name:           modulint
 version:        0.1.0.0
@@ -27,13 +27,15 @@ source-repository head
 
 library
   exposed-modules:
-      Modulint.Dependencies
+      Modulint.Check
+      Modulint.Config
       Modulint.Directory
-      Modulint.FindCycle
       Modulint.Imports
       Modulint.Imports.Load
       Modulint.Imports.Local
       Modulint.Imports.Types
+      Modulint.Options
+      Modulint.TreeName
   other-modules:
       Paths_modulint
   hs-source-dirs:
@@ -42,11 +44,14 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , dhall
     , directory
     , dlist
     , filepath
     , haskell-src-exts
     , mtl
+    , optparse-applicative
+    , text
     , unix
   default-language: Haskell2010
 
@@ -60,12 +65,15 @@ executable modulint
   build-depends:
       base >=4.7 && <5
     , containers
+    , dhall
     , directory
     , dlist
     , filepath
     , haskell-src-exts
     , modulint
     , mtl
+    , optparse-applicative
+    , text
     , unix
   default-language: Haskell2010
 
@@ -80,11 +88,14 @@ test-suite modulint-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , dhall
     , directory
     , dlist
     , filepath
     , haskell-src-exts
     , modulint
     , mtl
+    , optparse-applicative
+    , text
     , unix
   default-language: Haskell2010

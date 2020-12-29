@@ -1,23 +1,29 @@
 module Main where
 
 import qualified Data.Foldable as Fold
-import qualified Data.List as List
-import           Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Language.Haskell.Exts.Parser as Parse
-import qualified System.Environment as Env
 import qualified System.Exit as Exit
 
-import qualified Modulint.Dependencies as Deps
-import qualified Modulint.FindCycle as FindCycle
+import qualified Modulint.Config as Config
+import qualified Modulint.Check as Check
 import qualified Modulint.Imports as Imports
+import qualified Modulint.Options as Options
+import qualified Modulint.TreeName as TreeName
 
 main :: IO ()
 main = do
-  directoriesToScan <- Env.getArgs
-  Fold.traverse_ printDirectoryImports directoriesToScan
+  options <- Options.parseOptions
+  config <- Config.loadConfigFile (Options.configPath options)
 
-printDirectoryImports :: FilePath -> IO ()
-printDirectoryImports directoryPath = do
+  let
+    importChecker = Check.newImportChecker config
+
+  Fold.traverse_
+    (printDirectoryImports importChecker)
+    (Options.sourcePaths options)
+
+printDirectoryImports :: Check.ImportChecker -> FilePath -> IO ()
+printDirectoryImports importChecker directoryPath = do
   result <- Imports.loadSourceTreeImports directoryPath
 
   case result of
@@ -30,60 +36,42 @@ printDirectoryImports directoryPath = do
         ]
       Exit.exitWith (Exit.ExitFailure 1)
 
-    Parse.ParseOk allImports ->
+    Parse.ParseOk allImports -> do
       let
-        localImports = Imports.removeNonLocalImports allImports
-        graph = Deps.buildDependencyGraph localImports
-        cycles = FindCycle.findCycle graph
+        localImports  = Imports.removeNonLocalImports allImports
+        checkFailures = Check.checkImports importChecker localImports
+
+      Fold.traverse_ showCheckFailure checkFailures
+
+      case length checkFailures of
+        0 -> do
+          putStrLn "modulint: All checks passed!"
+          Exit.exitWith Exit.ExitSuccess
+
+        errCount -> do
+          putStrLn $ "\nmodulint: " <> show errCount <> " errors found!"
+          Exit.exitWith (Exit.ExitFailure 1)
+
+
+showCheckFailure :: Check.CheckFailure -> IO ()
+showCheckFailure result =
+  case result of
+    Check.DependencyViolation imp dep ->
+      let
+        depSource = Check.dependencySource dep
+        depTarget = Check.dependencyTarget dep
+        impSource = Imports.importSource imp
+        impTarget = Imports.importTarget imp
       in
-        case length cycles of
-          0 ->
-            putStrLn "No cycles found!"
-
-          count -> do
-            putStrLn $ "Found " <> show count <> " cycles"
-            mapM_ (uncurry printCycle) (zip [1..] cycles)
-            Exit.exitWith (Exit.ExitFailure 1)
-
-printCycle :: Integer -> FindCycle.Cycle -> IO ()
-printCycle cycleNum depCycle = do
-  putStrLn $ ":: Cycle " ++ show cycleNum
-  putStrLn $ formatCycleSummary depCycle
-  putStrLn ""
-  mapM_ (putStrLn . formatCyclePair) (FindCycle.cyclePairs depCycle)
-  putStrLn ""
-
-formatCycleSummary :: FindCycle.Cycle -> String
-formatCycleSummary (root :| rest) =
-  List.intercalate " -> " $
-    map
-      (Deps.formatTreeName . Deps.targetTreeName)
-      (root : (rest ++ [root]))
-
-formatCyclePair :: (Deps.TreeName, Deps.Target) -> String
-formatCyclePair (source, target) =
-  let
-    header = Deps.formatTreeName source
-              <> " depends on "
-              <> Deps.formatTreeName (Deps.targetTreeName target)
-              <> " due to the following:"
-
-    causes = fmap formatImport $ Fold.toList $ Deps.targetCauses target
-  in
-    unlines (header : causes)
-
-formatImport :: Imports.Import -> String
-formatImport importInfo =
-  let
-    source = Imports.importSource importInfo
-    target = Imports.importTarget importInfo
-  in
-    unwords
-      [ " -"
-      , Imports.formatModuleName source
-      , "imports"
-      , Imports.formatModuleName target
-      , "at"
-      , Imports.formatModuleNameSrcLoc target
-      ]
-
+        putStrLn $ unwords
+          [ "The import of"
+          , Imports.formatModuleName impTarget
+          , "by"
+          , Imports.formatModuleName impSource
+          , "at"
+          , Imports.formatModuleNameSrcLoc impTarget
+          , "is forbidden by the declaration that the module tree"
+          , TreeName.formatTreeName depSource
+          , "depends on"
+          , TreeName.formatTreeName depTarget
+          ]
