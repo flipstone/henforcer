@@ -1,78 +1,81 @@
 # modulint
 
-`modulint` is a tool to help us keep dependencies amongs entire trees of Haskell
-modules from becoming hopelessly engangled.
+`modulint` is a tool to help keep your forest of Haskell modules organized
+cleanly.
 
-## Examples
+## Installation
 
-Here are some examples of the sorts of module imports we would prefer not have.
+`modulint` has not yet been released to hackage, so you should install it from
+source either by cloning and building te repo, or adding a extra dep to your
+`stack.yaml` like below and running `stack install modulint`
 
-### Example 1
+```
+extra-deps:
+- git: https://github.com/flipstone/modulint
+  commit: <SHA of the latest master commit>
+```
 
-* A.Module imports B.C.Module1
-* B.C.Module2 imports A.Module
+## Initialization
 
-We want to prevent this because:
+Once the `modulint` command is installed you'll need to initialize modulint for
+your project. `cd` to your product directory and run the following command:
 
-* Trees A and B.C depend each other in a cycle
-* Trees A and B also depend on each other in a cycle
+`modulint --init`
 
-### Example 2
+or
 
-* A.Module imports B.Module1
-* B.Module2 imports A.Module2
+`stack exec modulint --init`
 
-We want to prevent this because:
+This will create an empty modulint configuration file at `modulint.dhall` in
+the root of your project plus a `.modulint/prelude.dhall` file that defines the
+configuration file format and is imported by `modulint.dhall`.
 
-* Trees A and B depend on each other in a cycle
+## Execution
 
-### Example 3
+Running `modulint` with no arguments from the project directory. You can also
+run it from any directory by specifying the `--config <config path>` option
+to tell `modulint` where the configuration file for the project lives.
 
-* A.B.Module imports A.C.Module1
-* A.C.Module2 imports A.B.Module
+## Configuration
 
-We want to prevent this because:
+`modulint` uses `dhall` files for configuration. The `.modulint/prelude.dhall`
+file defines the configuration options that are available as well as default
+values for them all. You can use it as a handy reference for configuring
+`modulint`.
 
-* Trees A.B and A.C depend on each other in a cycle
-* The A depends on itself, which is not a cycle
+Note that the default `modulint` configuration does not enforce any particular
+rules, so running `modulint` immediately after installation will not report
+module structure errors.
 
-### Example 4
+### Source Paths
 
-* A.Module1 imports A.B.Module1
-* A.B.Module2 imports A.Module1
+The `sourcePaths` option is the most import -- this option defines which
+directories of files (relative to `modulint.dhall`) `modulint` will scan for
+Haskell files when it runs.  You should set it such that any files you want
+`modulint` to examine are found.
 
-We want to prevent this because:
 
-* Trees A and A.B depend on each other in a cycle
+### Module Trees
 
-### Example 5
+`modulint` uses "module trees" as part of its configuration. A "module tree"
+refers to a root module (e.g. `Data.Text`) and all the modules are prefixed by
+it (e.g. `Data.Text.Encoding` and `Data.Text.Lazy`). For modules in your
+project this almost always means a `src/Foo/MyModule.hs` file and any `.hs`
+files contained inside the `src/Foo/MyModule` directory.
 
-* A.B imports A
+### Tree Dependencies
 
-We want to prevent this because
+The `treeDependencies` options lets you declare that one module tree depends on
+other trees. Declaring such a dependency tells `modulint` that you don't want
+the dependency targetso to import anything from the dependent tree, which would
+cause a backwards dependency rendering the two module trees logically
+inseparable.  `modulint` will report any imports causing a backward dependency
+as an error.
 
-* Our model essential assumes A depends on A.B (even if it does not in reality),
-  so this direct import of a parent is a cycle by default. Note that this is
-  not currently detected: see the known issue below)
+### Encapsulated Trees
 
-### Counterexample
+The `encapsulatedTrees` options lets you declare that the root of a module tree
+is effectively a public interface that any modules outside the tree should be
+using. `modulint` will report an error if any module outside the tree attempts
+to import a module from inside the encapsulated tree.
 
-* A.Module1 imports A.B.Module
-* A.Module2 imports A.Module1
-
-This is perfectly fine for these reasons:
-
-*  Tree A depends on Tree A.B, but not in a cycle.
-*  A.Module2 depends on sibling A.Module1, but not in a cycle
-*  A.Module2 could also depend on A.B.Module directly without
-*  creating any cycle
-
-## Known Issues
-
-* Currently imports of modules that contain no imports themselves end up getting
-  ignored when we filter out non-local imports. Eventually we can improve this
-  logic.
-
-* Currently we filter out parent trees when determining how the import statements
-  lead to tree dependencies. This ends up filtering out an edge case when a module
-  _actually_ imports its parent.
