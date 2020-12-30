@@ -21,10 +21,12 @@ description:         Please see the README on GitHub at <https://github.com/flip
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
 - containers
 - dhall
 - directory
 - dlist
+- file-embed
 - filepath
 - haskell-src-exts
 - mtl
@@ -49,7 +51,7 @@ executables:
     - modulint
 tests:
   modulint-test:
-    main:                Spec.hs
+    main:                Main.hs
     source-dirs:         test
     ghc-options:
     - -threaded
@@ -57,4 +59,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - modulint
+    - HUnit
 

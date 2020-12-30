@@ -8,7 +8,7 @@ import qualified Options.Applicative as Opt
 data Options =
   Options
     { configPath :: FilePath
-    , sourcePaths :: [FilePath]
+    , initialize :: Bool
     } deriving (Show)
 
 parseOptions :: IO Options
@@ -30,5 +30,5 @@ optionsParser =
           <> Opt.value "./modulint.dhall"
           <> Opt.showDefault
           )
-    <*> Opt.some (Opt.strArgument (Opt.metavar "<source path...>"))
+    <*> Opt.flag False True (Opt.long "init")
 

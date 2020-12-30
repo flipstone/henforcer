@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1ef4cd29803c4390000455aefb9833b3e4a1dfbb0267fde7ce52901295ac1728
+-- hash: 3405fadaa2589355c8d477411b54ed7e2fd3a03e60d4383a05e8d93958011c29
 
 name:           modulint
 version:        0.1.0.0
@@ -29,11 +29,14 @@ library
   exposed-modules:
       Modulint.Check
       Modulint.Config
+      Modulint.Config.Defaults
       Modulint.Directory
       Modulint.Imports
       Modulint.Imports.Load
       Modulint.Imports.Local
       Modulint.Imports.Types
+      Modulint.Initialize
+      Modulint.Main
       Modulint.Options
       Modulint.TreeName
   other-modules:
@@ -43,10 +46,12 @@ library
   ghc-options: -Wall -Werror
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , containers
     , dhall
     , directory
     , dlist
+    , file-embed
     , filepath
     , haskell-src-exts
     , mtl
@@ -64,10 +69,12 @@ executable modulint
   ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , containers
     , dhall
     , directory
     , dlist
+    , file-embed
     , filepath
     , haskell-src-exts
     , modulint
@@ -79,18 +86,21 @@ executable modulint
 
 test-suite modulint-test
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Main.hs
   other-modules:
       Paths_modulint
   hs-source-dirs:
       test
   ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      HUnit
+    , base >=4.7 && <5
+    , bytestring
     , containers
     , dhall
     , directory
     , dlist
+    , file-embed
     , filepath
     , haskell-src-exts
     , modulint

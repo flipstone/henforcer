@@ -3,15 +3,5 @@
 -- own settings. Consult the prelude.dhall file for a reference
 -- to settings and the provided defaults.
 (./.modulint/prelude.dhall)::
-  { sourcePaths = [ "." ]
-
-  , treeDependencies =
-    [ { moduleTree = "PetStore"
-      , dependencies = ["Service"]
-      }
-    ]
-
-  , encapsulatedTrees =
-    [ "Service.ThirdPartyPetsSite"
-    ]
+  { sourcePaths = [ "src" ]
   }

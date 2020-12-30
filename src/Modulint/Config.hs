@@ -8,12 +8,15 @@ import qualified Data.Text as T
 import qualified Data.Void as Void
 import qualified Dhall
 import qualified Dhall.Src as DhallSrc
+import           System.FilePath ((</>))
+import qualified System.FilePath as FilePath
 
 import qualified Modulint.TreeName as TreeName
 
 data Config =
   Config
-    { dependencyDeclarations :: [DependencyDeclaration]
+    { sourcePaths :: [FilePath]
+    , dependencyDeclarations :: [DependencyDeclaration]
     , encapsulatedTrees :: [TreeName.TreeName]
     } deriving (Show)
 
@@ -24,14 +27,23 @@ data DependencyDeclaration =
     } deriving (Show)
 
 loadConfigFile :: FilePath -> IO Config
-loadConfigFile =
-  Dhall.inputFile configDecoder
+loadConfigFile configPath = do
+  rawConfig <- Dhall.inputFile configDecoder configPath
+  pure $
+    rawConfig
+      { sourcePaths = map (relativize configPath) (sourcePaths rawConfig)
+      }
+
+relativize :: FilePath -> FilePath -> FilePath
+relativize configPath sourcePath =
+  FilePath.takeDirectory configPath </> sourcePath
 
 configDecoder :: Dhall.Decoder Config
 configDecoder =
   Dhall.record $
     Config
-      <$> Dhall.field (T.pack "treeDependencies")   (Dhall.list dependencyDeclarationDecoder)
+      <$> Dhall.field (T.pack "sourcePaths")        (Dhall.list Dhall.string)
+      <*> Dhall.field (T.pack "treeDependencies")   (Dhall.list dependencyDeclarationDecoder)
       <*> Dhall.field (T.pack "encapsulatedTrees")  (Dhall.list treeName)
 
 dependencyDeclarationDecoder :: Dhall.Decoder DependencyDeclaration
