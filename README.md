@@ -6,7 +6,7 @@ cleanly.
 ## Installation
 
 `modulint` has not yet been released to hackage, so you should install it from
-source either by cloning and building te repo, or adding a extra dep to your
+source either by cloning and building the repo, or adding a extra dep to your
 `stack.yaml` like below and running `stack install modulint`
 
 ```
@@ -29,6 +29,19 @@ or
 This will create an empty modulint configuration file at `modulint.dhall` in
 the root of your project plus a `.modulint/prelude.dhall` file that defines the
 configuration file format and is imported by `modulint.dhall`.
+
+_Note: `modulint` may require a later version of `dhall` than is available in
+earlier lts stackage snapshots. You may need to add an extra-dep like below to
+get a compatible version of `dhall`, and its dependency `atomic-write`. You
+may need to tweak `dhall` version below based on the `repline` version in your
+lts as well -- use a `dhall` > `1.32` if your LTS has `repline` >= `0.4`.
+
+```
+# modulint needs a later dhall, which needs a later atomic-write
+- dhall-1.32.0
+- atomic-write-0.2.0.7
+```
+
 
 ## Execution
 
@@ -53,7 +66,6 @@ The `sourcePaths` option is the most import -- this option defines which
 directories of files (relative to `modulint.dhall`) `modulint` will scan for
 Haskell files when it runs.  You should set it such that any files you want
 `modulint` to examine are found.
-
 
 ### Module Trees
 
