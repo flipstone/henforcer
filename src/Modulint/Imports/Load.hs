@@ -26,8 +26,7 @@ parseImports parseMode moduleSource = do
 
         Just (Syntax.ModuleHead _ srcModule _ _) ->
           let
-            targetModules = map Syntax.importModule importDecls
-            imports = map (Types.Import srcModule) targetModules
+            imports = map (Types.mkImport srcModule) importDecls
           in
             pure $ Set.fromList imports
 

@@ -3,6 +3,5 @@ module Modulint.Imports
   ) where
 
 import Modulint.Imports.Load as ReExport
-import Modulint.Imports.Local as ReExport
 import Modulint.Imports.Types as ReExport
 

@@ -30,10 +30,10 @@ main = do
 modulintTest :: HUnit.Test
 modulintTest =
   HUnit.TestCase $ do
-    -- Remove just the prelude file so that init can write a new one. This
-    -- lets the test verify that the prelude being distributed is compatible
+    -- Remove just the package file so that init can write a new one. This
+    -- lets the test verify that the package being distributed is compatible
     -- with the test configuration in the example dir
-    Dir.removeFile "examples/.modulint/prelude.dhall"
+    Dir.removeFile "examples/.modulint/package.dhall"
 
     Modulint.main initExamplesOptions
 

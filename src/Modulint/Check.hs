@@ -1,5 +1,6 @@
 module Modulint.Check
   ( CheckFailure(..)
+  , QualificationViolation(..)
   , CheckedDependency(..)
   , ImportChecker
   , checkImports
@@ -13,12 +14,15 @@ import qualified Control.Monad.ST as ST
 
 import qualified Modulint.Config as Config
 import qualified Modulint.Imports as Imports
+import qualified Modulint.ModuleName as ModuleName
+import qualified Modulint.Qualification as Qualification
 import qualified Modulint.TreeName as TreeName
 
 data ImportChecker =
   ImportChecker
-    { dependencies      :: [CheckedDependency]
-    , encapsulatedTrees :: [TreeName.TreeName]
+    { dependencies        :: [CheckedDependency]
+    , encapsulatedTrees   :: [TreeName.TreeName]
+    , qualificationRules  :: Qualification.RuleMap
     }
 
 data CheckedDependency =
@@ -30,6 +34,12 @@ data CheckedDependency =
 data CheckFailure
   = DependencyViolation    Imports.Import CheckedDependency
   | EncapsulationViolation Imports.Import TreeName.TreeName
+  | QualificationViolation Imports.Import QualificationViolation
+
+data QualificationViolation
+  = QualificationForbidden
+  | QualificationRequired [ModuleName.ModuleName]
+  | DisallowedAlias ModuleName.ModuleName [ModuleName.ModuleName]
 
 newImportChecker :: Config.Config -> ImportChecker
 newImportChecker config =
@@ -44,8 +54,9 @@ newImportChecker config =
       $ config
   in
     ImportChecker
-      { dependencies      = configuredDependencies
-      , encapsulatedTrees = Config.encapsulatedTrees config
+      { dependencies        = configuredDependencies
+      , encapsulatedTrees   = Config.encapsulatedTrees config
+      , qualificationRules  = Config.qualificationRules config
       }
 
 checkImports :: Foldable f
@@ -70,6 +81,13 @@ checkImport failures checker imp = do
   Fold.traverse_
     (checkImportAgainstEncapsulation failures imp)
     (encapsulatedTrees checker)
+
+  let
+    targetName = ModuleName.syntaxToModuleName (Imports.importTarget imp)
+
+  Fold.traverse_
+    (checkImportQualification failures imp)
+    (Qualification.lookupRule targetName (qualificationRules checker))
 
 checkImportAgainstDependency :: STRef.STRef s [CheckFailure]
                              -> Imports.Import
@@ -114,6 +132,42 @@ checkImportAgainstEncapsulation failures imp encapsulatedTree = do
   Monad.when
     encapsulationViolated
     (addFailure failures (EncapsulationViolation imp encapsulatedTree))
+
+checkImportQualification :: STRef.STRef s [CheckFailure]
+                         -> Imports.Import
+                         -> Qualification.Rule
+                         -> ST.ST s ()
+checkImportQualification failures imp rule =
+  case rule of
+    Qualification.Forbidden ->
+      Monad.when
+        (Imports.importQualified imp)
+        (addFailure failures (QualificationViolation imp QualificationForbidden))
+
+    Qualification.RequiredAs allowedAliases -> do
+      case Imports.importAlias imp of
+        Nothing ->
+          addFailure failures (QualificationViolation imp (QualificationRequired allowedAliases))
+
+        Just alias -> do
+          Monad.when
+            (not (Imports.importQualified imp))
+            (addFailure failures (QualificationViolation imp (QualificationRequired allowedAliases)))
+
+          Monad.when
+            (not (alias `elem` allowedAliases))
+            (addFailure failures (QualificationViolation imp (DisallowedAlias alias allowedAliases)))
+
+    Qualification.AllowedAs allowedAliases ->
+      case Imports.importAlias imp of
+        Nothing ->
+          pure ()
+
+        Just alias ->
+          Monad.when
+            (not (alias `elem` allowedAliases))
+            (addFailure failures (QualificationViolation imp (DisallowedAlias alias allowedAliases)))
+
 
 addFailure :: STRef.STRef s [CheckFailure] -> CheckFailure -> ST.ST s ()
 addFailure failures err =

@@ -1,3 +1,3 @@
 module PetStore.Pet.Model where
 
-import Prelude
+import qualified Prelude

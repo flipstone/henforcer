@@ -13,19 +13,19 @@ initializeConfigPath :: FilePath -> IO ()
 initializeConfigPath configPath = do
   let
     modulintDirPath = FilePath.takeDirectory configPath </> ".modulint"
-    preludePath = modulintDirPath </> "prelude.dhall"
+    packagePath = modulintDirPath </> "package.dhall"
 
   Dir.createDirectoryIfMissing False modulintDirPath
 
-  preludeExists <- Dir.doesFileExist preludePath
+  packageExists <- Dir.doesFileExist packagePath
 
   if
-    preludeExists
+    packageExists
   then
-    putStrLn (preludePath <> " already exists, skipping. Remove your file and run init again to get the latest prelude.")
+    putStrLn (packagePath <> " already exists, skipping. Remove your file and run init again to get the latest package.")
   else do
-    BS.writeFile preludePath Defaults.preludeFile
-    putStrLn ("Installed modulint prelude file at " <> preludePath)
+    BS.writeFile packagePath Defaults.packageFile
+    putStrLn ("Installed modulint package file at " <> packagePath)
 
   modulintExists <- Dir.doesFileExist configPath
 

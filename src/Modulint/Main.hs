@@ -12,6 +12,7 @@ import qualified Modulint.Config as Config
 import qualified Modulint.Check as Check
 import qualified Modulint.Imports as Imports
 import qualified Modulint.Initialize as Initialize
+import qualified Modulint.ModuleName as ModuleName
 import qualified Modulint.Options as Options
 import qualified Modulint.TreeName as TreeName
 
@@ -51,11 +52,8 @@ printDirectoryImports importChecker directoryPath = do
 
     Parse.ParseOk allImports -> do
       let
-        localImports =
-          Imports.removeNonLocalImports allImports
-
         checkFailures =
-          Check.checkImports importChecker localImports
+          Check.checkImports importChecker allImports
 
         errorOutput =
           List.intercalate "\n\n" (map formatCheckFailure checkFailures)
@@ -79,21 +77,17 @@ formatCheckFailure failure =
     Check.EncapsulationViolation imp treeName ->
       formatEncapsulationViolation imp treeName
 
+    Check.QualificationViolation imp violation ->
+      formatQualificationViolation imp violation
+
 formatDependencyViolation :: Imports.Import -> Check.CheckedDependency -> String
 formatDependencyViolation imp dep =
   let
     depSource = Check.dependencySource dep
     depTarget = Check.dependencyTarget dep
-    impSource = Imports.importSource imp
-    impTarget = Imports.importTarget imp
   in
     unwords
-      [ "The import of"
-      , Imports.formatModuleName impTarget
-      , "by"
-      , Imports.formatModuleName impSource
-      , "at"
-      , Imports.formatModuleNameSrcLoc impTarget
+      [ formatImportSubject imp
       , "is forbidden by the declaration that the module tree"
       , TreeName.formatTreeName depSource
       , "depends on"
@@ -102,20 +96,50 @@ formatDependencyViolation imp dep =
 
 formatEncapsulationViolation :: Imports.Import -> TreeName.TreeName -> String
 formatEncapsulationViolation imp treeName =
-  let
-    impSource = Imports.importSource imp
-    impTarget = Imports.importTarget imp
-  in
-    unwords
-      [ "The import of"
-      , Imports.formatModuleName impTarget
-      , "by"
-      , Imports.formatModuleName impSource
-      , "at"
-      , Imports.formatModuleNameSrcLoc impTarget
-      , "is forbidden because it is an internal module of the encapsulated tree"
-      , TreeName.formatTreeName treeName
-      ]
+  unwords
+    [ formatImportSubject imp
+    , "is forbidden because it is an internal module of the encapsulated tree"
+    , TreeName.formatTreeName treeName
+    ]
+
+formatQualificationViolation :: Imports.Import -> Check.QualificationViolation -> String
+formatQualificationViolation imp violation =
+  case violation of
+    Check.QualificationForbidden ->
+      unwords
+        [ formatImportSubject imp
+        , "is improper because it is qualified. Qualified imports"
+        , "of this module have been declared forbidden."
+        ]
+
+    Check.QualificationRequired allowedAliases  ->
+      unwords
+        ( formatImportSubject imp
+        : "is improper because it is not qualified. =mports"
+        : "of this module are declared to require qualification"
+        : "using one of the following aliases:"
+        : map ModuleName.formatModuleName allowedAliases
+        )
+
+    Check.DisallowedAlias badAlias allowedAliases  ->
+      unwords
+        ( formatImportSubject imp
+        : "is improper because the alias"
+        : ModuleName.formatModuleName badAlias
+        : "is not one of the allowed aliases. The allowed aliases are:"
+        : map ModuleName.formatModuleName allowedAliases
+        )
+
+formatImportSubject :: Imports.Import -> String
+formatImportSubject imp =
+  unwords
+    [ "The import of"
+    , Imports.formatModuleName (Imports.importTarget imp)
+    , "by"
+    , Imports.formatModuleName (Imports.importSource imp)
+    , "at"
+    , Imports.formatModuleNameSrcLoc (Imports.importTarget imp)
+    ]
 
 moduleParseFailure :: Exit.ExitCode
 moduleParseFailure =

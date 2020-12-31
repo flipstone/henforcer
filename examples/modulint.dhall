@@ -1,8 +1,7 @@
--- This loads the Config type from prelude.dhall and uses
--- record extension to override the default values with your
--- own settings. Consult the prelude.dhall file for a reference
--- to settings and the provided defaults.
-(./.modulint/prelude.dhall)::
+let
+  Ml = ./.modulint/package.dhall
+in
+  Ml.Config::
   { sourcePaths = [ "." ]
 
   , treeDependencies =
@@ -14,4 +13,10 @@
   , encapsulatedTrees =
     [ "Service.ThirdPartyPetsSite"
     ]
+
+  , qualificationRules =
+    toMap
+      { `Prelude` = Ml.QualificationRule.Forbidden
+      , `PetStore.Pet.Model` = Ml.QualificationRule.RequiredAs ["PetModel"]
+      }
   }

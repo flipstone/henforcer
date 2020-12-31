@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 630af0de2421638a71d5205ee29b48a9531dde15b6300f803ff611ab29719bcd
+-- hash: 7d304e819a5c75c6758383eaf86ae564daaaf6524e0f7129c1be976f1e88976d
 
 name:           modulint
 version:        0.1.0.0
@@ -33,11 +33,12 @@ library
       Modulint.Directory
       Modulint.Imports
       Modulint.Imports.Load
-      Modulint.Imports.Local
       Modulint.Imports.Types
       Modulint.Initialize
       Modulint.Main
+      Modulint.ModuleName
       Modulint.Options
+      Modulint.Qualification
       Modulint.TreeName
   other-modules:
       Paths_modulint
