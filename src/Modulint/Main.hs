@@ -89,9 +89,9 @@ formatDependencyViolation imp dep =
     unwords
       [ formatImportSubject imp
       , "is forbidden by the declaration that the module tree"
-      , TreeName.formatTreeName depSource
+      , TreeName.format depSource
       , "depends on"
-      , TreeName.formatTreeName depTarget
+      , TreeName.format depTarget
       ]
 
 formatEncapsulationViolation :: Imports.Import -> TreeName.TreeName -> String
@@ -99,7 +99,7 @@ formatEncapsulationViolation imp treeName =
   unwords
     [ formatImportSubject imp
     , "is forbidden because it is an internal module of the encapsulated tree"
-    , TreeName.formatTreeName treeName
+    , TreeName.format treeName
     ]
 
 formatQualificationViolation :: Imports.Import -> Check.QualificationViolation -> String

@@ -72,7 +72,7 @@ treeName :: Dhall.Decoder TreeName.TreeName
 treeName =
   let
     extractTreeName input =
-      case TreeName.parseTreeName input of
+      case TreeName.parse input of
         Right validName ->
           pure validName
 

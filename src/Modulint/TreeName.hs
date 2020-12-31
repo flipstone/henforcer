@@ -1,9 +1,8 @@
 module Modulint.TreeName
   ( TreeName
-  , formatTreeName
+  , format
   , isSuperTreeOf
-  , treeNamesForModule
-  , parseTreeName
+  , parse
   , treeContainsModule
   , treeStrictlyContainsModule
   ) where
@@ -14,12 +13,29 @@ data TreeName =
   TreeName String (Maybe TreeName)
   deriving (Show, Ord, Eq)
 
-formatTreeName :: TreeName -> String
-formatTreeName (TreeName name maybeRest) =
+format :: TreeName -> String
+format (TreeName name maybeRest) =
   maybe name joinName maybeRest
     where
       joinName rest =
-        name ++ ('.' : formatTreeName rest)
+        name ++ ('.' : format rest)
+
+parse :: String -> Either String TreeName
+parse stringName =
+  case maybeName of
+    Just name ->
+      Right name
+
+    Nothing ->
+      Left "TreeNames must not be empty!"
+
+    where
+      maybeName =
+        foldr addPart Nothing (moduleNameParts stringName)
+
+      addPart newPart subTreeName =
+        Just (TreeName newPart subTreeName)
+
 
 isSuperTreeOf :: TreeName -> TreeName -> Bool
 isSuperTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
@@ -53,7 +69,7 @@ treeStrictlyContainsModule treeName moduleName =
 
 treeNameOfModule :: ModuleName.ModuleName -> TreeName
 treeNameOfModule moduleName =
-  case parseTreeName (ModuleName.toString moduleName) of
+  case parse (ModuleName.toString moduleName) of
     Right name ->
       name
 
@@ -66,38 +82,6 @@ treeNameOfModule moduleName =
           , err
           , ". This should have been impossible and probably reflects a bug in modulint itself"
           ]
-
-parseTreeName :: String -> Either String TreeName
-parseTreeName stringName =
-  case maybeName of
-    Just name ->
-      Right name
-
-    Nothing ->
-      Left "TreeNames must not be empty!"
-
-    where
-      maybeName =
-        foldr addPart Nothing (moduleNameParts stringName)
-
-      addPart newPart subTreeName =
-        Just (TreeName newPart subTreeName)
-
-treeNamesForModule :: String -> [TreeName]
-treeNamesForModule name =
-  go $ moduleNameParts name
-    where
-      go parts =
-        case parts of
-          [] ->
-            []
-
-          (firstPart : restParts) ->
-            let
-              standaloneName = TreeName firstPart Nothing
-              prependName = TreeName firstPart . Just
-            in
-              standaloneName : (map prependName (go restParts))
 
 moduleNameParts :: String -> [String]
 moduleNameParts moduleName =
