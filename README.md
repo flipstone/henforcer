@@ -27,7 +27,7 @@ or
 `stack exec modulint --init`
 
 This will create an empty modulint configuration file at `modulint.dhall` in
-the root of your project plus a `.modulint/prelude.dhall` file that defines the
+the root of your project plus a `.modulint/package.dhall` file that defines the
 configuration file format and is imported by `modulint.dhall`.
 
 _Note: `modulint` may require a later version of `dhall` than is available in
@@ -51,7 +51,7 @@ to tell `modulint` where the configuration file for the project lives.
 
 ## Configuration
 
-`modulint` uses `dhall` files for configuration. The `.modulint/prelude.dhall`
+`modulint` uses `dhall` files for configuration. The `.modulint/package.dhall`
 file defines the configuration options that are available as well as default
 values for them all. You can use it as a handy reference for configuring
 `modulint`.
@@ -59,6 +59,9 @@ values for them all. You can use it as a handy reference for configuring
 Note that the default `modulint` configuration does not enforce any particular
 rules, so running `modulint` immediately after installation will not report
 module structure errors.
+
+Source options are described below. More precise definitions can be found in
+the [package.dhall](blob/master/src/Modulint/Config/package.dhall).
 
 ### Source Paths
 
@@ -90,4 +93,10 @@ The `encapsulatedTrees` options lets you declare that the root of a module tree
 is effectively a public interface that any modules outside the tree should be
 using. `modulint` will report an error if any module outside the tree attempts
 to import a module from inside the encapsulated tree.
+
+### Qualification Rules
+
+The `qualificationRules` option lets you declare that certain modules must or
+must not be imported as `qualified` as well an what aliases may be used for
+the module when it is qualified.
 
