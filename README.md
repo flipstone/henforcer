@@ -52,16 +52,16 @@ to tell `modulint` where the configuration file for the project lives.
 ## Configuration
 
 `modulint` uses `dhall` files for configuration. The `.modulint/package.dhall`
-file defines the configuration options that are available as well as default
-values for them all. You can use it as a handy reference for configuring
-`modulint`.
+file created by `modulint --init` defines the configuration options that are
+available as well as default values for them all. You can use it as a handy
+reference for configuring `modulint`.
 
 Note that the default `modulint` configuration does not enforce any particular
 rules, so running `modulint` immediately after installation will not report
 module structure errors.
 
 Source options are described below. More precise definitions can be found in
-the [package.dhall](blob/master/src/Modulint/Config/package.dhall).
+the [package.dhall](src/Modulint/Config/package.dhall) file.
 
 ### Source Paths
 
