@@ -11,6 +11,7 @@ import qualified System.FilePath as FilePath
 
 import qualified Modulint.Directory as Dir
 import qualified Modulint.Imports.Types as Types
+import qualified Modulint.ModuleName as ModuleName
 
 parseImports :: Parse.ParseMode -> String -> Parse.ParseResult (Set.Set Types.Import)
 parseImports parseMode moduleSource = do
@@ -26,7 +27,8 @@ parseImports parseMode moduleSource = do
 
         Just (Syntax.ModuleHead _ srcModule _ _) ->
           let
-            imports = map (Types.mkImport srcModule) importDecls
+            moduleName = ModuleName.fromSyntax srcModule
+            imports = map (Types.mkImport moduleName) importDecls
           in
             pure $ Set.fromList imports
 

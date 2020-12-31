@@ -118,27 +118,27 @@ formatQualificationViolation imp violation =
         : "is improper because it is not qualified. =mports"
         : "of this module are declared to require qualification"
         : "using one of the following aliases:"
-        : map ModuleName.formatModuleName allowedAliases
+        : map ModuleName.format allowedAliases
         )
 
     Check.DisallowedAlias badAlias allowedAliases  ->
       unwords
         ( formatImportSubject imp
         : "is improper because the alias"
-        : ModuleName.formatModuleName badAlias
+        : ModuleName.format badAlias
         : "is not one of the allowed aliases. The allowed aliases are:"
-        : map ModuleName.formatModuleName allowedAliases
+        : map ModuleName.format allowedAliases
         )
 
 formatImportSubject :: Imports.Import -> String
 formatImportSubject imp =
   unwords
     [ "The import of"
-    , Imports.formatModuleName (Imports.importTarget imp)
+    , ModuleName.format (Imports.importedModule imp)
     , "by"
-    , Imports.formatModuleName (Imports.importSource imp)
+    , ModuleName.format (Imports.srcModule imp)
     , "at"
-    , Imports.formatModuleNameSrcLoc (Imports.importTarget imp)
+    , Imports.formatSrcLocation (Imports.srcLocation imp)
     ]
 
 moduleParseFailure :: Exit.ExitCode

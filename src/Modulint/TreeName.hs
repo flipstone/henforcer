@@ -8,7 +8,7 @@ module Modulint.TreeName
   , treeStrictlyContainsModule
   ) where
 
-import qualified Language.Haskell.Exts.Syntax as Syntax
+import qualified Modulint.ModuleName as ModuleName
 
 data TreeName =
   TreeName String (Maybe TreeName)
@@ -39,11 +39,11 @@ isSuperTreeOf (TreeName parent mbParentRest) (TreeName child mbChildRest) =
       (Just parentRest, Just childRest) ->
         isSuperTreeOf parentRest childRest
 
-treeContainsModule :: TreeName -> Syntax.ModuleName s -> Bool
+treeContainsModule :: TreeName -> ModuleName.ModuleName -> Bool
 treeContainsModule treeName moduleName =
   isSuperTreeOf treeName (treeNameOfModule moduleName)
 
-treeStrictlyContainsModule :: TreeName -> Syntax.ModuleName s -> Bool
+treeStrictlyContainsModule :: TreeName -> ModuleName.ModuleName -> Bool
 treeStrictlyContainsModule treeName moduleName =
   let
     moduleTree = treeNameOfModule moduleName
@@ -51,9 +51,9 @@ treeStrictlyContainsModule treeName moduleName =
     not (treeName == moduleTree) &&
     isSuperTreeOf treeName moduleTree
 
-treeNameOfModule :: Syntax.ModuleName s -> TreeName
-treeNameOfModule (Syntax.ModuleName _ stringName) =
-  case parseTreeName stringName of
+treeNameOfModule :: ModuleName.ModuleName -> TreeName
+treeNameOfModule moduleName =
+  case parseTreeName (ModuleName.toString moduleName) of
     Right name ->
       name
 
@@ -61,7 +61,7 @@ treeNameOfModule (Syntax.ModuleName _ stringName) =
       error $
         concat
           [ "Modulint.TreeName.treeNameOfModule: failed to parse Haskell module name "
-          , show stringName
+          , ModuleName.format moduleName
           , " as a TreeName: "
           , err
           , ". This should have been impossible and probably reflects a bug in modulint itself"

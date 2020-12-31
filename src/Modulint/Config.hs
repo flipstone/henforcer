@@ -66,7 +66,7 @@ qualificationRule =
 
 moduleName :: Dhall.Decoder ModuleName.ModuleName
 moduleName =
-  ModuleName.stringToModuleName <$> Dhall.string
+  ModuleName.fromString <$> Dhall.string
 
 treeName :: Dhall.Decoder TreeName.TreeName
 treeName =

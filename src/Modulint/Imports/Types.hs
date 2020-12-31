@@ -1,8 +1,7 @@
 module Modulint.Imports.Types
   ( Import(..)
   , mkImport
-  , formatModuleName
-  , formatModuleNameSrcLoc
+  , formatSrcLocation
   ) where
 
 import qualified Language.Haskell.Exts.Syntax as Syntax
@@ -13,27 +12,25 @@ import qualified Modulint.ModuleName as ModuleName
 
 data Import =
   Import
-    { importSource    :: Syntax.ModuleName SrcLoc.SrcSpanInfo
-    , importTarget    :: Syntax.ModuleName SrcLoc.SrcSpanInfo
-    , importQualified :: Bool
-    , importAlias     :: Maybe ModuleName.ModuleName
+    { srcModule       :: ModuleName.ModuleName
+    , srcLocation     :: SrcLoc.SrcSpanInfo
+    , importedModule  :: ModuleName.ModuleName
+    , isQualified     :: Bool
+    , alias           :: Maybe ModuleName.ModuleName
     } deriving (Show, Eq, Ord)
 
-mkImport :: Syntax.ModuleName SrcLoc.SrcSpanInfo
+mkImport :: ModuleName.ModuleName
          -> Syntax.ImportDecl SrcLoc.SrcSpanInfo
          -> Import
-mkImport srcModule importDecl =
+mkImport src importDecl =
   Import
-    { importSource    = srcModule
-    , importTarget    = Syntax.importModule importDecl
-    , importQualified = Syntax.importQualified importDecl
-    , importAlias     = fmap ModuleName.syntaxToModuleName (Syntax.importAs importDecl)
+    { srcModule       = src
+    , srcLocation     = Syntax.ann (Syntax.importModule importDecl)
+    , importedModule  = ModuleName.fromSyntax (Syntax.importModule importDecl)
+    , isQualified     = Syntax.importQualified importDecl
+    , alias           = fmap ModuleName.fromSyntax (Syntax.importAs importDecl)
     }
 
-formatModuleName :: Syntax.ModuleName a -> String
-formatModuleName (Syntax.ModuleName _ moduleName) =
-  moduleName
-
-formatModuleNameSrcLoc :: Syntax.ModuleName SrcLoc.SrcSpanInfo -> String
-formatModuleNameSrcLoc (Syntax.ModuleName srcLoc _) =
-  Pretty.prettyPrint $ SrcLoc.getPointLoc srcLoc
+formatSrcLocation :: SrcLoc.SrcSpanInfo -> String
+formatSrcLocation =
+  Pretty.prettyPrint . SrcLoc.getPointLoc

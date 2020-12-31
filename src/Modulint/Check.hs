@@ -83,7 +83,7 @@ checkImport failures checker imp = do
     (encapsulatedTrees checker)
 
   let
-    targetName = ModuleName.syntaxToModuleName (Imports.importTarget imp)
+    targetName = Imports.importedModule imp
 
   Fold.traverse_
     (checkImportQualification failures imp)
@@ -95,10 +95,10 @@ checkImportAgainstDependency :: STRef.STRef s [CheckFailure]
                              -> ST.ST s ()
 checkImportAgainstDependency failures imp dep = do
   let
-    importSource = Imports.importSource imp
-    importTarget = Imports.importTarget imp
-    depSource    = dependencySource dep
-    depTarget    = dependencyTarget dep
+    srcModule       = Imports.srcModule imp
+    importedModule  = Imports.importedModule imp
+    depSource       = dependencySource dep
+    depTarget       = dependencyTarget dep
 
     -- If the file that contains the import belongs to the module tree that is
     -- the dependency target then we need to check wether the module being
@@ -106,8 +106,8 @@ checkImportAgainstDependency failures imp dep = do
     -- dependency is declared for. This is -- once a dependency is declared, we
     -- don't allow dependency targets to import modules that depend on them.
     dependencyViolated  =
-      TreeName.treeContainsModule depTarget importSource
-      && TreeName.treeContainsModule depSource importTarget
+      TreeName.treeContainsModule depTarget srcModule
+      && TreeName.treeContainsModule depSource importedModule
 
   Monad.when
     dependencyViolated
@@ -119,15 +119,15 @@ checkImportAgainstEncapsulation :: STRef.STRef s [CheckFailure]
                                 -> ST.ST s ()
 checkImportAgainstEncapsulation failures imp encapsulatedTree = do
   let
-    importSource = Imports.importSource imp
-    importTarget = Imports.importTarget imp
+    srcModule       = Imports.srcModule imp
+    importedModule  = Imports.importedModule imp
 
     -- If the module being imported belongs to an encapsulated module tree
     -- then it may only be directly imported from within that tree. Imports
     -- by modules outside the encapsulated tree constitute a violation.
     encapsulationViolated =
-      TreeName.treeStrictlyContainsModule encapsulatedTree importTarget
-      && (not $ TreeName.treeContainsModule encapsulatedTree importSource)
+      TreeName.treeStrictlyContainsModule encapsulatedTree importedModule
+      && (not $ TreeName.treeContainsModule encapsulatedTree srcModule)
 
   Monad.when
     encapsulationViolated
@@ -141,17 +141,17 @@ checkImportQualification failures imp rule =
   case rule of
     Qualification.Forbidden ->
       Monad.when
-        (Imports.importQualified imp)
+        (Imports.isQualified imp)
         (addFailure failures (QualificationViolation imp QualificationForbidden))
 
     Qualification.RequiredAs allowedAliases -> do
-      case Imports.importAlias imp of
+      case Imports.alias imp of
         Nothing ->
           addFailure failures (QualificationViolation imp (QualificationRequired allowedAliases))
 
         Just alias -> do
           Monad.when
-            (not (Imports.importQualified imp))
+            (not (Imports.isQualified imp))
             (addFailure failures (QualificationViolation imp (QualificationRequired allowedAliases)))
 
           Monad.when
@@ -159,7 +159,7 @@ checkImportQualification failures imp rule =
             (addFailure failures (QualificationViolation imp (DisallowedAlias alias allowedAliases)))
 
     Qualification.AllowedAs allowedAliases ->
-      case Imports.importAlias imp of
+      case Imports.alias imp of
         Nothing ->
           pure ()
 

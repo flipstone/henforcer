@@ -1,8 +1,9 @@
 module Modulint.ModuleName
   ( ModuleName
-  , stringToModuleName
-  , syntaxToModuleName
-  , formatModuleName
+  , fromString
+  , toString
+  , fromSyntax
+  , format
   ) where
 
 import qualified Language.Haskell.Exts.Syntax as Syntax
@@ -11,14 +12,18 @@ newtype ModuleName =
   ModuleName String
   deriving (Show, Eq, Ord)
 
-stringToModuleName :: String -> ModuleName
-stringToModuleName =
+fromString :: String -> ModuleName
+fromString =
   ModuleName
 
-formatModuleName :: ModuleName -> String
-formatModuleName (ModuleName moduleName) =
+toString :: ModuleName -> String
+toString (ModuleName moduleName) =
   moduleName
 
-syntaxToModuleName :: Syntax.ModuleName s -> ModuleName
-syntaxToModuleName (Syntax.ModuleName _ moduleName) =
-  stringToModuleName moduleName
+format :: ModuleName -> String
+format =
+  toString
+
+fromSyntax :: Syntax.ModuleName s -> ModuleName
+fromSyntax (Syntax.ModuleName _ moduleName) =
+  fromString moduleName
