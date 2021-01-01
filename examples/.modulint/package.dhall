@@ -14,6 +14,10 @@ let
   TreeName = Text
 
 let
+  -- A Dependency declares that one subtree of the project depends on
+  -- other subtrees. This forbids any modules in the subtrees listed in
+  -- `dependencies` from importing any module contained within the subtree
+  -- indicated by `moduleTree`
   Dependency =
     { moduleTree    : TreeName
     , dependencies  : List TreeName
@@ -23,8 +27,15 @@ let
   -- An qualification rule declares if and how a module must be qualified
   -- when it is imported
   QualificationRule =
-    < Forbidden
+    < -- `Forbidden` declares that a modules can never be imported as qualified
+      Forbidden
+
+      -- `RequiredAs` declares that a module must be imported qualified using
+      -- one of the given aliases.
     | RequiredAs : List ModuleName
+
+      -- `AllowedAs declares that a module _may_ be imported qualified. If it
+      -- is qualified, it one of the given aliases _must_ be used.
     | AllowedAs  : List ModuleName
     >
 
@@ -68,6 +79,7 @@ in
     }
 
   , QualificationRule = QualificationRule
+  , QualificationRuleMap = QualificationRuleMap
   , Dependency = Dependency
   , TreeName = TreeName
   , ModuleName = ModuleName
