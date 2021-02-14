@@ -20,7 +20,7 @@ data ImportChecker =
   ImportChecker
     { dependencies           :: [CheckedDependency]
     , encapsulatedTrees      :: [TreeName.TreeName]
-    , allowedQualifications  :: Qualification.AllowedMap
+    , allowedQualifications  :: Qualification.AllowedSchemes
     }
 
 data CheckedDependency =
@@ -32,7 +32,7 @@ data CheckedDependency =
 data CheckFailure
   = DependencyViolation    Imports.Import CheckedDependency
   | EncapsulationViolation Imports.Import TreeName.TreeName
-  | QualificationViolation Imports.Import [Qualification.AllowedQualification]
+  | QualificationViolation Imports.Import [Qualification.Scheme]
 
 
 newImportChecker :: Config.Config -> ImportChecker
@@ -81,7 +81,7 @@ checkImport failures checker imp = do
 
   Fold.traverse_
     (checkImportQualification failures imp)
-    (Qualification.lookupAllowed targetName (allowedQualifications checker))
+    (Qualification.lookupAllowedSchemes targetName (allowedQualifications checker))
 
 checkImportAgainstDependency :: STRef.STRef s [CheckFailure]
                              -> Imports.Import
@@ -129,40 +129,15 @@ checkImportAgainstEncapsulation failures imp encapsulatedTree = do
 
 checkImportQualification :: STRef.STRef s [CheckFailure]
                          -> Imports.Import
-                         -> [Qualification.AllowedQualification]
+                         -> [Qualification.Scheme]
                          -> ST.ST s ()
 checkImportQualification failures imp alloweds =
   if
-    any (isAllowedBy imp) alloweds
+    Imports.qualification imp `elem` alloweds
   then
     pure ()
   else
     addFailure failures (QualificationViolation imp alloweds)
-
-isAllowedBy :: Imports.Import -> Qualification.AllowedQualification -> Bool
-isAllowedBy imp allowed =
-  qualifiedCorrectly && aliasedCorrectly
-    where
-      qualifiedCorrectly =
-        case Qualification.qualification allowed of
-          Qualification.Qualified ->
-            Imports.isQualified imp
-
-          Qualification.Unqualified ->
-            not (Imports.isQualified imp)
-
-      aliasedCorrectly =
-        case (Imports.alias imp, Qualification.alias allowed) of
-          (Nothing, Qualification.WithoutAlias) ->
-            True
-
-          (Just impAlias, Qualification.WithAlias allowedAlias) ->
-            impAlias == allowedAlias
-
-          _ ->
-            False
-
-
 
 addFailure :: STRef.STRef s [CheckFailure] -> CheckFailure -> ST.ST s ()
 addFailure failures err =

@@ -20,7 +20,7 @@ data Config =
     { sourcePaths :: [FilePath]
     , dependencyDeclarations :: [DependencyDeclaration]
     , encapsulatedTrees :: [TreeName.TreeName]
-    , allowedQualifications :: Qualification.AllowedMap
+    , allowedQualifications :: Qualification.AllowedSchemes
     } deriving (Show)
 
 data DependencyDeclaration =
@@ -48,7 +48,7 @@ configDecoder =
       <$> Dhall.field (T.pack "sourcePaths")           (Dhall.list Dhall.string)
       <*> Dhall.field (T.pack "treeDependencies")      (Dhall.list dependencyDeclarationDecoder)
       <*> Dhall.field (T.pack "encapsulatedTrees")     (Dhall.list treeName)
-      <*> Dhall.field (T.pack "allowedQualifications") (Dhall.map moduleName (Dhall.list allowedQualification))
+      <*> Dhall.field (T.pack "allowedQualifications") (Dhall.map moduleName (Dhall.list qualificationScheme))
 
 dependencyDeclarationDecoder :: Dhall.Decoder DependencyDeclaration
 dependencyDeclarationDecoder =
@@ -57,10 +57,10 @@ dependencyDeclarationDecoder =
       <$> Dhall.field (T.pack "moduleTree") treeName
       <*> Dhall.field (T.pack "dependencies") (Dhall.list treeName)
 
-allowedQualification :: Dhall.Decoder Qualification.AllowedQualification
-allowedQualification =
+qualificationScheme :: Dhall.Decoder Qualification.Scheme
+qualificationScheme =
   Dhall.record $
-    Qualification.AllowedQualification
+    Qualification.Scheme
       <$> Dhall.field (T.pack "qualification") qualification
       <*> Dhall.field (T.pack "alias") alias
 

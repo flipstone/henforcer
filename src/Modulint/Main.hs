@@ -10,6 +10,7 @@ import qualified System.Exit as Exit
 
 import qualified Modulint.Config as Config
 import qualified Modulint.Check as Check
+import qualified Modulint.ErrorMessage as ErrorMessage
 import qualified Modulint.Imports as Imports
 import qualified Modulint.Initialize as Initialize
 import qualified Modulint.ModuleName as ModuleName
@@ -57,7 +58,9 @@ printDirectoryImports importChecker directoryPath = do
           Check.checkImports importChecker allImports
 
         errorOutput =
-          List.intercalate "\n\n" (map formatCheckFailure checkFailures)
+          List.intercalate
+            "\n\n"
+            (map (ErrorMessage.format . failureMessage) checkFailures)
 
       case length checkFailures of
         0 -> do
@@ -69,25 +72,31 @@ printDirectoryImports importChecker directoryPath = do
           putStrLn $ "\nmodulint: " <> show errCount <> " errors found!"
           Exit.exitWith checksFailed
 
-formatCheckFailure :: Check.CheckFailure -> String
-formatCheckFailure failure =
+failureMessage :: Check.CheckFailure -> ErrorMessage.Msg
+failureMessage failure =
   case failure of
     Check.DependencyViolation imp dep ->
-      formatDependencyViolation imp dep
+      ErrorMessage.build
+        (Imports.srcLocation imp)
+        (formatDependencyViolation imp dep)
 
     Check.EncapsulationViolation imp treeName ->
-      formatEncapsulationViolation imp treeName
+      ErrorMessage.build
+        (Imports.srcLocation imp)
+        (formatEncapsulationViolation imp treeName)
 
     Check.QualificationViolation imp violation ->
-      formatQualificationViolation imp violation
+      ErrorMessage.build
+        (Imports.srcLocation imp)
+        (formatQualificationViolation imp violation)
 
-formatDependencyViolation :: Imports.Import -> Check.CheckedDependency -> String
+formatDependencyViolation :: Imports.Import -> Check.CheckedDependency -> ErrorMessage.Body
 formatDependencyViolation imp dep =
   let
     depSource = Check.dependencySource dep
     depTarget = Check.dependencyTarget dep
   in
-    unwords
+    ErrorMessage.line $
       [ formatImportSubject imp
       , "is forbidden by the declaration that the module tree"
       , TreeName.format depSource
@@ -95,26 +104,29 @@ formatDependencyViolation imp dep =
       , TreeName.format depTarget
       ]
 
-formatEncapsulationViolation :: Imports.Import -> TreeName.TreeName -> String
+formatEncapsulationViolation :: Imports.Import -> TreeName.TreeName -> ErrorMessage.Body
 formatEncapsulationViolation imp treeName =
-  unwords
+  ErrorMessage.line
     [ formatImportSubject imp
     , "is forbidden because it is an internal module of the encapsulated tree"
     , TreeName.format treeName
     ]
 
-formatQualificationViolation :: Imports.Import -> [Qualification.AllowedQualification] -> String
+formatQualificationViolation :: Imports.Import -> [Qualification.Scheme] -> ErrorMessage.Body
 formatQualificationViolation imp alloweds =
-  unwords
-    ( formatImportSubject imp
-    : "is improper because it does not match one of the allowed qualification"
-    : "schemes. The allowed qualification schemes are:"
-    : map formatAllowedQualification alloweds
-    )
+  ErrorMessage.line
+    [ formatImportSubject imp
+    , "is improper because it does not match one of the allowed qualification"
+    , "schemes. It was imported:"
+    ]
+  <> ErrorMessage.indent (formatQualificationScheme (Imports.qualification imp))
+  <> ErrorMessage.line []
+  <> ErrorMessage.line ["But it may only be imported in the followings ways:"]
+  <> ErrorMessage.indent (foldMap formatQualificationScheme alloweds)
 
-formatAllowedQualification :: Qualification.AllowedQualification -> String
-formatAllowedQualification allowed =
-  unwords
+formatQualificationScheme :: Qualification.Scheme -> ErrorMessage.Body
+formatQualificationScheme allowed =
+  ErrorMessage.line
     [ case Qualification.qualification allowed of
         Qualification.Qualified -> "qualified"
         Qualification.Unqualified -> "unqualified"
@@ -129,10 +141,6 @@ formatImportSubject imp =
   unwords
     [ "The import of"
     , ModuleName.format (Imports.importedModule imp)
-    , "by"
-    , ModuleName.format (Imports.srcModule imp)
-    , "at"
-    , Imports.formatSrcLocation (Imports.srcLocation imp)
     ]
 
 moduleParseFailure :: Exit.ExitCode

@@ -17,6 +17,6 @@ in
   , allowedQualifications =
     toMap
       { `Prelude` = [ Ml.unqualified ]
-      , `PetStore.Pet.Model` = [ Ml.qualifiedAs "PetModel" ]
+      , `PetStore.Pet.Model` = [ Ml.qualifiedAs "PetModel", Ml.unqualified ]
       }
   }
