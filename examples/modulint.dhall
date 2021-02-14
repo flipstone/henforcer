@@ -14,9 +14,9 @@ in
     [ "Service.ThirdPartyPetsSite"
     ]
 
-  , qualificationRules =
+  , allowedQualifications =
     toMap
-      { `Prelude` = Ml.QualificationRule.Forbidden
-      , `PetStore.Pet.Model` = Ml.QualificationRule.RequiredAs ["PetModel"]
+      { `Prelude` = [ Ml.unqualified ]
+      , `PetStore.Pet.Model` = [ Ml.qualifiedAs "PetModel" ]
       }
   }

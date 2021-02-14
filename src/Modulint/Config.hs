@@ -20,7 +20,7 @@ data Config =
     { sourcePaths :: [FilePath]
     , dependencyDeclarations :: [DependencyDeclaration]
     , encapsulatedTrees :: [TreeName.TreeName]
-    , qualificationRules :: Qualification.RuleMap
+    , allowedQualifications :: Qualification.AllowedMap
     } deriving (Show)
 
 data DependencyDeclaration =
@@ -45,10 +45,10 @@ configDecoder :: Dhall.Decoder Config
 configDecoder =
   Dhall.record $
     Config
-      <$> Dhall.field (T.pack "sourcePaths")        (Dhall.list Dhall.string)
-      <*> Dhall.field (T.pack "treeDependencies")   (Dhall.list dependencyDeclarationDecoder)
-      <*> Dhall.field (T.pack "encapsulatedTrees")  (Dhall.list treeName)
-      <*> Dhall.field (T.pack "qualificationRules") (Dhall.map moduleName qualificationRule)
+      <$> Dhall.field (T.pack "sourcePaths")           (Dhall.list Dhall.string)
+      <*> Dhall.field (T.pack "treeDependencies")      (Dhall.list dependencyDeclarationDecoder)
+      <*> Dhall.field (T.pack "encapsulatedTrees")     (Dhall.list treeName)
+      <*> Dhall.field (T.pack "allowedQualifications") (Dhall.map moduleName (Dhall.list allowedQualification))
 
 dependencyDeclarationDecoder :: Dhall.Decoder DependencyDeclaration
 dependencyDeclarationDecoder =
@@ -57,12 +57,24 @@ dependencyDeclarationDecoder =
       <$> Dhall.field (T.pack "moduleTree") treeName
       <*> Dhall.field (T.pack "dependencies") (Dhall.list treeName)
 
-qualificationRule :: Dhall.Decoder Qualification.Rule
-qualificationRule =
+allowedQualification :: Dhall.Decoder Qualification.AllowedQualification
+allowedQualification =
+  Dhall.record $
+    Qualification.AllowedQualification
+      <$> Dhall.field (T.pack "qualification") qualification
+      <*> Dhall.field (T.pack "alias") alias
+
+qualification :: Dhall.Decoder Qualification.Qualification
+qualification =
   Dhall.union $
-       (const Qualification.Forbidden <$> Dhall.constructor (T.pack "Forbidden")    Dhall.unit)
-    <> (Qualification.RequiredAs      <$> Dhall.constructor (T.pack "RequiredAs") (Dhall.list moduleName))
-    <> (Qualification.AllowedAs       <$> Dhall.constructor (T.pack "AllowedAs")   (Dhall.list moduleName))
+       (const Qualification.Qualified   <$> Dhall.constructor (T.pack "Qualified")     Dhall.unit)
+    <> (const Qualification.Unqualified <$> Dhall.constructor (T.pack "Unqualified")   Dhall.unit)
+
+alias :: Dhall.Decoder Qualification.Alias
+alias =
+  Dhall.union $
+       (const Qualification.WithoutAlias <$> Dhall.constructor (T.pack "WithoutAlias")  Dhall.unit)
+    <> (Qualification.WithAlias          <$> Dhall.constructor (T.pack "WithAlias")     moduleName)
 
 moduleName :: Dhall.Decoder ModuleName.ModuleName
 moduleName =

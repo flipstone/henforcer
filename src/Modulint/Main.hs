@@ -14,6 +14,7 @@ import qualified Modulint.Imports as Imports
 import qualified Modulint.Initialize as Initialize
 import qualified Modulint.ModuleName as ModuleName
 import qualified Modulint.Options as Options
+import qualified Modulint.Qualification as Qualification
 import qualified Modulint.TreeName as TreeName
 
 main :: Options.Options -> IO ()
@@ -102,33 +103,26 @@ formatEncapsulationViolation imp treeName =
     , TreeName.format treeName
     ]
 
-formatQualificationViolation :: Imports.Import -> Check.QualificationViolation -> String
-formatQualificationViolation imp violation =
-  case violation of
-    Check.QualificationForbidden ->
-      unwords
-        [ formatImportSubject imp
-        , "is improper because it is qualified. Qualified imports"
-        , "of this module have been declared forbidden."
-        ]
+formatQualificationViolation :: Imports.Import -> [Qualification.AllowedQualification] -> String
+formatQualificationViolation imp alloweds =
+  unwords
+    ( formatImportSubject imp
+    : "is improper because it does not match one of the allowed qualification"
+    : "schemes. The allowed qualification schemes are:"
+    : map formatAllowedQualification alloweds
+    )
 
-    Check.QualificationRequired allowedAliases  ->
-      unwords
-        ( formatImportSubject imp
-        : "is improper because it is not qualified. =mports"
-        : "of this module are declared to require qualification"
-        : "using one of the following aliases:"
-        : map ModuleName.format allowedAliases
-        )
+formatAllowedQualification :: Qualification.AllowedQualification -> String
+formatAllowedQualification allowed =
+  unwords
+    [ case Qualification.qualification allowed of
+        Qualification.Qualified -> "qualified"
+        Qualification.Unqualified -> "unqualified"
 
-    Check.DisallowedAlias badAlias allowedAliases  ->
-      unwords
-        ( formatImportSubject imp
-        : "is improper because the alias"
-        : ModuleName.format badAlias
-        : "is not one of the allowed aliases. The allowed aliases are:"
-        : map ModuleName.format allowedAliases
-        )
+    , case Qualification.alias allowed of
+        Qualification.WithoutAlias -> "without alias"
+        Qualification.WithAlias name -> "as " <> ModuleName.format name
+    ]
 
 formatImportSubject :: Imports.Import -> String
 formatImportSubject imp =

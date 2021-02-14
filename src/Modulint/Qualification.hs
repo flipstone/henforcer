@@ -1,22 +1,34 @@
 module Modulint.Qualification
-  ( RuleMap
-  , Rule(..)
-  , lookupRule
+  ( AllowedMap
+  , Qualification(..)
+  , Alias(..)
+  , AllowedQualification(..)
+  , lookupAllowed
   ) where
 
 import qualified Data.Map.Strict as Map
 
 import qualified Modulint.ModuleName as ModuleName
 
-type RuleMap =
-  Map.Map ModuleName.ModuleName Rule
+type AllowedMap =
+  Map.Map ModuleName.ModuleName [AllowedQualification]
 
-data Rule
-  = Forbidden
-  | RequiredAs [ModuleName.ModuleName]
-  | AllowedAs [ModuleName.ModuleName]
+data Qualification
+  = Qualified
+  | Unqualified
   deriving Show
 
-lookupRule :: ModuleName.ModuleName -> RuleMap -> Maybe Rule
-lookupRule =
+data Alias
+  = WithAlias ModuleName.ModuleName
+  | WithoutAlias
+  deriving Show
+
+data AllowedQualification =
+  AllowedQualification
+    { qualification :: Qualification
+    , alias :: Alias
+    } deriving Show
+
+lookupAllowed :: ModuleName.ModuleName -> AllowedMap -> Maybe [AllowedQualification]
+lookupAllowed =
   Map.lookup

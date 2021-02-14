@@ -1,6 +1,5 @@
 module Modulint.Check
   ( CheckFailure(..)
-  , QualificationViolation(..)
   , CheckedDependency(..)
   , ImportChecker
   , checkImports
@@ -14,15 +13,14 @@ import qualified Control.Monad.ST as ST
 
 import qualified Modulint.Config as Config
 import qualified Modulint.Imports as Imports
-import qualified Modulint.ModuleName as ModuleName
 import qualified Modulint.Qualification as Qualification
 import qualified Modulint.TreeName as TreeName
 
 data ImportChecker =
   ImportChecker
-    { dependencies        :: [CheckedDependency]
-    , encapsulatedTrees   :: [TreeName.TreeName]
-    , qualificationRules  :: Qualification.RuleMap
+    { dependencies           :: [CheckedDependency]
+    , encapsulatedTrees      :: [TreeName.TreeName]
+    , allowedQualifications  :: Qualification.AllowedMap
     }
 
 data CheckedDependency =
@@ -34,12 +32,8 @@ data CheckedDependency =
 data CheckFailure
   = DependencyViolation    Imports.Import CheckedDependency
   | EncapsulationViolation Imports.Import TreeName.TreeName
-  | QualificationViolation Imports.Import QualificationViolation
+  | QualificationViolation Imports.Import [Qualification.AllowedQualification]
 
-data QualificationViolation
-  = QualificationForbidden
-  | QualificationRequired [ModuleName.ModuleName]
-  | DisallowedAlias ModuleName.ModuleName [ModuleName.ModuleName]
 
 newImportChecker :: Config.Config -> ImportChecker
 newImportChecker config =
@@ -54,9 +48,9 @@ newImportChecker config =
       $ config
   in
     ImportChecker
-      { dependencies        = configuredDependencies
-      , encapsulatedTrees   = Config.encapsulatedTrees config
-      , qualificationRules  = Config.qualificationRules config
+      { dependencies          = configuredDependencies
+      , encapsulatedTrees     = Config.encapsulatedTrees config
+      , allowedQualifications = Config.allowedQualifications config
       }
 
 checkImports :: Foldable f
@@ -87,7 +81,7 @@ checkImport failures checker imp = do
 
   Fold.traverse_
     (checkImportQualification failures imp)
-    (Qualification.lookupRule targetName (qualificationRules checker))
+    (Qualification.lookupAllowed targetName (allowedQualifications checker))
 
 checkImportAgainstDependency :: STRef.STRef s [CheckFailure]
                              -> Imports.Import
@@ -135,38 +129,39 @@ checkImportAgainstEncapsulation failures imp encapsulatedTree = do
 
 checkImportQualification :: STRef.STRef s [CheckFailure]
                          -> Imports.Import
-                         -> Qualification.Rule
+                         -> [Qualification.AllowedQualification]
                          -> ST.ST s ()
-checkImportQualification failures imp rule =
-  case rule of
-    Qualification.Forbidden ->
-      Monad.when
-        (Imports.isQualified imp)
-        (addFailure failures (QualificationViolation imp QualificationForbidden))
+checkImportQualification failures imp alloweds =
+  if
+    any (isAllowedBy imp) alloweds
+  then
+    pure ()
+  else
+    addFailure failures (QualificationViolation imp alloweds)
 
-    Qualification.RequiredAs allowedAliases -> do
-      case Imports.alias imp of
-        Nothing ->
-          addFailure failures (QualificationViolation imp (QualificationRequired allowedAliases))
+isAllowedBy :: Imports.Import -> Qualification.AllowedQualification -> Bool
+isAllowedBy imp allowed =
+  qualifiedCorrectly && aliasedCorrectly
+    where
+      qualifiedCorrectly =
+        case Qualification.qualification allowed of
+          Qualification.Qualified ->
+            Imports.isQualified imp
 
-        Just alias -> do
-          Monad.when
-            (not (Imports.isQualified imp))
-            (addFailure failures (QualificationViolation imp (QualificationRequired allowedAliases)))
+          Qualification.Unqualified ->
+            not (Imports.isQualified imp)
 
-          Monad.when
-            (not (alias `elem` allowedAliases))
-            (addFailure failures (QualificationViolation imp (DisallowedAlias alias allowedAliases)))
+      aliasedCorrectly =
+        case (Imports.alias imp, Qualification.alias allowed) of
+          (Nothing, Qualification.WithoutAlias) ->
+            True
 
-    Qualification.AllowedAs allowedAliases ->
-      case Imports.alias imp of
-        Nothing ->
-          pure ()
+          (Just impAlias, Qualification.WithAlias allowedAlias) ->
+            impAlias == allowedAlias
 
-        Just alias ->
-          Monad.when
-            (not (alias `elem` allowedAliases))
-            (addFailure failures (QualificationViolation imp (DisallowedAlias alias allowedAliases)))
+          _ ->
+            False
+
 
 
 addFailure :: STRef.STRef s [CheckFailure] -> CheckFailure -> ST.ST s ()
