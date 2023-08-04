@@ -3,10 +3,17 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: haddock-api-2.27.0@sha256:3cd85ab0a73705623f2f54e36cb60c922a0b37ef057e0f59d4ffb31e13daf86a,6156
+    pantry-tree:
+      sha256: 0dfec64bf7fff73465c8efe029f96c67159545829cd61d168d691721655ddf2b
+      size: 4598
+  original:
+    hackage: haddock-api-2.27.0
 snapshots:
 - completed:
-    size: 493124
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/10.yaml
-    sha256: 48bc6d1d59224a5166265ef6cdda6a512f29ecc8ef7331826312b82377e89507
-  original: lts-15.10
+    sha256: 1d5fb7e344e76dd2c8958e3061d4e4dabb50a1355e6ff02e7d0e4f754c0adf47
+    size: 640015
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/5.yaml
+  original: lts-21.5

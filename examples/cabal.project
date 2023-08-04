@@ -1,0 +1,8 @@
+packages: examples.cabal ../henforcer.cabal
+package examples
+  ghc-options: -Wredundant-constraints
+  optimization: 2
+  flags: +ci
+allow-newer: haddock-api-2.26.0:haddock-library
+           , haddock-api-2.27.0:base
+jobs: $ncpus

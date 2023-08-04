@@ -1,3 +1,3 @@
-# Changelog for module
+# Changelog for Henforcer
 
 ## Unreleased changes

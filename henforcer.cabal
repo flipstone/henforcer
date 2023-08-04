@@ -1,0 +1,134 @@
+cabal-version: 3.4
+
+name:           henforcer
+version:        0.1.0.0
+synopsis:       GHC plugin to enforce user specified rules on code.
+description:    Please see the README on GitHub at <https://github.com/flipstone/henforcer#readme>
+category:       Development, Compiler Plugin, static-analysis
+homepage:       https://github.com/flipstone/henforcer#readme
+bug-reports:    https://github.com/flipstone/henforcer/issues
+author:         Flipstone Technology Partners
+maintainer:     maintainers@flipstone.com
+copyright:      2023 Flipstone Technology Partners
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    data/*.dhall
+extra-doc-files:
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/flipstone/henforcer
+
+flag ci
+  description: More strict ghc options used for development and ci, not intended for end-use.
+  manual: True
+  default: False
+
+flag executable
+  description: Control building the executable if you only want or need the plugin.
+  manual: True
+  default: True
+
+common ci-warnings
+    ghc-options:
+      -Wall
+      -Wcompat
+      -Werror
+      -Wmissing-import-lists
+      -Wmissing-export-lists
+      -Wmissing-home-modules
+      -Wmissed-specialisations
+      -Wmonomorphism-restriction
+      -Wcompat-unqualified-imports
+      -Wpartial-fields
+      -Wcpp-undef
+      -Wredundant-constraints
+      -Wunused-packages
+      -Wunused-matches
+      -Wunused-type-patterns
+      -fwrite-ide-info
+
+library henforcer-internal
+  exposed-modules:
+      CompatGHC
+      Henforcer.Config
+      Henforcer.Checks
+      Henforcer.Options
+  other-modules:
+      Paths_henforcer
+      Henforcer.CodeStructure
+      Henforcer.CodeStructure.Import
+      Henforcer.CodeStructure.Import.Import
+      Henforcer.CodeStructure.Import.MaxOpenUnaliasedImports
+      Henforcer.CodeStructure.Import.Scheme
+      Henforcer.CodeStructure.Import.Scheme.Alias
+      Henforcer.CodeStructure.Import.Scheme.Safe
+      Henforcer.CodeStructure.Import.Scheme.Scheme
+      Henforcer.CodeStructure.TreeName
+      Henforcer.Checks.ImportCheck
+      Henforcer.Checks.ImportCheck.Check
+      Henforcer.Checks.ImportCheck.CheckFailure
+  autogen-modules:
+      Paths_henforcer
+  hs-source-dirs:
+      src
+
+  if flag(ci)
+    import: ci-warnings
+
+  build-depends:
+      base >=4.7 && <5
+    , containers ^>=0.6
+    , dhall >=1.28 && < 1.42
+    , ghc >= 9.2.1 && <9.5
+    , optparse-applicative >=0.14 && <0.18
+    , text >=1.2 && <2.1
+
+  default-language: Haskell2010
+
+library
+  exposed-modules:
+      Henforcer
+  hs-source-dirs:
+      plugin
+
+  if flag(ci)
+    import: ci-warnings
+
+  build-depends:
+      henforcer:henforcer-internal
+    , base >=4.7 && <5
+
+  default-language: Haskell2010
+
+executable henforcer
+  if !flag(executable)
+    buildable: False
+  main-is: Main.hs
+  other-modules:
+      Config.Defaults
+      Config.Initialize
+      Paths_henforcer
+  hs-source-dirs:
+      app
+
+  ghc-options:
+      -threaded
+      -rtsopts
+      -with-rtsopts=-N
+  if flag(ci)
+    import: ci-warnings
+
+  build-depends:
+      base >=4.7 && <5
+    , bytestring ^>= 0.11
+    , directory ^>=1.3
+    , file-embed ==0.0.*
+    , filepath ^>=1.4
+    , henforcer:henforcer-internal
+
+  default-language: Haskell2010

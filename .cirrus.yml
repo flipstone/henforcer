@@ -1,0 +1,92 @@
+linux_test_task:
+  container:
+    image: ghcr.io/flipstone/haskell-tools:debian-unstable-ghc-9.4.5-2023-07-18-1d8bf61
+    cpu: 6
+    memory: 6G
+  stack_cache:
+    folder: ~/.stack
+  cabal_cache:
+    folder: ~/.cabal
+  ghcup_cache:
+    folder: ~/.ghcup
+  install_script:
+    - apt update
+    - apt install bmake
+    - export PATH=$PATH:/root/.local/bin:/root/.ghcup/bin
+    - bmake setup
+  test_script:
+    - export PATH=$PATH:/root/.local/bin:/root/.ghcup/bin
+    - bmake ci
+  upload_caches:
+    - stack
+    - cabal
+
+freebsd_test_task:
+  freebsd_instance:
+    image_family: freebsd-13-2
+    cpu: 6
+    memory: 6G
+  stack_cache:
+    folder: ~/.stack
+  cabal_cache:
+    folder: ~/.cabal
+  ghcup_cache:
+    folder: ~/.ghcup
+    populate_script:
+      - pkg install -y hs-stack hs-cabal-install curl
+      - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.19.5/x86_64-portbld-freebsd-ghcup-0.1.19.5
+      - chmod +x /usr/local/bin/ghcup
+      - export PATH=$PATH:/.local/bin:/.ghcup/bin
+      - export GHC_VERSIONS=9.4.5
+      - export STACK_YAMLS=stack.yaml
+      - make setup
+  upload_caches:
+    - ghcup
+  install_script:
+    - pkg install -y hs-stack hs-cabal-install curl
+    - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.19.5/x86_64-portbld-freebsd-ghcup-0.1.19.5
+    - chmod +x /usr/local/bin/ghcup
+    - export PATH=$PATH:/.local/bin:/.ghcup/bin
+    - export GHC_VERSIONS=9.4.5
+    - export STACK_YAMLS=stack.yaml
+    - make setup
+  test_script:
+    - export PATH=$PATH:/.local/bin:/.ghcup/bin
+    - export GHC_VERSIONS=9.4.5
+    - export STACK_YAMLS=stack.yaml
+    - make ci
+  upload_caches:
+    - stack
+    - cabal
+
+macos_test_task:
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-ventura-base:latest
+    cpu: 6
+    memory: 6G
+  stack_cache:
+    folder: ~/.stack
+  cabal_cache:
+    folder: ~/.cabal
+  ghcup_cache:
+    folder: ~/.ghcup
+    populate_script:
+      - brew install haskell-stack cabal-install bmake
+      - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+      - source /Users/admin/.ghcup/env
+      - GHC_VERSIONS=9.2.8 STACK_YAMLS=stack-lts-20.19.yaml bmake setup
+  upload_caches:
+    - ghcup
+  install_script:
+    - brew install haskell-stack cabal-install bmake
+    - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+    - source /Users/admin/.ghcup/env
+    - export PATH=$PATH:/Users/admin/.local/bin
+    - GHC_VERSIONS=9.2.8 STACK_YAMLS=stack-lts-20.19.yaml bmake setup
+  test_script:
+    - source /Users/admin/.ghcup/env
+    - export PATH=$PATH:/Users/admin/.local/bin
+    - GHC_VERSIONS=9.2.8 STACK_YAMLS=stack-lts-20.19.yaml bmake ci
+  upload_caches:
+    - stack
+    - cabal
