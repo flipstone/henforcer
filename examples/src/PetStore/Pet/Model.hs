@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {- |
 Module      : PetStore.Pet.Model
@@ -11,9 +12,10 @@ commentary with @some markup@.
 -}
 module PetStore.Pet.Model (foo, bar) where
 
+import Data.Text
 import Prelude qualified
 import System.IO.Unsafe (unsafePerformIO)
-import qualified UnliftIO as Foo
+import qualified "unliftio" UnliftIO as Foo
 
 -- | This is some haddock
 foo :: Prelude.IO ()

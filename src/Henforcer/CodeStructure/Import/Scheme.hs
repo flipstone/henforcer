@@ -12,5 +12,6 @@ module Henforcer.CodeStructure.Import.Scheme
   ) where
 
 import Henforcer.CodeStructure.Import.Scheme.Alias as Export
+import Henforcer.CodeStructure.Import.Scheme.PackageQualifier as Export
 import Henforcer.CodeStructure.Import.Scheme.Safe as Export
 import Henforcer.CodeStructure.Import.Scheme.Scheme as Export

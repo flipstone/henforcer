@@ -121,7 +121,11 @@ checkImportQualification ::
   -> [CodeStructure.Scheme]
   -> [CheckFailure]
 checkImportQualification imp alloweds =
-  if elem (CodeStructure.buildScheme . CompatGHC.unLoc $ CodeStructure.importDecl imp) alloweds
+  if elem
+    ( CodeStructure.keepOnlyPackageNameInQualifier . CodeStructure.buildScheme . CompatGHC.unLoc $
+        CodeStructure.importDecl imp
+    )
+    alloweds
     then []
     else pure $ QualificationViolation imp alloweds
 

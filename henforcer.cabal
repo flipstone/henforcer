@@ -66,6 +66,7 @@ library henforcer-internal
       Henforcer.CodeStructure.Import.MaxOpenUnaliasedImports
       Henforcer.CodeStructure.Import.Scheme
       Henforcer.CodeStructure.Import.Scheme.Alias
+      Henforcer.CodeStructure.Import.Scheme.PackageQualifier
       Henforcer.CodeStructure.Import.Scheme.Safe
       Henforcer.CodeStructure.Import.Scheme.Scheme
       Henforcer.CodeStructure.TreeName

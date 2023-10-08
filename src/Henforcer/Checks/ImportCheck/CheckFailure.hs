@@ -12,6 +12,7 @@ module Henforcer.Checks.ImportCheck.CheckFailure
   ) where
 
 import qualified Data.List.NonEmpty as NEL
+import qualified Data.Text as T
 
 import qualified CompatGHC
 import qualified Henforcer.CodeStructure as CodeStructure
@@ -176,6 +177,13 @@ rebuildImportStatementFromScheme modName schema =
             CompatGHC.QualifiedPre -> CompatGHC.text "qualified"
             CompatGHC.QualifiedPost -> CompatGHC.empty
             CompatGHC.NotQualified -> CompatGHC.empty
+        , case CodeStructure.packageQualification schema of
+            -- The order here is very important, as package qualified imports must come after safe
+            -- and prepositive qualified.
+            CodeStructure.WithoutPackageQualifier ->
+              CompatGHC.empty
+            CodeStructure.WithPackageQualifier str ->
+              CompatGHC.doubleQuotes $ CompatGHC.text (T.unpack str)
         , CompatGHC.ppr modName
         , case CodeStructure.qualification schema of
             CompatGHC.QualifiedPre -> CompatGHC.empty

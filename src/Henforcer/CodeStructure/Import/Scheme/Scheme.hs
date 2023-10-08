@@ -10,14 +10,22 @@ module Henforcer.CodeStructure.Import.Scheme.Scheme
   , AllowedSchemes
   , buildScheme
   , qualificationSchemeDecoder
+  , keepOnlyPackageNameInQualifier
   ) where
 
-import qualified Data.Map.Strict as M
+import qualified Control.Monad as M
+import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import qualified Dhall
 
 import qualified CompatGHC
 import Henforcer.CodeStructure.Import.Scheme.Alias (Alias, aliasDecoder, determineAlias)
+import Henforcer.CodeStructure.Import.Scheme.PackageQualifier
+  ( PackageQualifier (WithPackageQualifier, WithoutPackageQualifier)
+  , determinePackageQualifier
+  , keepPackageNameOnly
+  , packageQualifierDecoder
+  )
 import Henforcer.CodeStructure.Import.Scheme.Safe (Safe, determineSafe, safeDecoder)
 
 {- | Representation of the structure of on an import, covering the qualification, any aliasing, and
@@ -27,11 +35,12 @@ data Scheme = Scheme
   { qualification :: CompatGHC.ImportDeclQualifiedStyle
   , alias :: Alias
   , safe :: Safe
+  , packageQualification :: PackageQualifier
   }
   deriving (Eq)
 
 type AllowedSchemes =
-  M.Map CompatGHC.ModuleName [Scheme]
+  Map.Map CompatGHC.ModuleName [Scheme]
 
 -- | Compute the 'Scheme' from an import
 buildScheme :: CompatGHC.ImportDecl CompatGHC.GhcRn -> Scheme
@@ -40,6 +49,7 @@ buildScheme imp =
     { qualification = CompatGHC.ideclQualified imp
     , alias = determineAlias imp
     , safe = determineSafe imp
+    , packageQualification = determinePackageQualifier imp
     }
 
 -- | Dhall decoder for 'Scheme' so that it can be read from configuration
@@ -50,3 +60,18 @@ qualificationSchemeDecoder =
       <$> Dhall.field (T.pack "qualification") CompatGHC.qualificationDecoder
       <*> Dhall.field (T.pack "alias") aliasDecoder
       <*> Dhall.field (T.pack "safe") safeDecoder
+      <*> Dhall.field (T.pack "packageQualification") packageQualifierDecoder
+
+keepOnlyPackageNameInQualifier :: Scheme -> Scheme
+keepOnlyPackageNameInQualifier s =
+  let
+    mbGetQualifierText :: PackageQualifier -> Maybe T.Text
+    mbGetQualifierText (WithPackageQualifier t) = Just t
+    mbGetQualifierText WithoutPackageQualifier = Nothing
+
+    newQualifier =
+      case M.join . fmap keepPackageNameOnly . mbGetQualifierText $ packageQualification s of
+        Nothing -> WithoutPackageQualifier
+        Just t -> WithPackageQualifier t
+   in
+    s{packageQualification = newQualifier}

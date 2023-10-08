@@ -55,12 +55,22 @@ let
       < WithSafe | WithoutSafe >
 
 let
+    -- Indicates whether an allowed import is package qualified and if so what the package
+    -- qualification must be.
+    PackageQualifier =
+      < WithPackageQualifier : Text | WithoutPackageQualifier >
+
+let
     -- Describes an allowed qualification scheme for a module when it is imported.
     -- When allowed qualifications are declared for a module, any import of that
     -- module must match one of the `AllowedQualification`s given for it in the
     -- configuration.
     AllowedQualification =
-      { qualification : Qualification, alias : Alias, safe : Safe }
+      { qualification : Qualification
+      , alias : Alias
+      , safe : Safe
+      , packageQualification : PackageQualifier
+      }
 
 let
     -- Build an `AllowedQualification` for unqualified imports without an alias
@@ -68,6 +78,7 @@ let
       { qualification = Qualification.Unqualified
       , alias = Alias.WithoutAlias
       , safe = Safe.WithoutSafe
+      , packageQualification = PackageQualifier.WithoutPackageQualifier
       }
 
 let
@@ -78,6 +89,7 @@ let
         { qualification = Qualification.Unqualified
         , alias = Alias.WithAlias aliasName
         , safe = Safe.WithoutSafe
+        , packageQualification = PackageQualifier.WithoutPackageQualifier
         }
 
 let
@@ -86,6 +98,7 @@ let
       { qualification = Qualification.QualifiedPre
       , alias = Alias.WithoutAlias
       , safe = Safe.WithoutSafe
+      , packageQualification = PackageQualifier.WithoutPackageQualifier
       }
 
 let
@@ -96,6 +109,7 @@ let
         { qualification = Qualification.QualifiedPre
         , alias = Alias.WithAlias aliasName
         , safe = Safe.WithoutSafe
+        , packageQualification = PackageQualifier.WithoutPackageQualifier
         }
 
 let
@@ -104,6 +118,7 @@ let
       { qualification = Qualification.QualifiedPost
       , alias = Alias.WithoutAlias
       , safe = Safe.WithoutSafe
+      , packageQualification = PackageQualifier.WithoutPackageQualifier
       }
 
 let
@@ -114,6 +129,7 @@ let
         { qualification = Qualification.QualifiedPost
         , alias = Alias.WithAlias aliasName
         , safe = Safe.WithoutSafe
+        , packageQualification = PackageQualifier.WithoutPackageQualifier
         }
 
 let
@@ -123,10 +139,12 @@ let
       [ { qualification = Qualification.QualifiedPre
         , alias = Alias.WithoutAlias
         , safe = Safe.WithoutSafe
+        , packageQualification = PackageQualifier.WithoutPackageQualifier
         }
       , { qualification = Qualification.QualifiedPost
         , alias = Alias.WithoutAlias
         , safe = Safe.WithoutSafe
+        , packageQualification = PackageQualifier.WithoutPackageQualifier
         }
       ]
 
@@ -138,10 +156,12 @@ let
         [ { qualification = Qualification.QualifiedPre
           , alias = Alias.WithAlias aliasName
           , safe = Safe.WithoutSafe
+          , packageQualification = PackageQualifier.WithoutPackageQualifier
           }
         , { qualification = Qualification.QualifiedPost
           , alias = Alias.WithAlias aliasName
           , safe = Safe.WithoutSafe
+          , packageQualification = PackageQualifier.WithoutPackageQualifier
           }
         ]
 
@@ -155,6 +175,27 @@ let
     onlySafe =
       \(imports : List AllowedQualification) ->
         map AllowedQualification AllowedQualification setWithSafe imports
+
+let
+    -- Mark an `AllowedQualification` as requiring a package qualifier
+    setWithPackageQualifier =
+      \(qualifier : Text) ->
+      \(import : AllowedQualification) ->
+            import
+        //  { packageQualification =
+                PackageQualifier.WithPackageQualifier qualifier
+            }
+
+let
+    -- Modify a list of `AllowedQualification` to only allow package qualified imports
+    onlyPackageQualified =
+      \(qualifier : Text) ->
+      \(imports : List AllowedQualification) ->
+        map
+          AllowedQualification
+          AllowedQualification
+          (setWithPackageQualifier qualifier)
+          imports
 
 let AllowedQualificationMap =
       List { mapKey : ModuleName, mapValue : List AllowedQualification }
@@ -211,6 +252,8 @@ in  { Config =
     , qualifiedEitherAs
     , setWithSafe
     , onlySafe
+    , setWithPackageQualifier
+    , onlyPackageQualified
     , AllowedQualificationMap
     , OpenUnaliasedImportMap
     , DefaultAllowedOpenUnaliasedImports

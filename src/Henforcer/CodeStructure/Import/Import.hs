@@ -18,8 +18,8 @@ import Henforcer.CodeStructure.Import.Scheme (Alias (WithoutAlias), Scheme (Sche
 
 -- | `Import` is a subset of a CompatGHC.HsModule to be a slightly more ergonomic interface.
 data Import = Import
-  { srcModule :: CompatGHC.ModuleName -- Do not support unnamed modules just yet!
-  , importDecl :: CompatGHC.LImportDecl CompatGHC.GhcRn
+  { srcModule :: !CompatGHC.ModuleName -- Do not support unnamed modules just yet!
+  , importDecl :: !(CompatGHC.LImportDecl CompatGHC.GhcRn)
   }
 
 -- | Get a 'SrcSpan' to track a location for an import
@@ -42,7 +42,7 @@ importIsOpenWithNoHidingOrAlias :: Import -> Bool
 importIsOpenWithNoHidingOrAlias imp =
   let rawImportDecl = CompatGHC.unLoc $ importDecl imp
    in case buildScheme rawImportDecl of
-        Scheme CompatGHC.NotQualified WithoutAlias _ ->
+        Scheme CompatGHC.NotQualified WithoutAlias _ _ ->
           case CompatGHC.ideclHiding rawImportDecl of
             Nothing -> True
             Just _ -> False
