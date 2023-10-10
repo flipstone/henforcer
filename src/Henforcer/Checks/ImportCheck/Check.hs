@@ -29,11 +29,11 @@ import qualified Henforcer.CodeStructure as CodeStructure
 import qualified Henforcer.Config as Config
 
 data ImportChecker = ImportChecker
-  { dependencies :: [CheckedDependency]
-  , encapsulatedTrees :: [CodeStructure.TreeName]
-  , allowedQualifications :: CodeStructure.AllowedSchemes
-  , defaultAllowedOpenUnaliasedImports :: CodeStructure.DefaultAllowedOpenUnaliasedImports
-  , perModuleOpenUnaliasedImports :: CodeStructure.PerModuleAllowedOpenUnaliasedImports
+  { dependencies :: ![CheckedDependency]
+  , encapsulatedTrees :: ![CodeStructure.TreeName]
+  , allowedQualifications :: !CodeStructure.AllowedSchemes
+  , defaultAllowedOpenUnaliasedImports :: !CodeStructure.DefaultAllowedOpenUnaliasedImports
+  , perModuleOpenUnaliasedImports :: !CodeStructure.PerModuleAllowedOpenUnaliasedImports
   }
 
 checkModule :: ImportChecker -> CompatGHC.TcGblEnv -> [CheckFailure]

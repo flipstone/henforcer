@@ -32,10 +32,10 @@ import Henforcer.CodeStructure.Import.Scheme.Safe (Safe, determineSafe, safeDeco
 the safety.
 -}
 data Scheme = Scheme
-  { qualification :: CompatGHC.ImportDeclQualifiedStyle
-  , alias :: Alias
-  , safe :: Safe
-  , packageQualification :: PackageQualifier
+  { qualification :: !CompatGHC.ImportDeclQualifiedStyle
+  , alias :: !Alias
+  , safe :: !Safe
+  , packageQualification :: !PackageQualifier
   }
   deriving (Eq)
 

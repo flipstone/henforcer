@@ -18,15 +18,15 @@ import qualified CompatGHC
 import qualified Henforcer.CodeStructure as CodeStructure
 
 data CheckedDependency = CheckedDependency
-  { dependencySource :: CodeStructure.TreeName
-  , dependencyTarget :: CodeStructure.TreeName
+  { dependencySource :: !CodeStructure.TreeName
+  , dependencyTarget :: !CodeStructure.TreeName
   }
 
 data CheckFailure
-  = DependencyViolation CodeStructure.Import CheckedDependency
-  | EncapsulationViolation CodeStructure.Import CodeStructure.TreeName
-  | QualificationViolation CodeStructure.Import [CodeStructure.Scheme]
-  | OpenImportViolation (NEL.NonEmpty CodeStructure.Import) CodeStructure.MaxOpenUnaliasedImportsNat
+  = DependencyViolation !CodeStructure.Import !CheckedDependency
+  | EncapsulationViolation !CodeStructure.Import !CodeStructure.TreeName
+  | QualificationViolation !CodeStructure.Import ![CodeStructure.Scheme]
+  | OpenImportViolation !(NEL.NonEmpty CodeStructure.Import) !CodeStructure.MaxOpenUnaliasedImportsNat
 
 instance CompatGHC.Outputable CheckFailure where
   ppr cf =

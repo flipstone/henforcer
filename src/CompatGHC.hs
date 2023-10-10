@@ -175,7 +175,7 @@ addMessages =
 -- step with minimal changes.
 data PkgQual =
   NotPkgQualified
-  | PkgQualified String
+  | PkgQualified !String
 
 -- | Helper that purposely shadows the name provided in GHC. The api from GHC changed somewhat
 -- significantly in 9.4. Once support for 9.2 is dropped this can be removed as a general cleanup
@@ -211,7 +211,7 @@ addMessages =
 -- step with minimal changes.
 data PkgQual =
   NotPkgQualified
-  | PkgQualified String
+  | PkgQualified !String
 
 -- | Helper that purposely shadows the name provided in GHC. The api from GHC changed somewhat
 -- significantly in 9.4. Once support for 9.2 is dropped this can be removed as a general cleanup

@@ -18,7 +18,7 @@ import qualified CompatGHC
 
 -- | Directly represent if an import has an alias or not.
 data Alias
-  = WithAlias CompatGHC.ModuleName
+  = WithAlias !CompatGHC.ModuleName
   | WithoutAlias
   deriving (Eq)
 

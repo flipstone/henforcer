@@ -14,7 +14,7 @@ import qualified Dhall.Src as DhallSrc
 import qualified CompatGHC
 
 data TreeName
-  = TreeName String (Maybe TreeName)
+  = TreeName !String !(Maybe TreeName)
   deriving (Ord, Eq)
 
 instance CompatGHC.Outputable TreeName where

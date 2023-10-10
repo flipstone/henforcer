@@ -27,7 +27,7 @@ import qualified CompatGHC
 
 data DefaultAllowedOpenUnaliasedImports
   = NoDefaultMaximum
-  | DefaultMaximum MaxOpenUnaliasedImportsNat
+  | DefaultMaximum !MaxOpenUnaliasedImportsNat
 
 defaultAllowedOpenUnaliasedImportsDecoder :: Dhall.Decoder DefaultAllowedOpenUnaliasedImports
 defaultAllowedOpenUnaliasedImportsDecoder =
@@ -55,7 +55,7 @@ lookupModule (PerModuleAllowedOpenUnaliasedImports perModuleMap) =
 
 data MaxAllowedForModule
   = NoMaxToEnforce
-  | MaxForModule MaxOpenUnaliasedImportsNat
+  | MaxForModule !MaxOpenUnaliasedImportsNat
 
 determineMaxAllowedForModule ::
   DefaultAllowedOpenUnaliasedImports
