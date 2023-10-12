@@ -11,6 +11,8 @@ module Henforcer.CodeStructure.Import.Scheme.Scheme
   , buildScheme
   , qualificationSchemeDecoder
   , keepOnlyPackageNameInQualifier
+  , filterAliased
+  , isAliasIn
   ) where
 
 import qualified Control.Monad as M
@@ -19,7 +21,12 @@ import qualified Data.Text as T
 import qualified Dhall
 
 import qualified CompatGHC
-import Henforcer.CodeStructure.Import.Scheme.Alias (Alias, aliasDecoder, determineAlias)
+import Henforcer.CodeStructure.Import.Scheme.Alias
+  ( Alias (WithAlias, WithoutAlias)
+  , aliasDecoder
+  , determineAlias
+  , isAliased
+  )
 import Henforcer.CodeStructure.Import.Scheme.PackageQualifier
   ( PackageQualifier (WithPackageQualifier, WithoutPackageQualifier)
   , determinePackageQualifier
@@ -75,3 +82,14 @@ keepOnlyPackageNameInQualifier s =
         Just t -> WithPackageQualifier t
    in
     s{packageQualification = newQualifier}
+
+filterAliased :: [Scheme] -> [Scheme]
+filterAliased =
+  filter (isAliased . alias)
+
+isAliasIn :: [CompatGHC.ModuleName] -> Scheme -> Bool
+isAliasIn modNames scheme =
+  case alias scheme of
+    WithoutAlias -> False
+    WithAlias n ->
+      elem n modNames

@@ -62,6 +62,7 @@ library henforcer-internal
       Paths_henforcer
       Henforcer.CodeStructure
       Henforcer.CodeStructure.Import
+      Henforcer.CodeStructure.Import.AllowedAliasUniqueness
       Henforcer.CodeStructure.Import.Import
       Henforcer.CodeStructure.Import.MaxOpenUnaliasedImports
       Henforcer.CodeStructure.Import.Scheme

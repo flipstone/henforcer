@@ -23,6 +23,7 @@ data Config = Config
   , allowedQualifications :: CodeStructure.AllowedSchemes
   , defaultAllowedOpenUnaliasedImports :: CodeStructure.DefaultAllowedOpenUnaliasedImports
   , perModuleOpenUnaliasedImports :: CodeStructure.PerModuleAllowedOpenUnaliasedImports
+  , allowedAliasUniqueness :: CodeStructure.AllowedAliasUniqueness
   }
 
 data DependencyDeclaration = DependencyDeclaration
@@ -51,6 +52,9 @@ configDecoder =
       <*> Dhall.field
         (T.pack "perModuleOpenUnaliasedImports")
         CodeStructure.perModuleAllowedOpenUnaliasedImportsDecoder
+      <*> Dhall.field
+        (T.pack "allowedAliasUniqueness")
+        CodeStructure.allowedAliasUniquenessDecoder
 
 dependencyDeclarationDecoder :: Dhall.Decoder DependencyDeclaration
 dependencyDeclarationDecoder =

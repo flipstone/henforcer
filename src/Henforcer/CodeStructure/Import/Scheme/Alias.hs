@@ -9,6 +9,8 @@ module Henforcer.CodeStructure.Import.Scheme.Alias
   ( Alias (..)
   , aliasDecoder
   , determineAlias
+  , isAliased
+  , isAliasedAs
   ) where
 
 import qualified Data.Text as T
@@ -20,7 +22,7 @@ import qualified CompatGHC
 data Alias
   = WithAlias !CompatGHC.ModuleName
   | WithoutAlias
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 -- | Compute the alias from an import
 determineAlias :: CompatGHC.ImportDecl CompatGHC.GhcRn -> Alias
@@ -33,3 +35,11 @@ aliasDecoder =
   Dhall.union $
     (const WithoutAlias <$> Dhall.constructor (T.pack "WithoutAlias") Dhall.unit)
       <> (WithAlias <$> Dhall.constructor (T.pack "WithAlias") CompatGHC.moduleNameDecoder)
+
+isAliased :: Alias -> Bool
+isAliased (WithAlias _) = True
+isAliased WithoutAlias = False
+
+isAliasedAs :: CompatGHC.ModuleName -> Alias -> Bool
+isAliasedAs modName (WithAlias alias) = modName == alias
+isAliasedAs _ WithoutAlias = False

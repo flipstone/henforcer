@@ -60,6 +60,12 @@ let
     PackageQualifier =
       < WithPackageQualifier : Text | WithoutPackageQualifier >
 
+let AllowedAliasUniqueness =
+      < AllAliasesUniqueExcept : List ModuleName
+      | AliasesToBeUnique : List ModuleName
+      | NoAliasUniqueness
+      >
+
 let
     -- Describes an allowed qualification scheme for a module when it is imported.
     -- When allowed qualifications are declared for a module, any import of that
@@ -217,12 +223,21 @@ let -- Build a default max in a more ergonomic way in configurations.
       \(maxAllowed : Natural) ->
         DefaultAllowedOpenUnaliasedImports.DefaultMaximum maxAllowed
 
+let allAliasesUniqueExcept =
+      \(exceptModNames : List ModuleName) ->
+        AllowedAliasUniqueness.AllAliasesUniqueExcept exceptModNames
+
+let aliasesToBeUnique =
+      \(modNamesMustBeUnique : List ModuleName) ->
+        AllowedAliasUniqueness.AliasesToBeUnique modNamesMustBeUnique
+
 let Config =
       { treeDependencies : List Dependency
       , encapsulatedTrees : List TreeName
       , allowedQualifications : AllowedQualificationMap
       , defaultAllowedOpenUnaliasedImports : DefaultAllowedOpenUnaliasedImports
       , perModuleOpenUnaliasedImports : OpenUnaliasedImportMap
+      , allowedAliasUniqueness : AllowedAliasUniqueness
       }
 
 in  { Config =
@@ -234,6 +249,7 @@ in  { Config =
         , defaultAllowedOpenUnaliasedImports =
             DefaultAllowedOpenUnaliasedImports.NoDefaultMaximum
         , perModuleOpenUnaliasedImports = toMap {=} : OpenUnaliasedImportMap
+        , allowedAliasUniqueness = AllowedAliasUniqueness.NoAliasUniqueness
         }
       }
     , Dependency
@@ -242,6 +258,7 @@ in  { Config =
     , Alias
     , Safe
     , AllowedQualification
+    , AllowedAliasUniqueness
     , unqualified
     , unqualifiedAs
     , qualified
@@ -258,4 +275,6 @@ in  { Config =
     , OpenUnaliasedImportMap
     , DefaultAllowedOpenUnaliasedImports
     , defaultMaxAllowedOpenUnaliasedImports
+    , allAliasesUniqueExcept
+    , aliasesToBeUnique
     }

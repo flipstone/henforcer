@@ -12,10 +12,15 @@ commentary with @some markup@.
 -}
 module PetStore.Pet.Model (foo, bar) where
 
+import Control.Monad as M
+import Data.Foldable as F
+import Data.Functor as F
+import Data.Monoid as M
 import Data.Text
 import Prelude qualified
 import System.IO.Unsafe (unsafePerformIO)
 import qualified "unliftio" UnliftIO as Foo
+import qualified UnliftIO.Async as Foo
 
 -- | This is some haddock
 foo :: Prelude.IO ()

@@ -27,6 +27,7 @@ data CheckFailure
   | EncapsulationViolation !CodeStructure.Import !CodeStructure.TreeName
   | QualificationViolation !CodeStructure.Import ![CodeStructure.Scheme]
   | OpenImportViolation !(NEL.NonEmpty CodeStructure.Import) !CodeStructure.MaxOpenUnaliasedImportsNat
+  | AliasUniquenessViolation !(NEL.NonEmpty CodeStructure.Import)
 
 instance CompatGHC.Outputable CheckFailure where
   ppr cf =
@@ -35,6 +36,7 @@ instance CompatGHC.Outputable CheckFailure where
       EncapsulationViolation i tn -> formatEncapsulationViolation i tn
       QualificationViolation i s -> formatQualificationViolation i s
       OpenImportViolation i n -> formatOpenImportViolation i n
+      AliasUniquenessViolation is -> formatAliasUniquenssViolation is
 
 {- | Convert a list of 'CheckFailure' to 'CompatGHC.Messages' so we can hand off to GHC printing mechanism
  in the plugin.
@@ -48,6 +50,7 @@ checkFailureImport (DependencyViolation i _) = i
 checkFailureImport (EncapsulationViolation i _) = i
 checkFailureImport (QualificationViolation i _) = i
 checkFailureImport (OpenImportViolation (i NEL.:| _) _) = i
+checkFailureImport (AliasUniquenessViolation (i NEL.:| _)) = i
 
 checkFailureLoc :: CheckFailure -> CompatGHC.SrcSpan
 checkFailureLoc = CodeStructure.srcLocation . checkFailureImport
@@ -147,6 +150,32 @@ formatOpenImportViolation imps maxAllowedNat =
                   ]
               , CompatGHC.cat
                   [ CompatGHC.text "The open imports are"
+                  , CompatGHC.colon
+                  ]
+              ]
+          )
+          4
+          (CompatGHC.vcat . fmap rebuildFromImport $ NEL.toList imps)
+   in CompatGHC.vcat
+        [ beginningDoc
+        , CompatGHC.blankLine
+        ]
+
+formatAliasUniquenssViolation :: NEL.NonEmpty CodeStructure.Import -> CompatGHC.SDoc
+formatAliasUniquenssViolation imps =
+  let rebuildFromImport imp =
+        rebuildImportStatementFromScheme (CodeStructure.importedModule imp)
+          . CodeStructure.buildScheme
+          . CompatGHC.unLoc
+          $ CodeStructure.importDecl imp
+      beginningDoc =
+        CompatGHC.hang
+          ( CompatGHC.sep
+              [ CompatGHC.hsep
+                  [ CompatGHC.text "Multiple imports share an alias that must be unique."
+                  ]
+              , CompatGHC.cat
+                  [ CompatGHC.text "The imports are"
                   , CompatGHC.colon
                   ]
               ]

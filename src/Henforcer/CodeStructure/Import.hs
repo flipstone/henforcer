@@ -11,6 +11,7 @@ module Henforcer.CodeStructure.Import
   ( module Export
   ) where
 
+import Henforcer.CodeStructure.Import.AllowedAliasUniqueness as Export
 import Henforcer.CodeStructure.Import.Import as Export
 import Henforcer.CodeStructure.Import.MaxOpenUnaliasedImports as Export
 import Henforcer.CodeStructure.Import.Scheme as Export
