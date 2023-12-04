@@ -88,9 +88,9 @@ library henforcer-internal
 
   build-depends:
       base >=4.7 && <5
-    , containers >=0.6 && < 0.7
+    , containers >=0.6 && < 0.8
     , dhall >=1.28 && < 1.43
-    , ghc >= 9.2.1 && <9.5
+    , ghc >= 9.2.1 && <9.9
     , optparse-applicative >=0.14 && <0.19
     , text >=1.2 && <2.2
 

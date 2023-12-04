@@ -27,8 +27,9 @@ data PackageQualifier
 determinePackageQualifier :: CompatGHC.ImportDecl CompatGHC.GhcRn -> PackageQualifier
 determinePackageQualifier idecl =
   case CompatGHC.ideclPkgQual idecl of
-    CompatGHC.NotPkgQualified -> WithoutPackageQualifier
-    CompatGHC.PkgQualified s -> WithPackageQualifier (T.pack s)
+    CompatGHC.NoPkgQual -> WithoutPackageQualifier
+    CompatGHC.ThisPkg u -> WithPackageQualifier (T.pack $ CompatGHC.unitIdString u)
+    CompatGHC.OtherPkg u -> WithPackageQualifier (T.pack $ CompatGHC.unitIdString u)
 
 -- | Dhall decoder for 'PackageQualifier' so that it can be read from configuration
 packageQualifierDecoder :: Dhall.Decoder PackageQualifier

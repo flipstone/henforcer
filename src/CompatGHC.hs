@@ -1,8 +1,12 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
+{-# OPTIONS_GHC -Wno-orphans -Wno-missing-methods #-}
+#if __GLASGOW_HASKELL__ == 904
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wno-missing-import-lists #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
+#endif
 
 {- |
 Module      : CompatGHC
@@ -26,7 +30,7 @@ module CompatGHC
   , ideclPkgQual
   , ideclQualified
   , ideclSafe
-  , ideclHiding
+  , ideclImportList
   , locA
   , moduleName
   , moduleNameString
@@ -59,10 +63,13 @@ module CompatGHC
   , sep
   , text
   , vcat
+  , unitIdString
+  , neverQualify
   -- GHC.Types.Error
   , Diagnostic (..)
   , MsgEnvelope
   , mkSimpleDecorated
+  , NoDiagnosticOpts(NoDiagnosticOpts)
   -- internal defined helpers
   , PkgQual (..)
   , addMessages
@@ -81,11 +88,12 @@ import GHC
   , LImportDecl
   , ModSummary (..)
   , ModuleName
+  , PkgQual(..)
   , SrcSpan
   , getLoc
   , ideclAs
-  , ideclHiding
   , ideclName
+  , ideclPkgQual
   , ideclQualified
   , ideclSafe
   , locA
@@ -96,7 +104,6 @@ import GHC
   )
 import qualified GHC.Data.Bag as GHC
 import GHC.Fingerprint (Fingerprint, getFileHash)
-import qualified GHC.Hs as GHC
 import GHC.Plugins
   ( CommandLineOption
   , Outputable (ppr)
@@ -118,81 +125,67 @@ import GHC.Plugins
   , sep
   , text
   , vcat
+  , unitIdString
+  , neverQualify
   )
-import qualified GHC.Plugins as GHC
 import GHC.Tc.Utils.Monad (TcGblEnv (tcg_mod, tcg_rn_imports), TcM)
 import qualified GHC.Tc.Utils.Monad as GHC
 import qualified GHC.Types.Error as GHC
 
-#if __GLASGOW_HASKELL__ == 902
-import GHC.Types.Error(Messages, MsgEnvelope(..))
-import qualified GHC.Types.SourceText as GHC902
-
-#else
-
 import Data.Typeable (Typeable)
 import GHC.Plugins (DiagnosticReason(..), Messages)
 import qualified GHC.Tc.Errors.Types as GHC904
-import GHC.Types.Error (MsgEnvelope(..), Diagnostic(..), mkSimpleDecorated)
+import GHC.Types.Error (MsgEnvelope(..), mkSimpleDecorated)
 
+#if __GLASGOW_HASKELL__ == 904
+import qualified GHC
+import qualified GHC.Plugins as GHC
 #endif
 
-#if __GLASGOW_HASKELL__ == 902
+#if __GLASGOW_HASKELL__ == 906
+import GHC (ideclImportList)
+import GHC.Types.Error (Diagnostic(..), NoDiagnosticOpts(NoDiagnosticOpts))
+import GHC.Utils.Error (mkErrorMsgEnvelope)
+#endif
 
--- | The bare minimum of the GHC 9.4 'DiagnosticReason' type that we need to support in 9.2
-data DiagnosticReason = ErrorWithoutFlag
-
--- While we never create any values of this type, it allows us to keep the 'Diagnostic' interface
--- the same as in 9.4
-data GhcHint
-
--- | The bare minimum of the GHC 9.4 'Diagnostic' class as needed to support 9.2
-class Diagnostic a where
-  diagnosticMessage :: a -> GHC.DecoratedSDoc
-  diagnosticReason  :: a -> DiagnosticReason
-  diagnosticHints   :: a -> [GhcHint]
-
-instance {-# INCOHERENT #-} (Diagnostic a) => GHC.RenderableDiagnostic a where
-  renderDiagnostic = diagnosticMessage
-
--- | 'mkSimpleDecorated' compat as needed for 9.2.x
-mkSimpleDecorated :: SDoc -> GHC.DecoratedSDoc
-mkSimpleDecorated = GHC.mkDecorated . pure
-
--- | Helper for creating a 'MsgEnvelope' as needed for 9.2.x
-mkErrorMsgEnvelope :: SrcSpan -> e -> MsgEnvelope e
-mkErrorMsgEnvelope msgSpan =
-  GHC.mkErr msgSpan GHC.neverQualify
-
--- | Helper to add messages to the type checking monad so our plugin will print our output and fail
--- a build.
-addMessages :: (Diagnostic a) => Messages a -> TcM ()
-addMessages =
-  GHC.addMessages . fmap diagnosticMessage
-
--- | Helper that purposely shadows the name provided in GHC. The api from GHC changed somewhat
--- significantly in 9.4. Once support for 9.2 is dropped this can be removed as a general cleanup
--- step with minimal changes.
-data PkgQual =
-  NotPkgQualified
-  | PkgQualified !String
-
--- | Helper that purposely shadows the name provided in GHC. The api from GHC changed somewhat
--- significantly in 9.4. Once support for 9.2 is dropped this can be removed as a general cleanup
--- step with minimal changes.
-ideclPkgQual :: ImportDecl GhcRn -> PkgQual
-ideclPkgQual i =
-  case GHC.ideclPkgQual i of
-    Nothing -> NotPkgQualified
-    Just fs -> PkgQualified (GHC.unpackFS $ GHC902.sl_fs fs)
-
+#if __GLASGOW_HASKELL__ == 908
+import GHC (ideclImportList)
+import GHC.Types.Error (Diagnostic(..), NoDiagnosticOpts(NoDiagnosticOpts))
+import GHC.Utils.Error (mkErrorMsgEnvelope)
 #endif
 
 #if __GLASGOW_HASKELL__ == 904
 
+data NoDiagnosticOpts = NoDiagnosticOpts
+
+-- | The 'Diagnostic' class has seen a frustrating amount of churn, changing in every release, here
+-- we model the 9.8 interface, but just enough for what we need.
+class Diagnostic a where
+  type DiagnosticOpts a
+  diagnosticMessage :: Int -> a -> GHC.DecoratedSDoc
+  diagnosticReason  :: a -> DiagnosticReason
+  diagnosticHints   :: a -> [b]
+  diagnosticCode :: a -> Maybe b
+
+instance Diagnostic a => GHC.Diagnostic a where
+  diagnosticMessage = diagnosticMessage 0
+  diagnosticReason = diagnosticReason
+  diagnosticHints = diagnosticHints
+
+-- | Compatibility shim as this datatype was added in GHC 9.6, along with 'ideclImportList'         │
+data ImportListInterpretation = Exactly | EverythingBut
+
+-- | Compatibility shim as GHC 9.4 used 'ideclHiding', but later changed to 'ideclImportList'.      │
+ideclImportList :: ImportDecl pass -> Maybe (ImportListInterpretation, GHC.XRec pass [GHC.XRec pass (GHC.IE pass)])
+ideclImportList idecl =
+  case GHC.ideclHiding idecl of
+    Nothing -> Nothing
+    Just (True, n) -> Just (EverythingBut,n)
+    Just (False,n) -> Just (Exactly,n)
+
 -- | Helper for creating a 'MsgEnvelope' as needed for 9.4.x
-mkErrorMsgEnvelope :: SrcSpan -> e -> MsgEnvelope e
-mkErrorMsgEnvelope msgSpan a =
+mkErrorMsgEnvelope :: SrcSpan -> unused -> e -> MsgEnvelope e
+mkErrorMsgEnvelope msgSpan _ a =
   MsgEnvelope
     { errMsgSpan = msgSpan
     , errMsgContext = GHC.neverQualify
@@ -202,28 +195,38 @@ mkErrorMsgEnvelope msgSpan a =
 
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
-addMessages :: (Typeable a, Diagnostic a) => Messages a -> TcM ()
+addMessages :: (Typeable a, GHC.Diagnostic a) => Messages a -> TcM ()
 addMessages =
   GHC.addMessages . fmap GHC904.TcRnUnknownMessage
 
--- | Helper that purposely shadows the name provided in GHC. The api from GHC changed somewhat
--- significantly in 9.4. Once support for 9.2 is dropped this can be removed as a general cleanup
--- step with minimal changes.
-data PkgQual =
-  NotPkgQualified
-  | PkgQualified !String
+#endif
 
--- | Helper that purposely shadows the name provided in GHC. The api from GHC changed somewhat
--- significantly in 9.4. Once support for 9.2 is dropped this can be removed as a general cleanup
--- step with minimal changes.
-ideclPkgQual :: ImportDecl GhcRn -> PkgQual
-ideclPkgQual i =
-  case GHC.ideclPkgQual i of
-    GHC.NoPkgQual -> NotPkgQualified
-    GHC.ThisPkg u -> PkgQualified (GHC.unitIdString u)
-    GHC.OtherPkg u -> PkgQualified (GHC.unitIdString u)
+#if __GLASGOW_HASKELL__ == 906
+
+-- | Helper to add messages to the type checking monad so our plugin will print our output and fail
+-- a build.
+addMessages ::
+  (Typeable a
+  , GHC.Diagnostic a
+  , GHC.DiagnosticOpts a ~ GHC.NoDiagnosticOpts
+  ) =>
+  Messages a ->
+  TcM ()
+addMessages =
+  GHC.addMessages . fmap (GHC904.mkTcRnUnknownMessage)
 
 #endif
+
+#if __GLASGOW_HASKELL__ == 908
+
+-- | Helper to add messages to the type checking monad so our plugin will print our output and fail
+-- a build.
+addMessages :: (Typeable a, Diagnostic a, GHC.DiagnosticOpts a ~ GHC.NoDiagnosticOpts) => Messages a -> TcM ()
+addMessages =
+  GHC.addMessages . fmap (GHC904.mkTcRnUnknownMessage)
+
+#endif
+
 
 -- | Helper for creating 'Messages'
 mkMessagesFromList :: [MsgEnvelope e] -> Messages e

@@ -43,7 +43,7 @@ importIsOpenWithNoHidingOrAlias imp =
   let rawImportDecl = CompatGHC.unLoc $ importDecl imp
    in case buildScheme rawImportDecl of
         Scheme CompatGHC.NotQualified WithoutAlias _ _ ->
-          case CompatGHC.ideclHiding rawImportDecl of
+          case CompatGHC.ideclImportList rawImportDecl of
             Nothing -> True
             Just _ -> False
         _ -> False

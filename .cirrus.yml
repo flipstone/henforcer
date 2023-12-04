@@ -74,7 +74,7 @@ macos_test_task:
       - brew install haskell-stack cabal-install bmake
       - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
       - source /Users/admin/.ghcup/env
-      - GHC_VERSIONS=9.2.8 STACK_YAMLS=stack-lts-20.19.yaml bmake setup
+      - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup
   upload_caches:
     - ghcup
   install_script:
@@ -82,11 +82,11 @@ macos_test_task:
     - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
     - source /Users/admin/.ghcup/env
     - export PATH=$PATH:/Users/admin/.local/bin
-    - GHC_VERSIONS=9.2.8 STACK_YAMLS=stack-lts-20.19.yaml bmake setup
+    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup
   test_script:
     - source /Users/admin/.ghcup/env
     - export PATH=$PATH:/Users/admin/.local/bin
-    - GHC_VERSIONS=9.2.8 STACK_YAMLS=stack-lts-20.19.yaml bmake ci
+    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake ci
   upload_caches:
     - stack
     - cabal

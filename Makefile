@@ -10,8 +10,8 @@ setup: setup-ghc setup-cabal setup-stack setup-extra-tools
 # run a subset of them on different platforms. This is particularly helpful when something is
 # unreleased and/or broken upstream. Like not having a proper release for aarch64-darwin or
 # something.
-GHC_VERSIONS ?= 9.4.5 9.2.8
-STACK_YAMLS ?= stack.yaml stack-lts-20.19.yaml
+GHC_VERSIONS ?= 9.4.5 9.6.3 9.8.1
+STACK_YAMLS ?= stack.yaml
 
 .PHONY: setup-ghc
 setup-ghc:

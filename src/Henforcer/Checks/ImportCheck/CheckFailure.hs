@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wno-missing-methods #-}
 {- |
 Module      : Henforcer.Checks.ImportCheck.CheckFailure
 Description :
@@ -59,13 +61,15 @@ checkFailureLoc = CodeStructure.srcLocation . checkFailureImport
  'diagnosticMessage', used for printing.
 -}
 instance CompatGHC.Diagnostic CheckFailure where
-  diagnosticMessage = CompatGHC.mkSimpleDecorated . CompatGHC.ppr
+  type DiagnosticOpts CheckFailure = CompatGHC.NoDiagnosticOpts
+  diagnosticMessage _ = CompatGHC.mkSimpleDecorated . CompatGHC.ppr
   diagnosticReason = const CompatGHC.ErrorWithoutFlag
   diagnosticHints = const []
+  diagnosticCode = const Nothing
 
 mkEnv :: CheckFailure -> CompatGHC.MsgEnvelope CheckFailure
 mkEnv cf =
-  CompatGHC.mkErrorMsgEnvelope (checkFailureLoc cf) cf
+  CompatGHC.mkErrorMsgEnvelope (checkFailureLoc cf) CompatGHC.neverQualify cf
 
 formatDependencyViolation :: CodeStructure.Import -> CheckedDependency -> CompatGHC.SDoc
 formatDependencyViolation imp dep =
