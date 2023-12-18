@@ -18,12 +18,15 @@ Maintainer  : maintainers@flipstone.com
 module CompatGHC
   ( -- GHC
     GhcRn
+  , IE(..)
   , ImportDecl
   , ImportDeclQualifiedStyle (..)
+  , LIE
   , LImportDecl
   , ModSummary (..)
   , ModuleName
   , SrcSpan
+  , generatedSrcSpan
   , getLoc
   , ideclAs
   , ideclName
@@ -46,7 +49,7 @@ module CompatGHC
   , Plugin (..)
   , PluginRecompile (MaybeRecompile)
   , SDoc
-  , TcGblEnv (tcg_rn_imports, tcg_mod)
+  , TcGblEnv (tcg_rn_exports, tcg_rn_imports, tcg_mod, tcg_doc_hdr)
   , TcM
   , UnitId (..)
   , blankLine
@@ -65,11 +68,14 @@ module CompatGHC
   , vcat
   , unitIdString
   , neverQualify
+  , keepRenamedSource
+
   -- GHC.Types.Error
   , Diagnostic (..)
   , MsgEnvelope
   , mkSimpleDecorated
   , NoDiagnosticOpts(NoDiagnosticOpts)
+
   -- internal defined helpers
   , PkgQual (..)
   , addMessages
@@ -83,8 +89,10 @@ import qualified Data.Text as T
 import qualified Dhall
 import GHC
   ( GhcRn
+  , IE(..)
   , ImportDecl
   , ImportDeclQualifiedStyle (..)
+  , LIE
   , LImportDecl
   , ModSummary (..)
   , ModuleName
@@ -113,6 +121,7 @@ import GHC.Plugins
   , UnitId (..)
   , blankLine
   , cat
+  , generatedSrcSpan
   , colon
   , defaultPlugin
   , dot
@@ -120,6 +129,7 @@ import GHC.Plugins
   , empty
   , hang
   , hsep
+  , keepRenamedSource
   , liftIO
   , purePlugin
   , sep
@@ -139,7 +149,6 @@ import GHC.Types.Error (MsgEnvelope(..), mkSimpleDecorated)
 
 #if __GLASGOW_HASKELL__ == 904
 import qualified GHC
-import qualified GHC.Plugins as GHC
 #endif
 
 #if __GLASGOW_HASKELL__ == 906
@@ -232,12 +241,12 @@ addMessages =
 mkMessagesFromList :: [MsgEnvelope e] -> Messages e
 mkMessagesFromList = GHC.mkMessages . GHC.listToBag
 
--- | Dhall decoder for 'ModuleName'
+-- -- | Dhall decoder for 'ModuleName'
 moduleNameDecoder :: Dhall.Decoder ModuleName
 moduleNameDecoder =
   fmap mkModuleName Dhall.string
 
--- | Dhall decoder for qualification style so that it can be read from configuration
+-- -- | Dhall decoder for qualification style so that it can be read from configuration
 qualificationDecoder :: Dhall.Decoder GHC.ImportDeclQualifiedStyle
 qualificationDecoder =
   Dhall.union $

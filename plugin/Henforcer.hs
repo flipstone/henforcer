@@ -1,3 +1,4 @@
+{-# LANGUAGE Strict #-}
 {- |
 Module      : Henforcer
 Description :
@@ -18,6 +19,8 @@ import qualified Henforcer.Checks as Checks
 import qualified Henforcer.Config as Config
 import qualified Henforcer.Options as Options
 
+import qualified Pollock as Coverage
+
 -- Using an MVar and unsafePerformIO here is a very ugly hack, but the plugin interface gives us no
 -- way to load the configuration once for the entire set of modules being compiled. This is a big
 -- enough performance win that the cost seems likely worth it otherwise.
@@ -29,7 +32,9 @@ plugin :: CompatGHC.Plugin
 plugin =
   CompatGHC.defaultPlugin
     { CompatGHC.pluginRecompile = recompile
+    , CompatGHC.renamedResultAction = CompatGHC.keepRenamedSource
     , CompatGHC.typeCheckResultAction = typeCheckResultAction
+    , CompatGHC.driverPlugin = Coverage.ensureHaddockIsOn
     }
 
 {- | During typechecking is when Henforcer performs checks, adding any violations to the error
@@ -42,11 +47,20 @@ typeCheckResultAction ::
   -> CompatGHC.TcM CompatGHC.TcGblEnv
 typeCheckResultAction commandLineOpts _modSummary tcGblEnv = do
   let getImportChecker = fmap (Checks.newImportChecker . fst) . loadConfigIfNeeded
+      getDocChecker = fmap (Checks.newDocumentationChecker . fst) . loadConfigIfNeeded
+--      exports :: _
+  -- CompatGHC.liftIO . print $  exports
+  documentationChecker <- CompatGHC.liftIO $ getDocChecker commandLineOpts
   importChecker <- CompatGHC.liftIO $ getImportChecker commandLineOpts
+  res <- CompatGHC.liftIO $ Coverage.processModule tcGblEnv -- (CompatGHC.ue_units $ CompatGHC.hsc_unit_env hscEnv) modSummary tcGblEnv mempty mempty --hscEnv
 
   CompatGHC.addMessages
     . Checks.errorMessagesFromList
     $ Checks.checkModule importChecker tcGblEnv
+
+  CompatGHC.addMessages
+    . Checks.docErrorMessagesFromList
+    $ Checks.checkDocs documentationChecker (CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv) res
 
   pure tcGblEnv
 

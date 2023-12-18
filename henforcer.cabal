@@ -71,9 +71,11 @@ library henforcer-internal
       Henforcer.CodeStructure.Import.Scheme.Safe
       Henforcer.CodeStructure.Import.Scheme.Scheme
       Henforcer.CodeStructure.TreeName
+      Henforcer.Checks.DocumentationCheck
       Henforcer.Checks.ImportCheck
       Henforcer.Checks.ImportCheck.Check
       Henforcer.Checks.ImportCheck.CheckFailure
+
   autogen-modules:
       Paths_henforcer
   hs-source-dirs:
@@ -92,8 +94,10 @@ library henforcer-internal
     , dhall >=1.28 && < 1.43
     , ghc >= 9.2.1 && <9.9
     , optparse-applicative >=0.14 && <0.19
+    , pollock >= 0.1 && <0.2
     , text >=1.2 && <2.2
 
+  default-extensions: StrictData
   default-language: Haskell2010
 
 library
@@ -112,6 +116,7 @@ library
   build-depends:
       henforcer:henforcer-internal
     , base >=4.7 && <5
+    , pollock >= 0.1 && <0.2
 
   default-language: Haskell2010
 

@@ -51,7 +51,7 @@ extra-doc-files:    CHANGELOG.md
 -- extra-source-files:
 
 common warnings
-    ghc-options: -fplugin Henforcer -j2
+    ghc-options: -fplugin Henforcer -j2 -dynamic-too -haddock
 
 library
     -- Import common warning flags.
@@ -64,6 +64,7 @@ library
                       Service.ThirdPartyPetsSite.Implementation
                       PetStore.Store
 
+    -- ghc-options: +RTS -s -RTS -ddump-timings -ddump-to-file
     -- Modules included in this library but not exported.
     -- other-modules:
 

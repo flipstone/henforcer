@@ -11,4 +11,5 @@ module Henforcer.Checks
   ( module Export
   ) where
 
+import Henforcer.Checks.DocumentationCheck as Export
 import Henforcer.Checks.ImportCheck as Export
