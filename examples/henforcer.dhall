@@ -19,4 +19,6 @@ in  Hen.Config::{
         Hen.defaultMaxAllowedOpenUnaliasedImports 1
     , perModuleOpenUnaliasedImports = toMap { `PetStore.Store` = 2 }
     , allowedAliasUniqueness = Hen.allAliasesUniqueExcept [ "M" ]
+    , defaultMaxUndocumented =
+        Hen.defaultMaxAllowedUndocumentedExports 1
     }

@@ -11,13 +11,12 @@ module Henforcer.Config
   , loadConfigFileWithFingerprint
   ) where
 
-import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import qualified Dhall
-import qualified Numeric.Natural as Nat
 
 import qualified CompatGHC
 import qualified Henforcer.CodeStructure as CodeStructure
+import qualified Henforcer.MaxUndocumented as Doc
 
 data Config = Config
   { dependencyDeclarations :: [DependencyDeclaration]
@@ -26,8 +25,8 @@ data Config = Config
   , defaultAllowedOpenUnaliasedImports :: CodeStructure.DefaultAllowedOpenUnaliasedImports
   , perModuleOpenUnaliasedImports :: CodeStructure.PerModuleAllowedOpenUnaliasedImports
   , allowedAliasUniqueness :: CodeStructure.AllowedAliasUniqueness
-  , defaultMaxUndocumented :: Maybe Nat.Natural
-  , perModuleMaxUndocumented :: M.Map CompatGHC.ModuleName Nat.Natural
+  , defaultMaxUndocumented :: Doc.DefaultAllowedUndocumentedExports
+  , perModuleMaxUndocumented :: Doc.PerModuleAllowedUndocumentedExports
   }
 
 data DependencyDeclaration = DependencyDeclaration
@@ -60,9 +59,9 @@ configDecoder =
         (T.pack "allowedAliasUniqueness")
         CodeStructure.allowedAliasUniquenessDecoder
       <*> Dhall.field
-        (T.pack "defaultMaxUndocumented") (Dhall.maybe Dhall.natural)
+        (T.pack "defaultMaxUndocumented") Doc.defaultAllowedUndocumentedExportsDecoder
       <*> Dhall.field
-        (T.pack "perModuleMaxUndocumented") (Dhall.map CompatGHC.moduleNameDecoder Dhall.natural)
+        (T.pack "perModuleMaxUndocumented") Doc.perModuleAllowedUndocumentedExportsDecoder
 
 dependencyDeclarationDecoder :: Dhall.Decoder DependencyDeclaration
 dependencyDeclarationDecoder =

@@ -213,15 +213,33 @@ let
       List { mapKey : ModuleName, mapValue : Natural }
 
 let
+    -- A key-value list of 'ModuleName' and numbers that represent the number of imports that are
+    -- allowed to be imported completely open with no alias.
+    MaxUndocumentedExportMap =
+      List { mapKey : ModuleName, mapValue : Natural }
+
+
+let
     -- Describes if there is a maximum number of open, unaliased, imports that should apply to all
     -- modules. Note this is superceded if a per module max is specified for a given module.
     DefaultAllowedOpenUnaliasedImports =
       < DefaultMaximum : Natural | NoDefaultMaximum >
 
+let
+    -- Describes if there is a maximum number of undocumented exports that should apply to all
+    -- modules. Note this is superceded if a per module max is specified for a given module.
+    DefaultAllowedUndocumentedExports =
+      < DefaultMaximumUndocumented : Natural | NoDefaultMaximumUndocumented >
+
 let -- Build a default max in a more ergonomic way in configurations.
     defaultMaxAllowedOpenUnaliasedImports =
       \(maxAllowed : Natural) ->
         DefaultAllowedOpenUnaliasedImports.DefaultMaximum maxAllowed
+
+let -- Build a default max in a more ergonomic way in configurations.
+    defaultMaxAllowedUndocumentedExports =
+      \(maxAllowed : Natural) ->
+        DefaultAllowedUndocumentedExports.DefaultMaximumUndocumented maxAllowed
 
 let allAliasesUniqueExcept =
       \(exceptModNames : List ModuleName) ->
@@ -238,6 +256,8 @@ let Config =
       , defaultAllowedOpenUnaliasedImports : DefaultAllowedOpenUnaliasedImports
       , perModuleOpenUnaliasedImports : OpenUnaliasedImportMap
       , allowedAliasUniqueness : AllowedAliasUniqueness
+      , defaultMaxUndocumented : DefaultAllowedUndocumentedExports
+      , perModuleMaxUndocumented : MaxUndocumentedExportMap
       }
 
 in  { Config =
@@ -250,6 +270,9 @@ in  { Config =
             DefaultAllowedOpenUnaliasedImports.NoDefaultMaximum
         , perModuleOpenUnaliasedImports = toMap {=} : OpenUnaliasedImportMap
         , allowedAliasUniqueness = AllowedAliasUniqueness.NoAliasUniqueness
+        , defaultMaxUndocumented =
+            DefaultAllowedUndocumentedExports.NoDefaultMaximumUndocumented
+        , perModuleMaxUndocumented = toMap {=} : MaxUndocumentedExportMap
         }
       }
     , Dependency
@@ -273,8 +296,11 @@ in  { Config =
     , onlyPackageQualified
     , AllowedQualificationMap
     , OpenUnaliasedImportMap
+    , MaxUndocumentedExportMap
     , DefaultAllowedOpenUnaliasedImports
+    , DefaultAllowedUndocumentedExports
     , defaultMaxAllowedOpenUnaliasedImports
     , allAliasesUniqueExcept
     , aliasesToBeUnique
+    , defaultMaxAllowedUndocumentedExports
     }

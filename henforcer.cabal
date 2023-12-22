@@ -70,6 +70,7 @@ library henforcer-internal
       Henforcer.CodeStructure.Import.Scheme.PackageQualifier
       Henforcer.CodeStructure.Import.Scheme.Safe
       Henforcer.CodeStructure.Import.Scheme.Scheme
+      Henforcer.MaxUndocumented
       Henforcer.CodeStructure.TreeName
       Henforcer.Checks.DocumentationCheck
       Henforcer.Checks.ImportCheck

@@ -28,21 +28,21 @@ import qualified Pollock
 
 import qualified CompatGHC
 import qualified Henforcer.Config as Config
+import qualified Henforcer.MaxUndocumented as Doc
 
 data DocumentationChecker = DocumentationChecker
-  { defaultMaxUndocumented :: Maybe Nat.Natural
+  { defaultMaxUndocumented :: Doc.DefaultAllowedUndocumentedExports
   , defaultMinDocumented :: Maybe Nat.Natural
-  , perModuleMaxUndocumented :: PerModuleMaxUndocumented
+  , perModuleMaxUndocumented :: Doc.PerModuleAllowedUndocumentedExports
   , perModuleMinDocumented :: PerModuleMinDocumented
   }
-
 
 newDocumentationChecker :: Config.Config -> DocumentationChecker
 newDocumentationChecker config =
   DocumentationChecker
     { defaultMaxUndocumented = Config.defaultMaxUndocumented config
     , defaultMinDocumented = Nothing
-    , perModuleMaxUndocumented = PerModuleMaxUndocumented $ Config.perModuleMaxUndocumented config
+    , perModuleMaxUndocumented = Config.perModuleMaxUndocumented config
     , perModuleMinDocumented = PerModuleMinDocumented mempty
     }
 
@@ -50,34 +50,23 @@ checkDocs :: DocumentationChecker -> CompatGHC.ModuleName -> Pollock.ModuleInfo 
 checkDocs checker =
   checkUndocumented (defaultMaxUndocumented checker) (perModuleMaxUndocumented checker)
 
-checkUndocumented :: Maybe Nat.Natural
-                  -> PerModuleMaxUndocumented
+checkUndocumented :: Doc.DefaultAllowedUndocumentedExports
+                  -> Doc.PerModuleAllowedUndocumentedExports
                   -> CompatGHC.ModuleName
                   -> Pollock.ModuleInfo
                   -> [CheckFailure]
-checkUndocumented defMax (PerModuleMaxUndocumented perMod) modName pollockModInfo =
-  case M.lookup modName perMod of
-    Nothing -> case defMax of
-      Nothing -> []
-      Just defRule ->
-        let
-          undocumented = fromIntegral $ Pollock.haddockableExports pollockModInfo - Pollock.haddockedExports pollockModInfo
-        in
-        if  undocumented > defRule
-        then
-          [ OverMaxUndocumented undocumented defRule]
-        else
-          []
-    Just modRule ->
+checkUndocumented defMax perMod modName pollockModInfo =
+  case Doc.determineMaxAllowedForModule defMax perMod modName of
+    Doc.NoMaxToEnforce -> mempty
+    Doc.MaxForModule maxForRule ->
       let
           undocumented = fromIntegral $ Pollock.haddockableExports pollockModInfo - Pollock.haddockedExports pollockModInfo
       in
-        if  undocumented > modRule
+        if  undocumented > maxForRule
         then
-          [ OverMaxUndocumented undocumented modRule]
+          pure (OverMaxUndocumented undocumented maxForRule)
         else
-          []
-
+          mempty
 
 newtype PerModuleMaxUndocumented
   = PerModuleMaxUndocumented (M.Map CompatGHC.ModuleName Nat.Natural)
@@ -97,7 +86,6 @@ perModuleMinDocumentedDecoder =
     PerModuleMinDocumented
     (Dhall.map CompatGHC.moduleNameDecoder Dhall.natural)
 
-
 instance CompatGHC.Outputable CheckFailure where
   ppr cf =
     case cf of
@@ -111,15 +99,11 @@ instance CompatGHC.Diagnostic CheckFailure where
   type DiagnosticOpts CheckFailure = CompatGHC.NoDiagnosticOpts
   diagnosticMessage _ = CompatGHC.mkSimpleDecorated . CompatGHC.ppr
   diagnosticReason = const CompatGHC.ErrorWithoutFlag
-  diagnosticHints = const []
+  diagnosticHints = const mempty
   diagnosticCode = const Nothing
 
--- mkEnv :: CheckFailure -> CompatGHC.MsgEnvelope CheckFailure
--- mkEnv cf =
---   CompatGHC.mkErrorMsgEnvelope (checkFailureLoc cf) cf
-
 data CheckFailure
-  = OverMaxUndocumented Nat.Natural Nat.Natural
+  = OverMaxUndocumented Doc.MaxUndocumentedExportsNat Doc.MaxUndocumentedExportsNat
   | UnderMinDocumented Nat.Natural Nat.Natural
 
 formatUnderMinDocumentedViolation ::
@@ -143,7 +127,7 @@ formatUnderMinDocumentedViolation current rule =
         ]
 
 formatOverMaxUndocumentedViolation ::
-  Nat.Natural -> Nat.Natural -> CompatGHC.SDoc
+  Doc.MaxUndocumentedExportsNat -> Doc.MaxUndocumentedExportsNat -> CompatGHC.SDoc
 formatOverMaxUndocumentedViolation current rule =
   let beginningDoc =
         ( CompatGHC.sep
