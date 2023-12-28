@@ -4,4 +4,4 @@ packages:
   - .
 
 extra-deps:
-  - haddock-api-2.27.0
+  - pollock-0.1.0.0

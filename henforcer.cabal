@@ -64,18 +64,19 @@ library henforcer-internal
       Henforcer.CodeStructure.Import
       Henforcer.CodeStructure.Import.AllowedAliasUniqueness
       Henforcer.CodeStructure.Import.Import
-      Henforcer.CodeStructure.Import.MaxOpenUnaliasedImports
       Henforcer.CodeStructure.Import.Scheme
       Henforcer.CodeStructure.Import.Scheme.Alias
       Henforcer.CodeStructure.Import.Scheme.PackageQualifier
       Henforcer.CodeStructure.Import.Scheme.Safe
       Henforcer.CodeStructure.Import.Scheme.Scheme
-      Henforcer.MaxUndocumented
       Henforcer.CodeStructure.TreeName
       Henforcer.Checks.DocumentationCheck
       Henforcer.Checks.ImportCheck
       Henforcer.Checks.ImportCheck.Check
       Henforcer.Checks.ImportCheck.CheckFailure
+      Henforcer.Rules
+      Henforcer.Rules.Maximum
+      Henforcer.Rules.Minimum
 
   autogen-modules:
       Paths_henforcer
@@ -93,6 +94,7 @@ library henforcer-internal
       base >=4.7 && <5
     , containers >=0.6 && < 0.8
     , dhall >=1.28 && < 1.43
+    , dlist >=1.0 && <1.1
     , ghc >= 9.2.1 && <9.9
     , optparse-applicative >=0.14 && <0.19
     , pollock >= 0.1 && <0.2

@@ -18,7 +18,7 @@ Maintainer  : maintainers@flipstone.com
 module CompatGHC
   ( -- GHC
     GhcRn
-  , IE(..)
+  , IE (..)
   , ImportDecl
   , ImportDeclQualifiedStyle (..)
   , LIE
@@ -69,13 +69,11 @@ module CompatGHC
   , unitIdString
   , neverQualify
   , keepRenamedSource
-
   -- GHC.Types.Error
   , Diagnostic (..)
   , MsgEnvelope
   , mkSimpleDecorated
-  , NoDiagnosticOpts(NoDiagnosticOpts)
-
+  , NoDiagnosticOpts (NoDiagnosticOpts)
   -- internal defined helpers
   , PkgQual (..)
   , addMessages
@@ -89,14 +87,14 @@ import qualified Data.Text as T
 import qualified Dhall
 import GHC
   ( GhcRn
-  , IE(..)
+  , IE (..)
   , ImportDecl
   , ImportDeclQualifiedStyle (..)
   , LIE
   , LImportDecl
   , ModSummary (..)
   , ModuleName
-  , PkgQual(..)
+  , PkgQual (..)
   , SrcSpan
   , getLoc
   , ideclAs
@@ -121,31 +119,31 @@ import GHC.Plugins
   , UnitId (..)
   , blankLine
   , cat
-  , generatedSrcSpan
   , colon
   , defaultPlugin
   , dot
   , doubleQuotes
   , empty
+  , generatedSrcSpan
   , hang
   , hsep
   , keepRenamedSource
   , liftIO
+  , neverQualify
   , purePlugin
   , sep
   , text
-  , vcat
   , unitIdString
-  , neverQualify
+  , vcat
   )
 import GHC.Tc.Utils.Monad (TcGblEnv (tcg_mod, tcg_rn_imports), TcM)
 import qualified GHC.Tc.Utils.Monad as GHC
 import qualified GHC.Types.Error as GHC
 
 import Data.Typeable (Typeable)
-import GHC.Plugins (DiagnosticReason(..), Messages)
-import qualified GHC.Tc.Errors.Types as GHC904
-import GHC.Types.Error (MsgEnvelope(..), mkSimpleDecorated)
+import GHC.Plugins (DiagnosticReason (..), Messages)
+import qualified GHC.Tc.Errors.Types as GHC
+import GHC.Types.Error (MsgEnvelope (..), mkSimpleDecorated)
 
 #if __GLASGOW_HASKELL__ == 904
 import qualified GHC
@@ -197,7 +195,7 @@ mkErrorMsgEnvelope :: SrcSpan -> unused -> e -> MsgEnvelope e
 mkErrorMsgEnvelope msgSpan _ a =
   MsgEnvelope
     { errMsgSpan = msgSpan
-    , errMsgContext = GHC.neverQualify
+    , errMsgContext = neverQualify
     , errMsgSeverity = GHC.SevError
     , errMsgDiagnostic = a
     }
@@ -206,7 +204,7 @@ mkErrorMsgEnvelope msgSpan _ a =
 -- a build.
 addMessages :: (Typeable a, GHC.Diagnostic a) => Messages a -> TcM ()
 addMessages =
-  GHC.addMessages . fmap GHC904.TcRnUnknownMessage
+  GHC.addMessages . fmap GHC.TcRnUnknownMessage
 
 #endif
 
@@ -222,7 +220,7 @@ addMessages ::
   Messages a ->
   TcM ()
 addMessages =
-  GHC.addMessages . fmap (GHC904.mkTcRnUnknownMessage)
+  GHC.addMessages . fmap GHC.mkTcRnUnknownMessage
 
 #endif
 
@@ -230,12 +228,17 @@ addMessages =
 
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
-addMessages :: (Typeable a, Diagnostic a, GHC.DiagnosticOpts a ~ GHC.NoDiagnosticOpts) => Messages a -> TcM ()
+addMessages ::
+  ( Typeable a
+  , Diagnostic a
+  , GHC.DiagnosticOpts a ~ GHC.NoDiagnosticOpts
+  ) =>
+  Messages a ->
+  TcM ()
 addMessages =
-  GHC.addMessages . fmap (GHC904.mkTcRnUnknownMessage)
+  GHC.addMessages . fmap GHC.mkTcRnUnknownMessage
 
 #endif
-
 
 -- | Helper for creating 'Messages'
 mkMessagesFromList :: [MsgEnvelope e] -> Messages e

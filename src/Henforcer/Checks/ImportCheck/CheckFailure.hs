@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-missing-methods #-}
+
 {- |
 Module      : Henforcer.Checks.ImportCheck.CheckFailure
 Description :
@@ -18,6 +19,7 @@ import qualified Data.Text as T
 
 import qualified CompatGHC
 import qualified Henforcer.CodeStructure as CodeStructure
+import qualified Henforcer.Rules as Rules
 
 data CheckedDependency = CheckedDependency
   { dependencySource :: !CodeStructure.TreeName
@@ -28,7 +30,7 @@ data CheckFailure
   = DependencyViolation !CodeStructure.Import !CheckedDependency
   | EncapsulationViolation !CodeStructure.Import !CodeStructure.TreeName
   | QualificationViolation !CodeStructure.Import ![CodeStructure.Scheme]
-  | OpenImportViolation !(NEL.NonEmpty CodeStructure.Import) !CodeStructure.MaxOpenUnaliasedImportsNat
+  | OpenImportViolation !(NEL.NonEmpty CodeStructure.Import) !Rules.MaximumNat
   | AliasUniquenessViolation !(NEL.NonEmpty CodeStructure.Import)
 
 instance CompatGHC.Outputable CheckFailure where
@@ -138,7 +140,7 @@ formatQualificationViolation imp alloweds =
         ]
 
 formatOpenImportViolation ::
-  NEL.NonEmpty CodeStructure.Import -> CodeStructure.MaxOpenUnaliasedImportsNat -> CompatGHC.SDoc
+  NEL.NonEmpty CodeStructure.Import -> Rules.MaximumNat -> CompatGHC.SDoc
 formatOpenImportViolation imps maxAllowedNat =
   let rebuildFromImport imp =
         rebuildImportStatementFromScheme (CodeStructure.importedModule imp)

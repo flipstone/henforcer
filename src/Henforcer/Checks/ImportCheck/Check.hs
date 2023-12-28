@@ -6,13 +6,12 @@ License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Checks.ImportCheck.Check
-  ( ImportChecker
-  , newImportChecker
-  , checkModule
+  ( checkImports
+  , determineChecks
   ) where
 
 import qualified Control.Monad as Monad
-import qualified Data.List as L
+import qualified Data.DList as DList
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -30,61 +29,7 @@ import Henforcer.Checks.ImportCheck.CheckFailure
   )
 import qualified Henforcer.CodeStructure as CodeStructure
 import qualified Henforcer.Config as Config
-
-data ImportChecker = ImportChecker
-  { dependencies :: ![CheckedDependency]
-  , encapsulatedTrees :: ![CodeStructure.TreeName]
-  , allowedQualifications :: !CodeStructure.AllowedSchemes
-  , defaultAllowedOpenUnaliasedImports :: !CodeStructure.DefaultAllowedOpenUnaliasedImports
-  , perModuleOpenUnaliasedImports :: !CodeStructure.PerModuleAllowedOpenUnaliasedImports
-  , allowedAliasUniqueness :: !CodeStructure.AllowedAliasUniqueness
-  }
-
-checkModule :: ImportChecker -> CompatGHC.TcGblEnv -> [CheckFailure]
-checkModule importChecker tcGblEnv =
-  let imports = CodeStructure.getImports tcGblEnv
-      name = CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv
-      importFailures = Monad.join $ fmap (checkImport importChecker) imports
-      openImportFailures =
-        checkOpenImport
-          name
-          (defaultAllowedOpenUnaliasedImports importChecker)
-          (perModuleOpenUnaliasedImports importChecker)
-          imports
-      aliasUniquenessFailures =
-        checkAllowedAliasUniquness (allowedAliasUniqueness importChecker) imports
-   in importFailures <> openImportFailures <> aliasUniquenessFailures
-
-newImportChecker :: Config.Config -> ImportChecker
-newImportChecker config =
-  let explodeDependencies decl =
-        fmap (CheckedDependency (Config.moduleTree decl)) $
-          Config.treeDependencies decl
-
-      configuredDependencies =
-        concatMap explodeDependencies $
-          Config.dependencyDeclarations config
-   in ImportChecker
-        { dependencies = configuredDependencies
-        , encapsulatedTrees = Config.encapsulatedTrees config
-        , allowedQualifications = Config.allowedQualifications config
-        , defaultAllowedOpenUnaliasedImports = Config.defaultAllowedOpenUnaliasedImports config
-        , perModuleOpenUnaliasedImports = Config.perModuleOpenUnaliasedImports config
-        , allowedAliasUniqueness = Config.allowedAliasUniqueness config
-        }
-
-checkImport ::
-  ImportChecker
-  -> CodeStructure.Import
-  -> [CheckFailure]
-checkImport checker imp =
-  let targetName = CodeStructure.importedModule imp
-      dependencyFailures = Monad.join $ fmap (checkImportAgainstDependency imp) (dependencies checker)
-      encapsulationFailures = Monad.join $ fmap (checkImportAgainstEncapsulation imp) (encapsulatedTrees checker)
-      qualificationFailures =
-        maybe [] (checkImportQualification imp) $
-          Map.lookup targetName (allowedQualifications checker)
-   in dependencyFailures <> encapsulationFailures <> qualificationFailures
+import qualified Henforcer.Rules as Rules
 
 checkImportAgainstDependency ::
   CodeStructure.Import
@@ -104,7 +49,7 @@ checkImportAgainstDependency imp dep =
           && CodeStructure.treeContainsModule depSource (CodeStructure.importedModule imp)
    in if dependencyViolated
         then pure $ DependencyViolation imp dep
-        else []
+        else mempty
 
 checkImportAgainstEncapsulation ::
   CodeStructure.Import
@@ -121,84 +66,210 @@ checkImportAgainstEncapsulation imp encapsulatedTree =
    in
     if encapsulationViolated
       then pure $ EncapsulationViolation imp encapsulatedTree
-      else []
+      else mempty
 
-checkImportQualification ::
-  CodeStructure.Import
-  -> [CodeStructure.Scheme]
-  -> [CheckFailure]
-checkImportQualification imp alloweds =
-  if elem
-    ( CodeStructure.keepOnlyPackageNameInQualifier . CodeStructure.buildScheme . CompatGHC.unLoc $
-        CodeStructure.importDecl imp
-    )
-    alloweds
-    then []
-    else pure $ QualificationViolation imp alloweds
+data ImportChecks = ImportChecks
+  { importChecksDependencyDeclarations :: !(Maybe (NEL.NonEmpty CheckedDependency)) -- Nothing means we won't even check
+  , importChecksEncapsulatedTrees :: !(Maybe (NEL.NonEmpty CodeStructure.TreeName)) -- Nothing means we won't even check
+  , importChecksAllowedQualifications :: !CodeStructure.AllowedSchemes
+  , importChecksAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
+  , importChecksAllowedAliasUniqueness :: !CodeStructure.AllowedAliasUniqueness
+  }
 
-checkOpenImport ::
-  CompatGHC.ModuleName
-  -> CodeStructure.DefaultAllowedOpenUnaliasedImports
-  -> CodeStructure.PerModuleAllowedOpenUnaliasedImports
-  -> [CodeStructure.Import]
-  -> [CheckFailure]
-checkOpenImport modName defaultMax perModuleMax imports =
-  let openImports = filter CodeStructure.importIsOpenWithNoHidingOrAlias imports
-   in case (openImports, CodeStructure.determineMaxAllowedForModule defaultMax perModuleMax modName) of
-        ([], _) ->
-          []
-        (_, CodeStructure.NoMaxToEnforce) ->
-          []
-        (x : xs, CodeStructure.MaxForModule nat) ->
-          checkNonEmptyOpenImports (x NEL.:| xs) nat
+determineChecks :: Config.Config -> CompatGHC.ModuleName -> ImportChecks
+determineChecks config modName =
+  determineChecksForModule
+    (Config.forAnyModule config)
+    . maybe Config.emptyForSpecifiedModule id
+    . Map.lookup modName
+    $ Config.forSpecifiedModules config
 
-checkNonEmptyOpenImports ::
-  NEL.NonEmpty CodeStructure.Import
-  -> CodeStructure.MaxOpenUnaliasedImportsNat
+determineChecksForModule ::
+  Config.ForAnyModule
+  -> Config.ForSpecifiedModule
+  -> ImportChecks
+determineChecksForModule fam fsm =
+  let
+    explodeDependencies decl =
+      fmap (CheckedDependency (Config.moduleTree decl)) $
+        Config.treeDependencies decl
+   in
+    ImportChecks
+      { importChecksDependencyDeclarations =
+          NEL.nonEmpty . concatMap explodeDependencies $ Config.anyModuleDependencyDeclarations fam
+      , importChecksEncapsulatedTrees = NEL.nonEmpty $ Config.anyModuleEncapsulatedTrees fam
+      , importChecksAllowedQualifications = Config.anyModuleAllowedQualifications fam
+      , importChecksAllowedOpenUnaliasedImports =
+          Maybe.fromMaybe
+            (Config.anyModuleAllowedOpenUnaliasedImports fam)
+            (Config.specifiedModuleAllowedOpenUnaliasedImports fsm)
+      , importChecksAllowedAliasUniqueness =
+          Maybe.fromMaybe
+            (Config.anyModuleAllowedAliasUniqueness fam)
+            (Config.specifiedModuleAllowedAliasUniqueness fsm)
+      }
+
+data ImportCheckAccum = ImportCheckAccum
+  { failures :: DList.DList CheckFailure
+  , openUnaliasedImports :: DList.DList CodeStructure.Import
+  , aliasedImportsByAliasName :: Map.Map CompatGHC.ModuleName [CodeStructure.Import]
+  }
+
+checkImports ::
+  ImportChecks
+  -> CompatGHC.TcGblEnv
   -> [CheckFailure]
-checkNonEmptyOpenImports nonEmptyOpenImports nat = do
-  if NEL.length nonEmptyOpenImports > fromIntegral nat
-    then pure (OpenImportViolation nonEmptyOpenImports nat)
-    else []
+checkImports checks tcGblEnv =
+  let
+    imports = CodeStructure.getImports tcGblEnv
+    accumulatedResults = foldr (checkImport checks) (ImportCheckAccum mempty mempty mempty) imports
+    openUnaliasedResults =
+      Maybe.catMaybes $
+        Rules.checkMaximum
+          (importChecksAllowedOpenUnaliasedImports checks)
+          (openUnaliasedImports accumulatedResults)
+          (fromIntegral . length . DList.toList)
+          (\dlist nat -> fmap (flip OpenImportViolation nat) . NEL.nonEmpty $ DList.toList dlist)
+    aliasUniquenessResults =
+      checkAllowedAliasUniquness
+        (importChecksAllowedAliasUniqueness checks)
+        (aliasedImportsByAliasName accumulatedResults)
+   in
+    DList.toList (failures accumulatedResults) <> openUnaliasedResults <> aliasUniquenessResults
+
+checkImport ::
+  ImportChecks
+  -> CodeStructure.Import
+  -> ImportCheckAccum
+  -> ImportCheckAccum
+checkImport checks imp =
+  encapsulationCheck
+    checks
+    imp
+    . dependencyCheck
+      checks
+      imp
+    . importQualificationCheck
+      checks
+      imp
+    . mbAddOpenImport
+      checks
+      imp
+    . addToAliasMap
+      checks
+      imp
+
+encapsulationCheck ::
+  ImportChecks
+  -> CodeStructure.Import
+  -> ImportCheckAccum
+  -> ImportCheckAccum
+encapsulationCheck checks imp accum =
+  case importChecksEncapsulatedTrees checks of
+    Nothing ->
+      accum
+    Just nonEmptyTrees ->
+      accum
+        { failures =
+            DList.append (failures accum) . DList.fromList . concatMap (checkImportAgainstEncapsulation imp) $
+              NEL.toList nonEmptyTrees
+        }
+
+dependencyCheck ::
+  ImportChecks
+  -> CodeStructure.Import
+  -> ImportCheckAccum
+  -> ImportCheckAccum
+dependencyCheck checks imp accum =
+  case importChecksDependencyDeclarations checks of
+    Nothing ->
+      accum
+    Just nonEmptyDependencies ->
+      accum
+        { failures =
+            DList.append (failures accum)
+              . DList.fromList
+              . Monad.join
+              . NEL.toList
+              $ fmap (checkImportAgainstDependency imp) nonEmptyDependencies
+        }
+
+importQualificationCheck ::
+  ImportChecks
+  -> CodeStructure.Import
+  -> ImportCheckAccum
+  -> ImportCheckAccum
+importQualificationCheck checks imp accum =
+  case Map.lookup (CodeStructure.importedModule imp) (importChecksAllowedQualifications checks) of
+    Nothing ->
+      accum
+    Just allowedSchemes ->
+      if elem
+        ( CodeStructure.keepOnlyPackageNameInQualifier . CodeStructure.buildScheme . CompatGHC.unLoc $
+            CodeStructure.importDecl imp
+        )
+        allowedSchemes
+        then accum
+        else
+          accum
+            { failures =
+                DList.cons (QualificationViolation imp allowedSchemes) (failures accum)
+            }
+
+mbAddOpenImport ::
+  ImportChecks
+  -> CodeStructure.Import
+  -> ImportCheckAccum
+  -> ImportCheckAccum
+mbAddOpenImport checks imp accum =
+  case importChecksAllowedOpenUnaliasedImports checks of
+    Rules.NoMaximumToEnforce ->
+      accum
+    Rules.MaximumAllowed _ ->
+      if CodeStructure.importIsOpenWithNoHidingOrAlias imp
+        then
+          accum
+            { openUnaliasedImports =
+                DList.cons imp $ openUnaliasedImports accum
+            }
+        else accum
+
+addToAliasMap ::
+  ImportChecks
+  -> CodeStructure.Import
+  -> ImportCheckAccum
+  -> ImportCheckAccum
+addToAliasMap checks imp accum =
+  case importChecksAllowedAliasUniqueness checks of
+    CodeStructure.NoAliasUniqueness ->
+      accum
+    _ ->
+      case CodeStructure.alias . CodeStructure.buildScheme . CompatGHC.unLoc $ CodeStructure.importDecl imp of
+        CodeStructure.WithAlias modName ->
+          accum
+            { aliasedImportsByAliasName =
+                Map.insertWith (<>) modName (pure imp) (aliasedImportsByAliasName accum)
+            }
+        CodeStructure.WithoutAlias ->
+          accum
 
 checkAllowedAliasUniquness ::
-  (Foldable t) =>
   CodeStructure.AllowedAliasUniqueness
-  -> t CodeStructure.Import
+  -> Map.Map CompatGHC.ModuleName [CodeStructure.Import]
   -> [CheckFailure]
-checkAllowedAliasUniquness aliasUniqueness imports =
+checkAllowedAliasUniquness allowedUniqueness aliasedImports =
   let
-    keepAliasedImportByModName accum i =
-      case CodeStructure.alias . CodeStructure.buildScheme . CompatGHC.unLoc $ CodeStructure.importDecl i of
-        CodeStructure.WithAlias modName ->
-          (modName, [i]) : accum
-        CodeStructure.WithoutAlias -> accum
-
-    aliasedSchemes :: Map.Map CompatGHC.ModuleName [CodeStructure.Import]
-    aliasedSchemes =
-      Map.fromListWith (<>) $ L.foldl' keepAliasedImportByModName [] imports
-
     buildUniquenessViolation :: Map.Map k [CodeStructure.Import] -> [CheckFailure]
     buildUniquenessViolation =
       fmap AliasUniquenessViolation
         . Maybe.mapMaybe NEL.nonEmpty
         . Map.elems
         . Map.filter ((<) 1 . length)
-
-    handleExcepts =
-      buildUniquenessViolation . Map.withoutKeys aliasedSchemes
-
-    handleUniques =
-      buildUniquenessViolation . Map.restrictKeys aliasedSchemes
    in
-    -- filter imports that aliased with the given set
-    -- group by alias name, keep results length >1
-    --      filter ((<) 1 . length) . L.groupBy (\x y -> (CodeStructure.alias x) == (CodeStructure.alias y)) $ filter (CodeStructure.isAliasIn aliasesRequiredToBeUnique) aliasedSchemes
-
-    case aliasUniqueness of
-      CodeStructure.AliasesToBeUnique modNames ->
-        handleUniques modNames
-      CodeStructure.AllAliasesUniqueExcept modNames ->
-        handleExcepts modNames
+    case allowedUniqueness of
       CodeStructure.NoAliasUniqueness ->
-        []
+        mempty
+      CodeStructure.AliasesToBeUnique modNames ->
+        buildUniquenessViolation $ Map.restrictKeys aliasedImports modNames
+      CodeStructure.AllAliasesUniqueExcept modNames ->
+        buildUniquenessViolation $ Map.withoutKeys aliasedImports modNames

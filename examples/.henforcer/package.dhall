@@ -207,39 +207,25 @@ let AllowedQualificationMap =
       List { mapKey : ModuleName, mapValue : List AllowedQualification }
 
 let
-    -- A key-value list of 'ModuleName' and numbers that represent the number of imports that are
-    -- allowed to be imported completely open with no alias.
-    OpenUnaliasedImportMap =
+    -- TODO Should we use more descriptive types for this?
+    ModuleNameNatMap =
       List { mapKey : ModuleName, mapValue : Natural }
 
 let
-    -- A key-value list of 'ModuleName' and numbers that represent the number of imports that are
-    -- allowed to be imported completely open with no alias.
-    MaxUndocumentedExportMap =
-      List { mapKey : ModuleName, mapValue : Natural }
+    -- TODO Should we use more descriptive types for this?
+    MinimumAllowed =
+      < MinimumAllowed : Natural | NoMinimumToEnforce >
 
-
-let
-    -- Describes if there is a maximum number of open, unaliased, imports that should apply to all
-    -- modules. Note this is superceded if a per module max is specified for a given module.
-    DefaultAllowedOpenUnaliasedImports =
-      < DefaultMaximum : Natural | NoDefaultMaximum >
+let minimumAllowed =
+      \(minAllowed : Natural) -> MinimumAllowed.MinimumAllowed minAllowed
 
 let
-    -- Describes if there is a maximum number of undocumented exports that should apply to all
-    -- modules. Note this is superceded if a per module max is specified for a given module.
-    DefaultAllowedUndocumentedExports =
-      < DefaultMaximumUndocumented : Natural | NoDefaultMaximumUndocumented >
+    -- TODO Should we use more descriptive types for this?
+    MaximumAllowed =
+      < MaximumAllowed : Natural | NoMaximumToEnforce >
 
-let -- Build a default max in a more ergonomic way in configurations.
-    defaultMaxAllowedOpenUnaliasedImports =
-      \(maxAllowed : Natural) ->
-        DefaultAllowedOpenUnaliasedImports.DefaultMaximum maxAllowed
-
-let -- Build a default max in a more ergonomic way in configurations.
-    defaultMaxAllowedUndocumentedExports =
-      \(maxAllowed : Natural) ->
-        DefaultAllowedUndocumentedExports.DefaultMaximumUndocumented maxAllowed
+let maximumAllowed =
+      \(maxAllowed : Natural) -> MaximumAllowed.MaximumAllowed maxAllowed
 
 let allAliasesUniqueExcept =
       \(exceptModNames : List ModuleName) ->
@@ -249,30 +235,73 @@ let aliasesToBeUnique =
       \(modNamesMustBeUnique : List ModuleName) ->
         AllowedAliasUniqueness.AliasesToBeUnique modNamesMustBeUnique
 
-let Config =
+let ForAnyModule =
       { treeDependencies : List Dependency
       , encapsulatedTrees : List TreeName
       , allowedQualifications : AllowedQualificationMap
-      , defaultAllowedOpenUnaliasedImports : DefaultAllowedOpenUnaliasedImports
-      , perModuleOpenUnaliasedImports : OpenUnaliasedImportMap
+      , allowedOpenUnaliasedImports : MaximumAllowed
       , allowedAliasUniqueness : AllowedAliasUniqueness
-      , defaultMaxUndocumented : DefaultAllowedUndocumentedExports
-      , perModuleMaxUndocumented : MaxUndocumentedExportMap
+      , maximumExportsUndocumented : MaximumAllowed
+      , minimumExportsDocumented : MinimumAllowed
+      , maximumExportsWithoutSince : MaximumAllowed
+      , minimumExportsWithSince : MinimumAllowed
       }
+
+let ForSpecifiedModule =
+      { allowedOpenUnaliasedImports : Optional MaximumAllowed
+      , allowedAliasUniqueness : Optional AllowedAliasUniqueness
+      , maximumExportsUndocumented : Optional MaximumAllowed
+      , minimumExportsDocumented : Optional MinimumAllowed
+      , maximumExportsWithoutSince : Optional MaximumAllowed
+      , minimumExportsWithSince : Optional MinimumAllowed
+      }
+
+let SpecifiedModuleMap =
+      List { mapKey : ModuleName, mapValue : ForSpecifiedModule }
+
+let Config =
+      { forAnyModule : ForAnyModule, forSpecifiedModule : SpecifiedModuleMap }
 
 in  { Config =
       { Type = Config
       , default =
+        { forAnyModule =
+          { treeDependencies = [] : List Dependency
+          , encapsulatedTrees = [] : List TreeName
+          , allowedQualifications = toMap {=} : AllowedQualificationMap
+          , allowedOpenUnaliasedImports = MaximumAllowed.NoMaximumToEnforce
+          , allowedAliasUniqueness = AllowedAliasUniqueness.NoAliasUniqueness
+          , maximumExportsUndocumented = MaximumAllowed.NoMaximumToEnforce
+          , minimumExportsDocumented = MinimumAllowed.NoMinimumToEnforce
+          , maximumExportsWithoutSince = MaximumAllowed.NoMaximumToEnforce
+          , minimumExportsWithSince = MinimumAllowed.NoMinimumToEnforce
+          }
+        , forSpecifiedModule = toMap {=} : SpecifiedModuleMap
+        }
+      }
+    , ForAnyModule =
+      { Type = ForAnyModule
+      , default =
         { treeDependencies = [] : List Dependency
         , encapsulatedTrees = [] : List TreeName
         , allowedQualifications = toMap {=} : AllowedQualificationMap
-        , defaultAllowedOpenUnaliasedImports =
-            DefaultAllowedOpenUnaliasedImports.NoDefaultMaximum
-        , perModuleOpenUnaliasedImports = toMap {=} : OpenUnaliasedImportMap
+        , allowedOpenUnaliasedImports = MaximumAllowed.NoMaximumToEnforce
         , allowedAliasUniqueness = AllowedAliasUniqueness.NoAliasUniqueness
-        , defaultMaxUndocumented =
-            DefaultAllowedUndocumentedExports.NoDefaultMaximumUndocumented
-        , perModuleMaxUndocumented = toMap {=} : MaxUndocumentedExportMap
+        , maximumExportsUndocumented = MaximumAllowed.NoMaximumToEnforce
+        , minimumExportsDocumented = MinimumAllowed.NoMinimumToEnforce
+        , maximumExportsWithoutSince = MaximumAllowed.NoMaximumToEnforce
+        , minimumExportsWithSince = MinimumAllowed.NoMinimumToEnforce
+        }
+      }
+    , ForSpecifiedModule =
+      { Type = ForSpecifiedModule
+      , default =
+        { allowedOpenUnaliasedImports = None MaximumAllowed
+        , allowedAliasUniqueness = None AllowedAliasUniqueness
+        , maximumExportsUndocumented = None MaximumAllowed
+        , minimumExportsDocumented = None MinimumAllowed
+        , maximumExportsWithoutSince = None MaximumAllowed
+        , minimumExportsWithSince = None MinimumAllowed
         }
       }
     , Dependency
@@ -295,12 +324,8 @@ in  { Config =
     , setWithPackageQualifier
     , onlyPackageQualified
     , AllowedQualificationMap
-    , OpenUnaliasedImportMap
-    , MaxUndocumentedExportMap
-    , DefaultAllowedOpenUnaliasedImports
-    , DefaultAllowedUndocumentedExports
-    , defaultMaxAllowedOpenUnaliasedImports
     , allAliasesUniqueExcept
     , aliasesToBeUnique
-    , defaultMaxAllowedUndocumentedExports
+    , maximumAllowed
+    , minimumAllowed
     }

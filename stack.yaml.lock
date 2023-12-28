@@ -5,12 +5,12 @@
 
 packages:
 - completed:
-    hackage: haddock-api-2.27.0@sha256:3cd85ab0a73705623f2f54e36cb60c922a0b37ef057e0f59d4ffb31e13daf86a,6156
+    hackage: pollock-0.1.0.0@sha256:c9b95b5144d788dfb0b79704e3bc706e6ce39114f100883977fd80db7eb34014,3642
     pantry-tree:
-      sha256: 0dfec64bf7fff73465c8efe029f96c67159545829cd61d168d691721655ddf2b
-      size: 4598
+      sha256: d15e311f8f1b2bea7778ec38f45bbb589b656baeac7fe862f217e8b0e5faf924
+      size: 1182
   original:
-    hackage: haddock-api-2.27.0
+    hackage: pollock-0.1.0.0
 snapshots:
 - completed:
     sha256: 1d5fb7e344e76dd2c8958e3061d4e4dabb50a1355e6ff02e7d0e4f754c0adf47

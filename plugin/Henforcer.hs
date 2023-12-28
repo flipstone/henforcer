@@ -1,4 +1,5 @@
 {-# LANGUAGE Strict #-}
+
 {- |
 Module      : Henforcer
 Description :
@@ -19,7 +20,7 @@ import qualified Henforcer.Checks as Checks
 import qualified Henforcer.Config as Config
 import qualified Henforcer.Options as Options
 
-import qualified Pollock as Coverage
+import qualified Pollock
 
 -- Using an MVar and unsafePerformIO here is a very ugly hack, but the plugin interface gives us no
 -- way to load the configuration once for the entire set of modules being compiled. This is a big
@@ -34,7 +35,7 @@ plugin =
     { CompatGHC.pluginRecompile = recompile
     , CompatGHC.renamedResultAction = CompatGHC.keepRenamedSource
     , CompatGHC.typeCheckResultAction = typeCheckResultAction
-    , CompatGHC.driverPlugin = Coverage.ensureHaddockIsOn
+    , CompatGHC.driverPlugin = Pollock.ensureHaddockIsOn
     }
 
 {- | During typechecking is when Henforcer performs checks, adding any violations to the error
@@ -46,21 +47,19 @@ typeCheckResultAction ::
   -> CompatGHC.TcGblEnv
   -> CompatGHC.TcM CompatGHC.TcGblEnv
 typeCheckResultAction commandLineOpts _modSummary tcGblEnv = do
-  let getImportChecker = fmap (Checks.newImportChecker . fst) . loadConfigIfNeeded
-      getDocChecker = fmap (Checks.newDocumentationChecker . fst) . loadConfigIfNeeded
---      exports :: _
-  -- CompatGHC.liftIO . print $  exports
-  documentationChecker <- CompatGHC.liftIO $ getDocChecker commandLineOpts
-  importChecker <- CompatGHC.liftIO $ getImportChecker commandLineOpts
-  res <- CompatGHC.liftIO $ Coverage.processModule tcGblEnv -- (CompatGHC.ue_units $ CompatGHC.hsc_unit_env hscEnv) modSummary tcGblEnv mempty mempty --hscEnv
+  config <- CompatGHC.liftIO $ loadConfigIfNeeded commandLineOpts
+  let
+    modName = CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv
 
   CompatGHC.addMessages
     . Checks.errorMessagesFromList
-    $ Checks.checkModule importChecker tcGblEnv
+    $ Checks.checkImports (Checks.determineChecks config modName) tcGblEnv
+
+  pollockModuleInfo <- CompatGHC.liftIO $ Pollock.processModule tcGblEnv
 
   CompatGHC.addMessages
     . Checks.docErrorMessagesFromList
-    $ Checks.checkDocs documentationChecker (CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv) res
+    $ Checks.checkDocumentation (Checks.determineDocumentationChecks config modName) pollockModuleInfo
 
   pure tcGblEnv
 
@@ -72,18 +71,18 @@ recompile =
   fmap (CompatGHC.MaybeRecompile . snd) . loadConfigFileFromOpts
 
 -- | Load the config into the global state, if it isn't there.
-loadConfigIfNeeded :: [CompatGHC.CommandLineOption] -> IO (Config.Config, CompatGHC.Fingerprint)
+loadConfigIfNeeded :: [CompatGHC.CommandLineOption] -> IO Config.Config
 loadConfigIfNeeded commandLineOpts = do
   mbConfigWithFingerprint <- MVar.tryReadMVar globalConfigState
   case mbConfigWithFingerprint of
-    Just c ->
-      pure c
+    Just (conf, _) ->
+      pure conf
     Nothing -> do
-      configWithFingerprint <- loadConfigFileFromOpts commandLineOpts
+      configWithFingerprint@(conf, _) <- loadConfigFileFromOpts commandLineOpts
       -- If we've been beaten to filling the global config, then oh well, but we do not want to
       -- block on it.
       _ <- MVar.tryPutMVar globalConfigState configWithFingerprint
-      pure configWithFingerprint
+      pure conf
 
 -- | Parse options to get configuration path and load the config.
 loadConfigFileFromOpts :: [String] -> IO (Config.Config, CompatGHC.Fingerprint)

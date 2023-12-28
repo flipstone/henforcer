@@ -20,7 +20,7 @@ module PetStore.Store
 import Data.Bool
 import Data.List
 
--- | @since 0.1.2.3
+-- | Note this is haddock
 -- Some documentation
 --
 -- @since 0.1
