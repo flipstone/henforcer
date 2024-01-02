@@ -44,7 +44,10 @@ data ForAnyModule = ForAnyModule
   , anyModuleMinimumDocumentedExports :: !Rules.MinimumAllowed
   , anyModuleMaximumExportsWithoutSince :: !Rules.MaximumAllowed
   , anyModuleMinimumExportsWithSince :: !Rules.MinimumAllowed
-  -- anyModuleModuleHeaderMustContain :: !Rules.HeaderMustContain
+  , anyModuleModuleHeaderCopyrightMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , anyModuleModuleHeaderDescriptionMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , anyModuleModuleHeaderLicenseMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , anyModuleModuleHeaderMaintainerMustExistNonEmpty :: !Rules.MustExistNonEmpty
   }
 
 forAnyModuleDecoder :: Dhall.Decoder ForAnyModule
@@ -74,6 +77,18 @@ forAnyModuleDecoder =
       <*> Dhall.field
         (T.pack "minimumExportsWithSince")
         Rules.minimumAllowedDecoder
+      <*> Dhall.field
+        (T.pack "moduleHeaderCopyrightMustExistNonEmpty")
+        Rules.mustExistNonEmptyDecoder
+      <*> Dhall.field
+        (T.pack "moduleHeaderDescriptionMustExistNonEmpty")
+        Rules.mustExistNonEmptyDecoder
+      <*> Dhall.field
+        (T.pack "moduleHeaderLicenseMustExistNonEmpty")
+        Rules.mustExistNonEmptyDecoder
+      <*> Dhall.field
+        (T.pack "moduleHeaderMaintainerMustExistNonEmpty")
+        Rules.mustExistNonEmptyDecoder
 
 data ForSpecifiedModule = ForSpecifiedModule
   { specifiedModuleAllowedOpenUnaliasedImports :: !(Maybe Rules.MaximumAllowed)
@@ -82,7 +97,10 @@ data ForSpecifiedModule = ForSpecifiedModule
   , specifiedModuleMinimumDocumentedExports :: !(Maybe Rules.MinimumAllowed)
   , specifiedModuleMaximumExportsWithoutSince :: !(Maybe Rules.MaximumAllowed)
   , specifiedModuleMinimumExportsWithSince :: !(Maybe Rules.MinimumAllowed)
-  -- specifiedModuleModuleHeaderMustContain :: !Rules.HeaderMustContain
+  , specifiedModuleModuleHeaderCopyrightMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
+  , specifiedModuleModuleHeaderDescriptionMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
+  , specifiedModuleModuleHeaderLicenseMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
+  , specifiedModuleModuleHeaderMaintainerMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
   }
 
 emptyForSpecifiedModule :: ForSpecifiedModule
@@ -94,7 +112,10 @@ emptyForSpecifiedModule =
     , specifiedModuleMinimumDocumentedExports = Nothing
     , specifiedModuleMaximumExportsWithoutSince = Nothing
     , specifiedModuleMinimumExportsWithSince = Nothing
-    -- specifiedModuleModuleHeaderMustContain = Nothing
+    , specifiedModuleModuleHeaderCopyrightMustExistNonEmpty = Nothing
+    , specifiedModuleModuleHeaderDescriptionMustExistNonEmpty = Nothing
+    , specifiedModuleModuleHeaderLicenseMustExistNonEmpty = Nothing
+    , specifiedModuleModuleHeaderMaintainerMustExistNonEmpty = Nothing
     }
 
 forSpecifiedModuleDecoder :: Dhall.Decoder ForSpecifiedModule
@@ -119,6 +140,18 @@ forSpecifiedModuleDecoder =
       <*> Dhall.field
         (T.pack "minimumExportsWithSince")
         (Dhall.maybe Rules.minimumAllowedDecoder)
+      <*> Dhall.field
+        (T.pack "moduleHeaderCopyrightMustExistNonEmpty")
+        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
+      <*> Dhall.field
+        (T.pack "moduleHeaderDescriptionMustExistNonEmpty")
+        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
+      <*> Dhall.field
+        (T.pack "moduleHeaderLicenseMustExistNonEmpty")
+        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
+      <*> Dhall.field
+        (T.pack "moduleHeaderMaintainerMustExistNonEmpty")
+        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
 
 type SpecifiedModuleMap = M.Map CompatGHC.ModuleName ForSpecifiedModule
 

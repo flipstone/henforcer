@@ -77,6 +77,7 @@ library henforcer-internal
       Henforcer.Rules
       Henforcer.Rules.Maximum
       Henforcer.Rules.Minimum
+      Henforcer.Rules.MustExistNonEmpty
 
   autogen-modules:
       Paths_henforcer

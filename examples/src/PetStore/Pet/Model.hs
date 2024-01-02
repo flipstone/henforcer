@@ -4,8 +4,7 @@
 {- |
 Module      : PetStore.Pet.Model
 Description : An example module
-Copyright   : (c) Flipstone, 2022
-License     : BSD-3-clause
+License     :
 Maintainer  : sample@email.com
 
 Here is a longer description of this module, containing some

@@ -22,10 +22,14 @@ in  Hen.Config::{
       , minimumExportsDocumented = Hen.minimumAllowed 2
       , maximumExportsWithoutSince = Hen.maximumAllowed 0
       , minimumExportsWithSince = Hen.minimumAllowed 1
+      , moduleHeaderCopyrightMustExistNonEmpty = True
+      , moduleHeaderDescriptionMustExistNonEmpty = True
+      , moduleHeaderLicenseMustExistNonEmpty = True
       }
     , forSpecifiedModule = toMap
         { `PetStore.Store` = Hen.ForSpecifiedModule::{
           , allowedOpenUnaliasedImports = Some (Hen.maximumAllowed 2)
+          , moduleHeaderMaintainerMustExistNonEmpty = Some True
           }
         }
     }

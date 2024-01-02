@@ -1,10 +1,8 @@
 {-|
 Module      : W
-Description : Short description
 Copyright   : (c) Some Person, 2013
                   Someone Else, 2014
 License     : GPL-3
-Maintainer  : sample@email.com
 Stability   : experimental
 Portability : POSIX
 

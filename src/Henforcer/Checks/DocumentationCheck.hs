@@ -27,10 +27,18 @@ import qualified Henforcer.Rules as Rules
 instance CompatGHC.Outputable CheckFailure where
   ppr cf =
     case cf of
-      OverMaxUndocumented current rule -> formatOverMaxUndocumentedViolation current rule
-      UnderMinDocumented current rule -> formatUnderMinDocumentedViolation current rule
+      OverMaximumUndocumented current rule -> formatOverMaximumUndocumentedViolation current rule
+      UnderMinimumDocumented current rule -> formatUnderMinimumDocumentedViolation current rule
       OverMaximumWithoutSince current rule -> formatOverMaximumWithoutSinceViolation current rule
       UnderMinimumWithSince current rule -> formatUnderMinimumWithSinceViolation current rule
+      CopyrightMustBeNonEmpty ->
+        formatMustBeNonEmpty "copyright"
+      DescriptionMustBeNonEmpty ->
+        formatMustBeNonEmpty "description"
+      LicenseMustBeNonEmpty ->
+        formatMustBeNonEmpty "license"
+      MaintainerMustBeNonEmpty ->
+        formatMustBeNonEmpty "maintainer"
 
 {- | The only part of the 'CompatGHC.Diagnostic' class that we really care about is the
  'diagnosticMessage', used for printing.
@@ -43,14 +51,18 @@ instance CompatGHC.Diagnostic CheckFailure where
   diagnosticCode = const Nothing
 
 data CheckFailure
-  = OverMaxUndocumented Rules.MaximumNat Rules.MaximumNat
-  | UnderMinDocumented Rules.MinimumNat Rules.MinimumNat
+  = OverMaximumUndocumented Rules.MaximumNat Rules.MaximumNat
+  | UnderMinimumDocumented Rules.MinimumNat Rules.MinimumNat
   | OverMaximumWithoutSince Rules.MaximumNat Rules.MaximumNat
   | UnderMinimumWithSince Rules.MinimumNat Rules.MinimumNat
+  | CopyrightMustBeNonEmpty
+  | DescriptionMustBeNonEmpty
+  | LicenseMustBeNonEmpty
+  | MaintainerMustBeNonEmpty
 
-formatUnderMinDocumentedViolation ::
+formatUnderMinimumDocumentedViolation ::
   Rules.MinimumNat -> Rules.MinimumNat -> CompatGHC.SDoc
-formatUnderMinDocumentedViolation current rule =
+formatUnderMinimumDocumentedViolation current rule =
   let beginningDoc =
         ( CompatGHC.sep
             [ CompatGHC.hsep
@@ -71,9 +83,9 @@ formatUnderMinDocumentedViolation current rule =
         , CompatGHC.blankLine
         ]
 
-formatOverMaxUndocumentedViolation ::
+formatOverMaximumUndocumentedViolation ::
   Rules.MaximumNat -> Rules.MaximumNat -> CompatGHC.SDoc
-formatOverMaxUndocumentedViolation current rule =
+formatOverMaximumUndocumentedViolation current rule =
   let beginningDoc =
         ( CompatGHC.sep
             [ CompatGHC.hsep
@@ -140,6 +152,19 @@ formatUnderMinimumWithSinceViolation current rule =
         , CompatGHC.blankLine
         ]
 
+formatMustBeNonEmpty ::
+  String
+  -> CompatGHC.SDoc
+formatMustBeNonEmpty fieldStr =
+  CompatGHC.vcat
+    [ CompatGHC.sep
+        [ CompatGHC.hsep
+            [ CompatGHC.text ("The module header field " <> fieldStr <> " must be present and non-empty.")
+            ]
+        ]
+    , CompatGHC.blankLine
+    ]
+
 instance CompatGHC.Outputable Nat.Natural where
   ppr n = CompatGHC.text $ show n
 
@@ -155,6 +180,10 @@ data DocumentationChecks = DocumentationChecks
   , minimumDocumentedExports :: !Rules.MinimumAllowed
   , maximumExportsWithoutSince :: !Rules.MaximumAllowed
   , minimumExportsWithSince :: !Rules.MinimumAllowed
+  , moduleHeaderCopyrightMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , moduleHeaderDescriptionMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , moduleHeaderLicenseMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , moduleHeaderMaintainerMustExistNonEmpty :: !Rules.MustExistNonEmpty
   }
 
 determineDocumentationChecks ::
@@ -164,7 +193,7 @@ determineDocumentationChecks ::
 determineDocumentationChecks config modName =
   let
     forSpecifiedModule =
-      maybe Config.emptyForSpecifiedModule id
+      Maybe.fromMaybe Config.emptyForSpecifiedModule
         . Map.lookup modName
         $ Config.forSpecifiedModules config
     forAnyModule = Config.forAnyModule config
@@ -186,6 +215,22 @@ determineDocumentationChecks config modName =
           Maybe.fromMaybe
             (Config.anyModuleMinimumExportsWithSince forAnyModule)
             (Config.specifiedModuleMinimumExportsWithSince forSpecifiedModule)
+      , moduleHeaderCopyrightMustExistNonEmpty =
+          Maybe.fromMaybe
+            (Config.anyModuleModuleHeaderCopyrightMustExistNonEmpty forAnyModule)
+            (Config.specifiedModuleModuleHeaderCopyrightMustExistNonEmpty forSpecifiedModule)
+      , moduleHeaderDescriptionMustExistNonEmpty =
+          Maybe.fromMaybe
+            (Config.anyModuleModuleHeaderDescriptionMustExistNonEmpty forAnyModule)
+            (Config.specifiedModuleModuleHeaderDescriptionMustExistNonEmpty forSpecifiedModule)
+      , moduleHeaderLicenseMustExistNonEmpty =
+          Maybe.fromMaybe
+            (Config.anyModuleModuleHeaderLicenseMustExistNonEmpty forAnyModule)
+            (Config.specifiedModuleModuleHeaderLicenseMustExistNonEmpty forSpecifiedModule)
+      , moduleHeaderMaintainerMustExistNonEmpty =
+          Maybe.fromMaybe
+            (Config.anyModuleModuleHeaderMaintainerMustExistNonEmpty forAnyModule)
+            (Config.specifiedModuleModuleHeaderMaintainerMustExistNonEmpty forSpecifiedModule)
       }
 
 checkDocumentation ::
@@ -210,8 +255,31 @@ checkDocumentation checks pollockModInfo =
       checkWithSince
         (minimumExportsWithSince checks)
         pollockModInfo
+    withCopyrightChecks =
+      checkModuleHeaderCopyright
+        (moduleHeaderCopyrightMustExistNonEmpty checks)
+        pollockModInfo
+    withDescriptionChecks =
+      checkModuleHeaderDescription
+        (moduleHeaderDescriptionMustExistNonEmpty checks)
+        pollockModInfo
+    withLicenseChecks =
+      checkModuleHeaderLicense
+        (moduleHeaderLicenseMustExistNonEmpty checks)
+        pollockModInfo
+    withMaintainerChecks =
+      checkModuleHeaderMaintainer
+        (moduleHeaderMaintainerMustExistNonEmpty checks)
+        pollockModInfo
    in
-    undocumentedChecks <> documentedChecks <> withoutSinceChecks <> withSinceChecks
+    undocumentedChecks
+      <> documentedChecks
+      <> withoutSinceChecks
+      <> withSinceChecks
+      <> withCopyrightChecks
+      <> withDescriptionChecks
+      <> withLicenseChecks
+      <> withMaintainerChecks
 
 checkUndocumented ::
   Rules.MaximumAllowed
@@ -225,7 +293,7 @@ checkUndocumented maximumAllowed pollockModInfo =
       maximumAllowed
       pollockModInfo
       getUndocumented
-      (OverMaxUndocumented . getUndocumented)
+      (OverMaximumUndocumented . getUndocumented)
 
 checkDocumented ::
   Rules.MinimumAllowed
@@ -240,7 +308,7 @@ checkDocumented minimumAllowed pollockModInfo =
       minimumAllowed
       pollockModInfo
       getDocumentedNat
-      (UnderMinDocumented . getDocumentedNat)
+      (UnderMinimumDocumented . getDocumentedNat)
 
 checkWithoutSince ::
   Rules.MaximumAllowed
@@ -271,3 +339,59 @@ checkWithSince minimumAllowed pollockModInfo =
       pollockModInfo
       numWithSinceNat
       (UnderMinimumWithSince . numWithSinceNat)
+
+checkModuleHeaderCopyright ::
+  Rules.MustExistNonEmpty
+  -> Pollock.ModuleInfo
+  -> [CheckFailure]
+checkModuleHeaderCopyright copyrightMustExist pollockModInfo =
+  let
+    getCopyright = Pollock.copyright . Pollock.moduleHeader
+   in
+    Rules.checkExistsAndNonEmptyString
+      copyrightMustExist
+      pollockModInfo
+      getCopyright
+      (const CopyrightMustBeNonEmpty)
+
+checkModuleHeaderDescription ::
+  Rules.MustExistNonEmpty
+  -> Pollock.ModuleInfo
+  -> [CheckFailure]
+checkModuleHeaderDescription descriptionMustExist pollockModInfo =
+  let
+    getDescription = Pollock.description . Pollock.moduleHeader
+   in
+    Rules.checkExistsAndNonEmptyString
+      descriptionMustExist
+      pollockModInfo
+      getDescription
+      (const DescriptionMustBeNonEmpty)
+
+checkModuleHeaderLicense ::
+  Rules.MustExistNonEmpty
+  -> Pollock.ModuleInfo
+  -> [CheckFailure]
+checkModuleHeaderLicense licenseMustExist pollockModInfo =
+  let
+    getLicense = Pollock.license . Pollock.moduleHeader
+   in
+    Rules.checkExistsAndNonEmptyString
+      licenseMustExist
+      pollockModInfo
+      getLicense
+      (const LicenseMustBeNonEmpty)
+
+checkModuleHeaderMaintainer ::
+  Rules.MustExistNonEmpty
+  -> Pollock.ModuleInfo
+  -> [CheckFailure]
+checkModuleHeaderMaintainer maintainerMustExist pollockModInfo =
+  let
+    getMaintainer = Pollock.maintainer . Pollock.moduleHeader
+   in
+    Rules.checkExistsAndNonEmptyString
+      maintainerMustExist
+      pollockModInfo
+      getMaintainer
+      (const MaintainerMustBeNonEmpty)

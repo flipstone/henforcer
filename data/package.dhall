@@ -245,6 +245,10 @@ let ForAnyModule =
       , minimumExportsDocumented : MinimumAllowed
       , maximumExportsWithoutSince : MaximumAllowed
       , minimumExportsWithSince : MinimumAllowed
+      , moduleHeaderCopyrightMustExistNonEmpty : Bool
+      , moduleHeaderDescriptionMustExistNonEmpty : Bool
+      , moduleHeaderLicenseMustExistNonEmpty : Bool
+      , moduleHeaderMaintainerMustExistNonEmpty : Bool
       }
 
 let ForSpecifiedModule =
@@ -254,6 +258,10 @@ let ForSpecifiedModule =
       , minimumExportsDocumented : Optional MinimumAllowed
       , maximumExportsWithoutSince : Optional MaximumAllowed
       , minimumExportsWithSince : Optional MinimumAllowed
+      , moduleHeaderCopyrightMustExistNonEmpty : Optional Bool
+      , moduleHeaderDescriptionMustExistNonEmpty : Optional Bool
+      , moduleHeaderLicenseMustExistNonEmpty : Optional Bool
+      , moduleHeaderMaintainerMustExistNonEmpty : Optional Bool
       }
 
 let SpecifiedModuleMap =
@@ -275,6 +283,10 @@ in  { Config =
           , minimumExportsDocumented = MinimumAllowed.NoMinimumToEnforce
           , maximumExportsWithoutSince = MaximumAllowed.NoMaximumToEnforce
           , minimumExportsWithSince = MinimumAllowed.NoMinimumToEnforce
+          , moduleHeaderCopyrightMustExistNonEmpty = False
+          , moduleHeaderDescriptionMustExistNonEmpty = False
+          , moduleHeaderLicenseMustExistNonEmpty = False
+          , moduleHeaderMaintainerMustExistNonEmpty = False
           }
         , forSpecifiedModule = toMap {=} : SpecifiedModuleMap
         }
@@ -291,6 +303,10 @@ in  { Config =
         , minimumExportsDocumented = MinimumAllowed.NoMinimumToEnforce
         , maximumExportsWithoutSince = MaximumAllowed.NoMaximumToEnforce
         , minimumExportsWithSince = MinimumAllowed.NoMinimumToEnforce
+        , moduleHeaderCopyrightMustExistNonEmpty = False
+        , moduleHeaderDescriptionMustExistNonEmpty = False
+        , moduleHeaderLicenseMustExistNonEmpty = False
+        , moduleHeaderMaintainerMustExistNonEmpty = False
         }
       }
     , ForSpecifiedModule =
@@ -302,6 +318,10 @@ in  { Config =
         , minimumExportsDocumented = None MinimumAllowed
         , maximumExportsWithoutSince = None MaximumAllowed
         , minimumExportsWithSince = None MinimumAllowed
+        , moduleHeaderCopyrightMustExistNonEmpty = None Bool
+        , moduleHeaderDescriptionMustExistNonEmpty = None Bool
+        , moduleHeaderLicenseMustExistNonEmpty = None Bool
+        , moduleHeaderMaintainerMustExistNonEmpty = None Bool
         }
       }
     , Dependency
