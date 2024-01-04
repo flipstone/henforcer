@@ -241,8 +241,8 @@ let ForAnyModule =
       , allowedQualifications : AllowedQualificationMap
       , allowedOpenUnaliasedImports : MaximumAllowed
       , allowedAliasUniqueness : AllowedAliasUniqueness
-      , maximumExportsUndocumented : MaximumAllowed
-      , minimumExportsDocumented : MinimumAllowed
+      , maximumExportsPlusHeaderUndocumented : MaximumAllowed
+      , minimumExportsPlusHeaderDocumented : MinimumAllowed
       , maximumExportsWithoutSince : MaximumAllowed
       , minimumExportsWithSince : MinimumAllowed
       , moduleHeaderCopyrightMustExistNonEmpty : Bool
@@ -254,8 +254,8 @@ let ForAnyModule =
 let ForSpecifiedModule =
       { allowedOpenUnaliasedImports : Optional MaximumAllowed
       , allowedAliasUniqueness : Optional AllowedAliasUniqueness
-      , maximumExportsUndocumented : Optional MaximumAllowed
-      , minimumExportsDocumented : Optional MinimumAllowed
+      , maximumExportsPlusHeaderUndocumented : Optional MaximumAllowed
+      , minimumExportsPlusHeaderDocumented : Optional MinimumAllowed
       , maximumExportsWithoutSince : Optional MaximumAllowed
       , minimumExportsWithSince : Optional MinimumAllowed
       , moduleHeaderCopyrightMustExistNonEmpty : Optional Bool
@@ -279,8 +279,10 @@ in  { Config =
           , allowedQualifications = toMap {=} : AllowedQualificationMap
           , allowedOpenUnaliasedImports = MaximumAllowed.NoMaximumToEnforce
           , allowedAliasUniqueness = AllowedAliasUniqueness.NoAliasUniqueness
-          , maximumExportsUndocumented = MaximumAllowed.NoMaximumToEnforce
-          , minimumExportsDocumented = MinimumAllowed.NoMinimumToEnforce
+          , maximumExportsPlusHeaderUndocumented =
+              MaximumAllowed.NoMaximumToEnforce
+          , minimumExportsPlusHeaderDocumented =
+              MinimumAllowed.NoMinimumToEnforce
           , maximumExportsWithoutSince = MaximumAllowed.NoMaximumToEnforce
           , minimumExportsWithSince = MinimumAllowed.NoMinimumToEnforce
           , moduleHeaderCopyrightMustExistNonEmpty = False
@@ -299,8 +301,9 @@ in  { Config =
         , allowedQualifications = toMap {=} : AllowedQualificationMap
         , allowedOpenUnaliasedImports = MaximumAllowed.NoMaximumToEnforce
         , allowedAliasUniqueness = AllowedAliasUniqueness.NoAliasUniqueness
-        , maximumExportsUndocumented = MaximumAllowed.NoMaximumToEnforce
-        , minimumExportsDocumented = MinimumAllowed.NoMinimumToEnforce
+        , maximumExportsPlusHeaderUndocumented =
+            MaximumAllowed.NoMaximumToEnforce
+        , minimumExportsPlusHeaderDocumented = MinimumAllowed.NoMinimumToEnforce
         , maximumExportsWithoutSince = MaximumAllowed.NoMaximumToEnforce
         , minimumExportsWithSince = MinimumAllowed.NoMinimumToEnforce
         , moduleHeaderCopyrightMustExistNonEmpty = False
@@ -314,8 +317,8 @@ in  { Config =
       , default =
         { allowedOpenUnaliasedImports = None MaximumAllowed
         , allowedAliasUniqueness = None AllowedAliasUniqueness
-        , maximumExportsUndocumented = None MaximumAllowed
-        , minimumExportsDocumented = None MinimumAllowed
+        , maximumExportsPlusHeaderUndocumented = None MaximumAllowed
+        , minimumExportsPlusHeaderDocumented = None MinimumAllowed
         , maximumExportsWithoutSince = None MaximumAllowed
         , minimumExportsWithSince = None MinimumAllowed
         , moduleHeaderCopyrightMustExistNonEmpty = None Bool

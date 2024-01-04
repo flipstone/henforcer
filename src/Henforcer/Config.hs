@@ -66,10 +66,10 @@ forAnyModuleDecoder =
         (T.pack "allowedAliasUniqueness")
         CodeStructure.allowedAliasUniquenessDecoder
       <*> Dhall.field
-        (T.pack "maximumExportsUndocumented")
+        (T.pack "maximumExportsPlusHeaderUndocumented")
         Rules.maximumAllowedDecoder
       <*> Dhall.field
-        (T.pack "minimumExportsDocumented")
+        (T.pack "minimumExportsPlusHeaderDocumented")
         Rules.minimumAllowedDecoder
       <*> Dhall.field
         (T.pack "maximumExportsWithoutSince")
@@ -129,10 +129,10 @@ forSpecifiedModuleDecoder =
         (T.pack "allowedAliasUniqueness")
         (Dhall.maybe CodeStructure.allowedAliasUniquenessDecoder)
       <*> Dhall.field
-        (T.pack "maximumExportsUndocumented")
+        (T.pack "maximumExportsPlusHeaderUndocumented")
         (Dhall.maybe Rules.maximumAllowedDecoder)
       <*> Dhall.field
-        (T.pack "minimumExportsDocumented")
+        (T.pack "minimumExportsPlusHeaderDocumented")
         (Dhall.maybe Rules.minimumAllowedDecoder)
       <*> Dhall.field
         (T.pack "maximumExportsWithoutSince")

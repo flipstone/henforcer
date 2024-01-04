@@ -18,8 +18,8 @@ in  Hen.Config::{
           }
       , allowedAliasUniqueness = Hen.allAliasesUniqueExcept [ "M" ]
       , allowedOpenUnaliasedImports = Hen.maximumAllowed 1
-      , maximumExportsUndocumented = Hen.maximumAllowed 1
-      , minimumExportsDocumented = Hen.minimumAllowed 2
+      , maximumExportsPlusHeaderUndocumented = Hen.maximumAllowed 1
+      , minimumExportsPlusHeaderDocumented = Hen.minimumAllowed 2
       , maximumExportsWithoutSince = Hen.maximumAllowed 0
       , minimumExportsWithSince = Hen.minimumAllowed 1
       , moduleHeaderCopyrightMustExistNonEmpty = True
