@@ -15,6 +15,15 @@ extra-deps:
   commit: <SHA of the latest master commit>
 ```
 
+_Note: `henforcer` requires a handful of packages that are not on stackage as of lts-22.7. The following is likely to needed in the `extra-deps` section of your `stack.yaml`
+
+```
+# henforcer needs pollock and tomland
+- pollock-0.1.0.0
+- tomland-1.3.3.2
+# tomland needs validation-selective
+```
+
 ## Initialization
 
 Once the `henforcer` command is installed you'll need to initialize henforcer for your project. `cd`
@@ -26,20 +35,8 @@ or
 
 `stack exec henforcer --init`
 
-This will create an empty henforcer configuration file at `henforcer.dhall` in the root of your
-project plus a `.henforcer/package.dhall` file that defines the configuration file format and is
-imported by `henforcer.dhall`.
-
-_Note: `henforcer` may require a later version of `dhall` than is available in earlier lts stackage
-snapshots. You may need to add an extra-dep like below to get a compatible version of `dhall`, and
-its dependency `atomic-write`. You may need to tweak `dhall` version below based on the `repline`
-version in your lts as well -- use a `dhall` > `1.32` if your LTS has `repline` >= `0.4`.
-
-```
-# henforcer needs a later dhall, which needs a later atomic-write
-- dhall-1.32.0
-- atomic-write-0.2.0.7
-```
+This will create a default `henforcer` configuration file at `henforcer.toml` in the root of your
+project.
 
 
 ## Execution
@@ -48,29 +45,167 @@ version in your lts as well -- use a `dhall` > `1.32` if your LTS has `repline` 
 compliation with `cabal` or `stack`, add `henforcer` as a dependency in your cabal file or
 package.yaml as applicable and add `-fplugin Henforcer` to `ghc-flags`. Specifying plugin options is
 done with `ghc-flags` as well. Currently only supported is the path to the configuration, which if
-it is at `foo/bar/henforcer.dhall` this would be as `-fplugin-opt=Henforcer:-c
-foo/bar/henforcer.dhall`.
+it is at `foo/bar/henforcer.toml` this would be as
+`-fplugin-opt=Henforcer:-cfoo/bar/henforcer.toml`.
 
 ## Configuration
 
-`henforcer` uses `dhall` files for configuration. The `.henforcer/package.dhall` file created by
-`henforcer --init` defines the configuration options that are available as well as default values
-for them all. You can use it as a handy reference for configuring `henforcer`.
+`henforcer` uses `TOML` files for configuration. Note that the default `henforcer` configuration
+does not enforce any particular rules, so running `henforcer` immediately after installation and
+initialization will not report errors.
 
-Note that the default `henforcer` configuration does not enforce any particular rules, so running
-`henforcer` immediately after installation will not report module structure errors.
+Configuration concepts and options are described below. Also the `examples/henforcer.toml` file
+shows a variety of usage possibilities.
 
-Source options are described below. More precise definitions can be found in the
-[package.dhall](data/package.dhall) file.
+### Concepts
 
-### Module Trees
+#### Module Trees
 
 `henforcer` uses "module trees" as part of its configuration. A "module tree" refers to a root
 module (e.g. `Data.Text`) and all the modules are prefixed by it (e.g. `Data.Text.Encoding` and
 `Data.Text.Lazy`). For modules in your project this almost always means a `src/Foo/MyModule.hs` file
 and any `.hs` files contained inside the `src/Foo/MyModule` directory.
+### Configuration reference
 
-### Tree Dependencies
+#### forAnyModule
+
+Required: Yes
+
+The `forAnyModule` key is a TOML table containing all of the checks that apply when compiling any
+given module. You can think of these as "global" but they do *not* apply to multiple modules at
+once.
+
+##### allowedAliasUniqueness
+
+Required: No
+
+`allowedAliasUniqueness` allows to check either that all aliases in the module being compiled are
+unique except for some, or that a given set of aliases is unique but others may be duplicated. This
+is specified as a TOML table with two keys:
+
+- `aliases` is an array of strings that are the aliases to be checked with.
+- `allAliasesUnique` is a boolean field. When true it determines that every alias should be unique,
+  except those given. When false it determines that only the given aliases should correspond to
+  exactly one import.
+
+The following determines that aliases should be unique by default but that repeated use of "M" is
+allowed.
+
+```toml
+[forAnyModule]
+allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "M" ] }
+```
+
+##### allowedOpenUnaliasedImports
+
+Required: No
+
+`allowedOpenUnaliasedImports` is a non-negative integer that specifies how many imports are allowed
+to be done without using the `qualified` keyword, as well as without using an `alias`. For example
+`import Prelude`. This allows for a check similar to `-Wno-missing-import-lists` but that is
+explictly without issue for modules that re-export others using an alias.
+
+##### allowedQualifications
+
+Required: No
+
+`allowedQualifications` is an array of tables that represent how certain modules should be
+imported. This can be thought of as a map of module name to a list of ways that module may be
+imported.
+
+###### module
+
+Required: Yes
+
+`module` is a string of the module name.
+
+###### importScheme
+
+Required: Yes
+
+`importScheme` defines the way that the module may be imported. The value is an array of
+tables. Which allows for several separate schemes to be specified for a module. The table includes
+checks for qualification, aliasing, safe imports and package qualification. Each of those are
+detailed below.
+
+```toml
+
+[[forAnyModule.allowedQualifications]]
+module = "UnliftIO"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = { qualifiedPre = true, qualifiedPost = true }
+alias = "Foo"
+packageQualified = "unliftio"
+```
+
+####### qualified
+
+Required: Yes
+
+`qualified` controls how an import statement should use the qualified keyword. This is a TOML table
+with three boolean keys which all default to false:
+- `qualifiedPre` whether or not an import can be written with the qualifier before the module name, such as
+```haskell
+import qualified UnliftIO`
+```
+- `qualifiedPost` whether or not an import can be written with the qualifier after the module name, such as
+```haskell
+import UnliftIO qualified`
+```
+
+- `unqualified` whether or not an import can be written without the qualified keyword entirely, such as
+```haskell
+import UnliftIO`
+```
+
+####### alias
+
+Required: No
+
+`alias` controls what alias can be used as part of an import scheme. It is a string value of what is allowed for this particular `importScheme`. This is the part of an import that comes after the `as` keyword, such as
+
+```haskell
+import UnliftIO as Foo`
+```
+
+####### safe
+
+Required: No
+
+`safe` is a boolean field that controls if the import is required to use the `safe` keyword. Most
+users are not expected to need this option.
+
+```haskell
+import safe Data.Bool
+```
+####### packageQualified
+
+Required: No
+
+`packageQualified` is a boolean field that controls if the import is required to use the package
+qualified imports feature. Most users are not expected to need this option.
+
+```haskell
+import "unliftio" UnliftIO
+```
+##### encapsulatedTrees
+
+Required: Yes
+
+The `encapsulatedTrees` option lets you declare that the root of a module tree is effectively a
+public interface that any modules outside the tree should be using. `henforcer` will report an error
+if any module outside the tree attempts to import a module from inside the encapsulated tree.
+
+This option is a TOML array of strings which are module names.
+
+```toml
+[forAnyModule]
+encapsulatedTrees = [ "Service.ThirdPartyPetsSite" ]
+```
+
+##### treeDependencies
+
+Required: No
 
 The `treeDependencies` options lets you declare that one module tree depends on other
 trees. Declaring such a dependency tells `henforcer` that you don't want the dependency targetso to
@@ -78,71 +213,123 @@ import anything from the dependent tree, which would cause a backwards dependenc
 module trees logically inseparable.  `henforcer` will report any imports causing a backward
 dependency as an error.
 
-### Encapsulated Trees
+This option has a value of a TOML array of tables with two keys:
+- `moduleTree` has a value of string representing the tree which depends on others.
+- `dependencies` has a value of an array of strings, which are the trees that the one specified by
+  `moduleTree`dependes upon.
 
-The `encapsulatedTrees` options lets you declare that the root of a module tree is effectively a
-public interface that any modules outside the tree should be using. `henforcer` will report an error
-if any module outside the tree attempts to import a module from inside the encapsulated tree.
 
-### Qualification Rules
+```toml
+[forAnyModule]
+treeDependencies = [ {moduleTree = "PetStore", dependencies = ["Service"]} ]
+```
 
-The `allowedQualifications` option lets you declare that certain modules must or must not be
-imported as `qualified`, if the qualification must be prepositive or postpositive, what aliases may
-be used for the module, and if the import should be marked with 'safe'.
+##### maximumExportsPlusHeaderUndocumented
 
-Several helpers exist to make writing these rules easier:
-- `unqualified`
-  Specifies an import must be unqualified, without an alias, such
-  as `import UnliftIO`.
+Required: No
 
-- `qualified`
-  Specifies an import must be qualified, in the prepositive, without an alias, such
-  as `import qualified UnliftIO`.
+`maximumExportsPlusHeaderUndocumented` is an non-negative integer to enforce a maximum number of
+exported items, along with the module header, from a module that may be missing Haddock
+documentation. This allows a codebase or module that is partially annotated to gradually dial the
+option down over time as Haddock coverage increases.
 
-- `qualifiedPost`
-  Specifies an import must be qualified, in the postpositive, without an alias, such
-  as `import UnliftIO qualified`.
 
-- `unqualifiedAs`
-  Specifies an import must be unqualified, with an alias, such
-  as `import Data.Text as T`.
+```toml
+[forAnyModule]
+maximumExportsPlusHeaderUndocumented = 1
+```
+##### minimumExportsPlusHeaderDocumented
 
-- `qualifiedAs`
-  Specifies an import must be qualified, in the prepositive, with an alias, such
-  as `import qualified Data.Text as T`.
+Required: No
 
-- `qualifiedPostAs`
-  Specifies an import must be qualified, in the postpositive, with an alias, such
-  as `import Data.Text qualified as T`.
+`minimumExportsPlusHeaderDocumented` is an non-negative integer to enforce a minimum number of
+exported items, along with the module header, from a module that must have Haddock
+documentation. This allows a codebase or module that is partially documented to continue to have at
+least as much Haddock coverage.
 
-- `qualifiedEither`
-  Specifies an import must be qualified, in either the prepositive or postpositive, without an
-  alias, such as `import qualified UnliftIO` or `import UnliftIO qualified`, producing a list of
-  allowed qualifications.
+```toml
+[forAnyModule]
+minimumExportsPlusHeaderDocumented = 1
+```
+##### maximumExportsWithoutSince
 
-- `qualifiedEitherAs`
-  Specifies an import must be qualified, in either the prepositive or postpositive, with an alias,
-  such as `import qualified Data.Text as T` or `import Data.Text qualified as T`, producing a list of
-  allowed qualifications.
+Required: No
 
-- `setWithSafe`
-  Mark an import as requiring to be imported 'safe', this is meant to be chained with one of the
-  other helpers.
+`maximumExportsWithoutSince` is an non-negative integer to enforce a maximum number of exported
+items from a module that can be lacking the `@since` annotation in their Haddock. This allows a
+codebase or module that is partially annotated to gradually dial the option down over time as
+coverage for the `@since` annotation increases.
 
-- `onlySafe`
-  Mark a list of imports as required to be imported 'safe'.
+```toml
+[forAnyModule]
+maximumExportsWithoutSince = 1
+```
+##### minimumExportsWithSince
 
-### Open Imports
+Required: No
 
-`henforcer` allows for checks around open imports. A maximum number of completely open imports can
-be specified. This does not include imports that have an associated alias, or those that are
-'hiding'.
+`minimumExportsWithSince` is an non-negative integer to enforce a minimum number of exported items
+from a module that must have in their Haddock the `@since` annotation. This allows a codebase or
+module that is partially annotated to continue to have at least as much coverage for the `@since`
+annotations.
 
-The checks for this can be specified as a default to apply to all modules with the option
-`defaultAllowedOpenUnaliasedImports` and on a module by module basis with the option
-`perModuleOpenUnaliasedImports`. Any per module check specified will have precedence over a default.
+```toml
+[forAnyModule]
+minimumExportsWithSince = 1
+```
+##### moduleHeaderCopyrightMustExistNonEmpty
 
-The following helper functions exist for these checks:
+Required: Yes
 
-- `defaultMaxAllowedOpenUnaliasedImports`
-  Allows to easily set the default maximum for the open import check.
+`moduleHeaderCopyrightMustExistNonEmpty` is a boolean that determines if the `Haddock` module header
+field of `Copyright` must be populated.
+
+```toml
+[forAnyModule]
+moduleHeaderCopyrightMustExistNonEmpty = false
+```
+##### moduleHeaderDescriptionMustExistNonEmpty
+
+Required: Yes
+
+`moduleHeaderDescriptionMustExistNonEmpty` is a boolean that determines if the `Haddock` module
+header field of `Description` must be populated.
+
+```toml
+[forAnyModule]
+moduleHeaderDescriptionMustExistNonEmpty = false
+```
+##### moduleHeaderLicenseMustExistNonEmpty
+
+Required: Yes
+
+`moduleHeaderLicenseMustExistNonEmpty` is a boolean that determines if the `Haddock` module header
+field of `License` must be populated.
+
+```toml
+[forAnyModule]
+moduleHeaderLicenseMustExistNonEmpty = false
+```
+##### moduleHeaderMaintainerMustExistNonEmpty
+
+Required: Yes
+
+`moduleHeaderMaintainerMustExistNonEmpty` is a boolean that determines if the `Haddock` module
+header field of `Maintainer` must be populated.
+
+```toml
+[forAnyModule]
+moduleHeaderMaintainerMustExistNonEmpty = false
+```
+#### forSpecifiedModules
+
+`forSpecifiedModules` is a top level array of tables for specifying checks that apply _only_ to a
+given module. Any checks specified here are _more_ specific than those in `forAnyModule` and as such
+will have precedence.
+
+```toml
+[[forSpecifiedModules]]
+module ="PetStore.Store"
+allowedOpenUnaliasedImports = 2
+moduleHeaderCopyrightMustExistNonEmpty = true
+```

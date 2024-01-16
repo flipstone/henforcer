@@ -10,13 +10,13 @@ Maintainer  : maintainers@flipstone.com
 module Henforcer.Rules.Minimum
   ( checkMinimum
   , MinimumAllowed
-  , minimumAllowedDecoder
+  , minimumAllowedCodec
   , MinimumNat
+  , minimumNatCodec
   ) where
 
-import qualified Data.Text as T
-import qualified Dhall
 import qualified Numeric.Natural as Nat
+import qualified Toml
 
 import qualified CompatGHC
 
@@ -43,20 +43,27 @@ particular module into a single type and be checked against.
 data MinimumAllowed
   = NoMinimumToEnforce
   | MinimumAllowed !MinimumNat
+  deriving (Show)
 
-minimumAllowedDecoder :: Dhall.Decoder MinimumAllowed
-minimumAllowedDecoder =
-  Dhall.union $
-    fmap (const NoMinimumToEnforce) (Dhall.constructor (T.pack "NoMinimumToEnforce") Dhall.unit)
-      <> fmap MinimumAllowed (Dhall.constructor (T.pack "MinimumAllowed") minimumNatDecoder)
+minimumAllowedFromMaybe :: Maybe MinimumNat -> MinimumAllowed
+minimumAllowedFromMaybe Nothing = NoMinimumToEnforce
+minimumAllowedFromMaybe (Just x) = MinimumAllowed x
+
+maybeFromMinimumAllowed :: MinimumAllowed -> Maybe MinimumNat
+maybeFromMinimumAllowed NoMinimumToEnforce = Nothing
+maybeFromMinimumAllowed (MinimumAllowed x) = Just x
+
+minimumAllowedCodec :: Toml.Key -> Toml.TomlCodec MinimumAllowed
+minimumAllowedCodec =
+  Toml.dimap maybeFromMinimumAllowed minimumAllowedFromMaybe . Toml.dioptional . minimumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity
 newtype MinimumNat = MinimumNat Nat.Natural
-  deriving (Num, Eq, Ord, Real, Enum, Integral)
+  deriving (Num, Eq, Ord, Real, Enum, Integral, Show)
 
 instance CompatGHC.Outputable MinimumNat where
   ppr (MinimumNat nat) = CompatGHC.text $ show nat
 
-minimumNatDecoder :: Dhall.Decoder MinimumNat
-minimumNatDecoder =
-  fmap MinimumNat Dhall.natural
+minimumNatCodec :: Toml.Key -> Toml.TomlCodec MinimumNat
+minimumNatCodec =
+  Toml.diwrap . Toml.natural

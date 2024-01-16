@@ -7,20 +7,34 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure.Import.Scheme.Safe
   ( Safe (..)
-  , safeDecoder
+  , safeCodec
   , determineSafe
   ) where
 
-import qualified Data.Text as T
-import qualified Dhall
+import qualified Toml
 
 import qualified CompatGHC
+
+-- TODO Safe can be a newtype wrapper around bool, to save some conversions
 
 -- | Directly represent if an import is 'safe' or not.
 data Safe
   = WithSafe
   | WithoutSafe
-  deriving (Eq)
+  deriving (Show, Eq)
+
+-- | Toml codec based on bool for 'Safe'
+safeCodec :: Toml.Key -> Toml.TomlCodec Safe
+safeCodec =
+  Toml.dimap safeToBool boolToSafe . Toml.bool
+
+safeToBool :: Safe -> Bool
+safeToBool WithSafe = True
+safeToBool WithoutSafe = False
+
+boolToSafe :: Bool -> Safe
+boolToSafe True = WithSafe
+boolToSafe False = WithoutSafe
 
 -- | Compute the safety from an import
 determineSafe :: CompatGHC.ImportDecl pass -> Safe
@@ -28,10 +42,3 @@ determineSafe imp =
   if CompatGHC.ideclSafe imp
     then WithSafe
     else WithoutSafe
-
--- | Dhall decoder for 'Safe' so that it can be read from configuration
-safeDecoder :: Dhall.Decoder Safe
-safeDecoder =
-  Dhall.union $
-    (const WithoutSafe <$> Dhall.constructor (T.pack "WithoutSafe") Dhall.unit)
-      <> (const WithSafe <$> Dhall.constructor (T.pack "WithSafe") Dhall.unit)

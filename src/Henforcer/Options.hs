@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Options
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2024
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -39,7 +39,7 @@ optionsParser =
     <$> Opt.strOption
       ( Opt.long "config"
           <> Opt.short 'c'
-          <> Opt.value "./henforcer.dhall"
+          <> Opt.value "./henforcer.toml"
           <> Opt.showDefault
       )
     <*> Opt.flag False True (Opt.long "init")

@@ -7,13 +7,13 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure.Import.Scheme.PackageQualifier
   ( PackageQualifier (..)
-  , packageQualifierDecoder
+  , packageQualifierCodec
   , determinePackageQualifier
   , keepPackageNameOnly
   ) where
 
 import qualified Data.Text as T
-import qualified Dhall
+import qualified Toml
 
 import qualified CompatGHC
 
@@ -21,7 +21,15 @@ import qualified CompatGHC
 data PackageQualifier
   = WithPackageQualifier T.Text
   | WithoutPackageQualifier
-  deriving (Eq)
+  deriving (Show, Eq)
+
+maybeFromPackageQualifier :: PackageQualifier -> Maybe T.Text
+maybeFromPackageQualifier WithoutPackageQualifier = Nothing
+maybeFromPackageQualifier (WithPackageQualifier x) = Just x
+
+packageQualifierCodec :: Toml.Key -> Toml.TomlCodec PackageQualifier
+packageQualifierCodec =
+  Toml.dimatch maybeFromPackageQualifier WithPackageQualifier . Toml.text
 
 -- | Compute the packageQualifier from an import
 determinePackageQualifier :: CompatGHC.ImportDecl CompatGHC.GhcRn -> PackageQualifier
@@ -30,15 +38,6 @@ determinePackageQualifier idecl =
     CompatGHC.NoPkgQual -> WithoutPackageQualifier
     CompatGHC.ThisPkg u -> WithPackageQualifier (T.pack $ CompatGHC.unitIdString u)
     CompatGHC.OtherPkg u -> WithPackageQualifier (T.pack $ CompatGHC.unitIdString u)
-
--- | Dhall decoder for 'PackageQualifier' so that it can be read from configuration
-packageQualifierDecoder :: Dhall.Decoder PackageQualifier
-packageQualifierDecoder =
-  Dhall.union $
-    (const WithoutPackageQualifier <$> Dhall.constructor (T.pack "WithoutPackageQualifier") Dhall.unit)
-      <> ( WithPackageQualifier
-            <$> Dhall.constructor (T.pack "WithPackageQualifier") (fmap T.pack Dhall.string)
-         )
 
 keepPackageNameOnly :: T.Text -> Maybe T.Text
 keepPackageNameOnly =

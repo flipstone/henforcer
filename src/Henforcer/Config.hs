@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Config
-Description : Haskell representation of the dhall configuration file that is used to define the checks to be enforced.
-Copyright   : (c) Flipstone Technology Partners, 2023
+Description : Haskell representation of the toml configuration file that is used to define the checks to be enforced.
+Copyright   : (c) Flipstone Technology Partners, 2023-2024
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -12,27 +12,27 @@ module Henforcer.Config
   , ForAnyModule (..)
   , ForSpecifiedModule (..)
   , emptyForSpecifiedModule
+  , configCodec
   ) where
 
 import qualified Data.Map.Strict as M
-import qualified Data.Text as T
-import qualified Dhall
+import qualified Toml
 
 import qualified CompatGHC
 import qualified Henforcer.CodeStructure as CodeStructure
 import qualified Henforcer.Rules as Rules
+import qualified TomlHelper
 
 data DependencyDeclaration = DependencyDeclaration
   { moduleTree :: CodeStructure.TreeName
   , treeDependencies :: [CodeStructure.TreeName]
   }
 
-dependencyDeclarationDecoder :: Dhall.Decoder DependencyDeclaration
-dependencyDeclarationDecoder =
-  Dhall.record $
-    DependencyDeclaration
-      <$> Dhall.field (T.pack "moduleTree") CodeStructure.treeNameDecoder
-      <*> Dhall.field (T.pack "dependencies") (Dhall.list CodeStructure.treeNameDecoder)
+dependencyDeclarationCodec :: Toml.TomlCodec DependencyDeclaration
+dependencyDeclarationCodec =
+  DependencyDeclaration
+    <$> TomlHelper.addField "moduleTree" moduleTree CodeStructure.treeNameCodec
+    <*> TomlHelper.addField "dependencies" treeDependencies CodeStructure.treeNameListCodec
 
 data ForAnyModule = ForAnyModule
   { anyModuleDependencyDeclarations :: ![DependencyDeclaration]
@@ -50,45 +50,22 @@ data ForAnyModule = ForAnyModule
   , anyModuleModuleHeaderMaintainerMustExistNonEmpty :: !Rules.MustExistNonEmpty
   }
 
-forAnyModuleDecoder :: Dhall.Decoder ForAnyModule
-forAnyModuleDecoder =
-  Dhall.record $
-    ForAnyModule
-      <$> Dhall.field (T.pack "treeDependencies") (Dhall.list dependencyDeclarationDecoder)
-      <*> Dhall.field (T.pack "encapsulatedTrees") (Dhall.list CodeStructure.treeNameDecoder)
-      <*> Dhall.field
-        (T.pack "allowedQualifications")
-        (Dhall.map CompatGHC.moduleNameDecoder (Dhall.list CodeStructure.qualificationSchemeDecoder))
-      <*> Dhall.field
-        (T.pack "allowedOpenUnaliasedImports")
-        Rules.maximumAllowedDecoder
-      <*> Dhall.field
-        (T.pack "allowedAliasUniqueness")
-        CodeStructure.allowedAliasUniquenessDecoder
-      <*> Dhall.field
-        (T.pack "maximumExportsPlusHeaderUndocumented")
-        Rules.maximumAllowedDecoder
-      <*> Dhall.field
-        (T.pack "minimumExportsPlusHeaderDocumented")
-        Rules.minimumAllowedDecoder
-      <*> Dhall.field
-        (T.pack "maximumExportsWithoutSince")
-        Rules.maximumAllowedDecoder
-      <*> Dhall.field
-        (T.pack "minimumExportsWithSince")
-        Rules.minimumAllowedDecoder
-      <*> Dhall.field
-        (T.pack "moduleHeaderCopyrightMustExistNonEmpty")
-        Rules.mustExistNonEmptyDecoder
-      <*> Dhall.field
-        (T.pack "moduleHeaderDescriptionMustExistNonEmpty")
-        Rules.mustExistNonEmptyDecoder
-      <*> Dhall.field
-        (T.pack "moduleHeaderLicenseMustExistNonEmpty")
-        Rules.mustExistNonEmptyDecoder
-      <*> Dhall.field
-        (T.pack "moduleHeaderMaintainerMustExistNonEmpty")
-        Rules.mustExistNonEmptyDecoder
+forAnyModuleCodec :: Toml.TomlCodec ForAnyModule
+forAnyModuleCodec =
+  ForAnyModule
+    <$> TomlHelper.addField "treeDependencies" anyModuleDependencyDeclarations (Toml.list dependencyDeclarationCodec)
+    <*> TomlHelper.addField "encapsulatedTrees" anyModuleEncapsulatedTrees CodeStructure.treeNameListCodec
+    <*> TomlHelper.addField "allowedQualifications" anyModuleAllowedQualifications CodeStructure.allowedSchemesCodec
+    <*> TomlHelper.addField "allowedOpenUnaliasedImports" anyModuleAllowedOpenUnaliasedImports Rules.maximumAllowedCodec
+    <*> TomlHelper.addField "allowedAliasUniqueness" anyModuleAllowedAliasUniqueness CodeStructure.allowedAliasUniquenessCodec
+    <*> TomlHelper.addField "maximumExportsPlusHeaderUndocumented" anyModuleAllowedOpenUnaliasedImports Rules.maximumAllowedCodec
+    <*> TomlHelper.addField "minimumExportsPlusHeaderDocumented" anyModuleMinimumDocumentedExports Rules.minimumAllowedCodec
+    <*> TomlHelper.addField "maximumExportsWithoutSince" anyModuleMaximumExportsWithoutSince Rules.maximumAllowedCodec
+    <*> TomlHelper.addField "minimumExportsWithSince" anyModuleMinimumExportsWithSince Rules.minimumAllowedCodec
+    <*> TomlHelper.addField "moduleHeaderCopyrightMustExistNonEmpty" anyModuleModuleHeaderCopyrightMustExistNonEmpty Rules.mustExistNonEmptyCodec
+    <*> TomlHelper.addField "moduleHeaderDescriptionMustExistNonEmpty" anyModuleModuleHeaderDescriptionMustExistNonEmpty Rules.mustExistNonEmptyCodec
+    <*> TomlHelper.addField "moduleHeaderLicenseMustExistNonEmpty" anyModuleModuleHeaderLicenseMustExistNonEmpty Rules.mustExistNonEmptyCodec
+    <*> TomlHelper.addField "moduleHeaderMaintainerMustExistNonEmpty" anyModuleModuleHeaderMaintainerMustExistNonEmpty Rules.mustExistNonEmptyCodec
 
 data ForSpecifiedModule = ForSpecifiedModule
   { specifiedModuleAllowedOpenUnaliasedImports :: !(Maybe Rules.MaximumAllowed)
@@ -102,6 +79,7 @@ data ForSpecifiedModule = ForSpecifiedModule
   , specifiedModuleModuleHeaderLicenseMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
   , specifiedModuleModuleHeaderMaintainerMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
   }
+  deriving (Show)
 
 emptyForSpecifiedModule :: ForSpecifiedModule
 emptyForSpecifiedModule =
@@ -118,40 +96,19 @@ emptyForSpecifiedModule =
     , specifiedModuleModuleHeaderMaintainerMustExistNonEmpty = Nothing
     }
 
-forSpecifiedModuleDecoder :: Dhall.Decoder ForSpecifiedModule
-forSpecifiedModuleDecoder =
-  Dhall.record $
-    ForSpecifiedModule
-      <$> Dhall.field
-        (T.pack "allowedOpenUnaliasedImports")
-        (Dhall.maybe Rules.maximumAllowedDecoder)
-      <*> Dhall.field
-        (T.pack "allowedAliasUniqueness")
-        (Dhall.maybe CodeStructure.allowedAliasUniquenessDecoder)
-      <*> Dhall.field
-        (T.pack "maximumExportsPlusHeaderUndocumented")
-        (Dhall.maybe Rules.maximumAllowedDecoder)
-      <*> Dhall.field
-        (T.pack "minimumExportsPlusHeaderDocumented")
-        (Dhall.maybe Rules.minimumAllowedDecoder)
-      <*> Dhall.field
-        (T.pack "maximumExportsWithoutSince")
-        (Dhall.maybe Rules.maximumAllowedDecoder)
-      <*> Dhall.field
-        (T.pack "minimumExportsWithSince")
-        (Dhall.maybe Rules.minimumAllowedDecoder)
-      <*> Dhall.field
-        (T.pack "moduleHeaderCopyrightMustExistNonEmpty")
-        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
-      <*> Dhall.field
-        (T.pack "moduleHeaderDescriptionMustExistNonEmpty")
-        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
-      <*> Dhall.field
-        (T.pack "moduleHeaderLicenseMustExistNonEmpty")
-        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
-      <*> Dhall.field
-        (T.pack "moduleHeaderMaintainerMustExistNonEmpty")
-        (Dhall.maybe Rules.mustExistNonEmptyDecoder)
+forSpecifiedModuleCodec :: Toml.TomlCodec ForSpecifiedModule
+forSpecifiedModuleCodec =
+  ForSpecifiedModule
+    <$> TomlHelper.addField "allowedOpenUnaliasedImports" specifiedModuleAllowedOpenUnaliasedImports (Toml.dioptional . Rules.maximumAllowedCodec)
+    <*> TomlHelper.addField "allowedAliasUniqueness" specifiedModuleAllowedAliasUniqueness (Toml.dioptional . CodeStructure.allowedAliasUniquenessCodec)
+    <*> TomlHelper.addField "maximumExportsPlusHeaderUndocumented" specifiedModuleMaximumUndocumentedExports (Toml.dioptional . Rules.maximumAllowedCodec)
+    <*> TomlHelper.addField "minimumExportsPlusHeaderDocumented" specifiedModuleMinimumDocumentedExports (Toml.dioptional . Rules.minimumAllowedCodec)
+    <*> TomlHelper.addField "maximumExportsWithoutSince" specifiedModuleMaximumExportsWithoutSince (Toml.dioptional . Rules.maximumAllowedCodec)
+    <*> TomlHelper.addField "minimumExportsWithSince" specifiedModuleMinimumExportsWithSince (Toml.dioptional . Rules.minimumAllowedCodec)
+    <*> TomlHelper.addField "moduleHeaderCopyrightMustExistNonEmpty" specifiedModuleModuleHeaderCopyrightMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
+    <*> TomlHelper.addField "moduleHeaderDescriptionMustExistNonEmpty" specifiedModuleModuleHeaderDescriptionMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
+    <*> TomlHelper.addField "moduleHeaderLicenseMustExistNonEmpty" specifiedModuleModuleHeaderLicenseMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
+    <*> TomlHelper.addField "moduleHeaderMaintainerMustExistNonEmpty" specifiedModuleModuleHeaderMaintainerMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
 
 type SpecifiedModuleMap = M.Map CompatGHC.ModuleName ForSpecifiedModule
 
@@ -160,19 +117,14 @@ data Config = Config
   , forSpecifiedModules :: !SpecifiedModuleMap
   }
 
-configDecoder :: Dhall.Decoder Config
-configDecoder =
-  Dhall.record $
-    Config
-      <$> Dhall.field
-        (T.pack "forAnyModule")
-        forAnyModuleDecoder
-      <*> Dhall.field
-        (T.pack "forSpecifiedModule")
-        (Dhall.map CompatGHC.moduleNameDecoder forSpecifiedModuleDecoder)
+configCodec :: Toml.TomlCodec Config
+configCodec =
+  Config
+    <$> TomlHelper.addField "forAnyModule" forAnyModule (Toml.table forAnyModuleCodec)
+    <*> TomlHelper.addField "forSpecifiedModules" forSpecifiedModules (CompatGHC.moduleNameMapCodec forSpecifiedModuleCodec)
 
 loadConfigFileWithFingerprint :: FilePath -> IO (Config, CompatGHC.Fingerprint)
 loadConfigFileWithFingerprint filepath = do
   fingerprint <- CompatGHC.getFileHash filepath
-  config <- Dhall.inputFile configDecoder filepath
+  config <- Toml.decodeFile configCodec filepath
   pure (config, fingerprint)

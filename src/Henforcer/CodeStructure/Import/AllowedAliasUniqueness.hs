@@ -7,33 +7,44 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure.Import.AllowedAliasUniqueness
   ( AllowedAliasUniqueness (..)
-  , allowedAliasUniquenessDecoder
+  , allowedAliasUniquenessCodec
   ) where
 
 import qualified Data.Set as Set
-import qualified Data.Text as T
-import qualified Dhall
+import qualified Toml
 
 import qualified CompatGHC
+import qualified TomlHelper
 
 data AllowedAliasUniqueness
   = AllAliasesUniqueExcept !(Set.Set CompatGHC.ModuleName)
   | AliasesToBeUnique !(Set.Set CompatGHC.ModuleName)
   | NoAliasUniqueness
+  deriving (Show)
 
-allowedAliasUniquenessDecoder :: Dhall.Decoder AllowedAliasUniqueness
-allowedAliasUniquenessDecoder =
-  Dhall.union $
-    fmap
-      AllAliasesUniqueExcept
-      ( Dhall.constructor
-          (T.pack "AllAliasesUniqueExcept")
-          (Dhall.setIgnoringDuplicates CompatGHC.moduleNameDecoder)
-      )
-      <> fmap
-        AliasesToBeUnique
-        ( Dhall.constructor
-            (T.pack "AliasesToBeUnique")
-            (Dhall.setIgnoringDuplicates CompatGHC.moduleNameDecoder)
-        )
-      <> fmap (const NoAliasUniqueness) (Dhall.constructor (T.pack "NoAliasUniqueness") Dhall.unit)
+data Intermediate = Intermediate
+  { allAliasesUnique :: !Bool
+  , aliases :: !(Set.Set CompatGHC.ModuleName)
+  }
+
+intermediateCodec :: Toml.TomlCodec Intermediate
+intermediateCodec =
+  Intermediate
+    <$> TomlHelper.addField "allAliasesUnique" allAliasesUnique Toml.bool
+    <*> TomlHelper.addField "aliases" aliases (Toml.dimap Set.toList Set.fromList . CompatGHC.moduleNameListCodec)
+
+intermediateTo :: Maybe Intermediate -> AllowedAliasUniqueness
+intermediateTo Nothing = NoAliasUniqueness
+intermediateTo (Just i) =
+  if allAliasesUnique i
+    then AllAliasesUniqueExcept (aliases i)
+    else AliasesToBeUnique (aliases i)
+
+toIntermediate :: AllowedAliasUniqueness -> Maybe Intermediate
+toIntermediate NoAliasUniqueness = Nothing
+toIntermediate (AllAliasesUniqueExcept a) = Just (Intermediate True a)
+toIntermediate (AliasesToBeUnique a) = Just (Intermediate False a)
+
+allowedAliasUniquenessCodec :: Toml.Key -> Toml.TomlCodec AllowedAliasUniqueness
+allowedAliasUniquenessCodec =
+  Toml.dimap toIntermediate intermediateTo . Toml.dioptional . Toml.table intermediateCodec

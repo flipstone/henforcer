@@ -3,11 +3,13 @@ module Henforcer.CodeStructure.TreeName
   , isSuperTreeOf
   , treeContainsModule
   , treeStrictlyContainsModule
-  , treeNameDecoder
+  , treeNameCodec
+  , treeNameListCodec
   ) where
 
 import qualified Data.List.NonEmpty as NEL
-import qualified Dhall
+import qualified Data.Text as T
+import qualified Toml
 
 import qualified CompatGHC
 
@@ -71,6 +73,10 @@ moduleNameParts modName =
     (onlyPart, _) ->
       pure onlyPart
 
-treeNameDecoder :: Dhall.Decoder TreeName
-treeNameDecoder =
-  fmap parse Dhall.string
+treeNameCodec :: Toml.Key -> Toml.TomlCodec TreeName
+treeNameCodec =
+  Toml.dimap format parse . Toml.string
+
+treeNameListCodec :: Toml.Key -> Toml.TomlCodec [TreeName]
+treeNameListCodec =
+  Toml.arrayOf (Toml._TextBy (T.pack . format) (pure . parse . T.unpack))

@@ -79,12 +79,16 @@ module CompatGHC
   , addMessages
   , mkMessagesFromList
   , mkErrorMsgEnvelope
-  , moduleNameDecoder
-  , qualificationDecoder
+  , moduleNameCodec
+  , moduleNameListCodec
+  , moduleNameMapCodec
+  , qualificationStyleCodec
   ) where
 
+import qualified Data.Map.Strict as Map
+import qualified Data.String as String
 import qualified Data.Text as T
-import qualified Dhall
+import Data.Typeable (Typeable)
 import GHC
   ( GhcRn
   , IE (..)
@@ -110,40 +114,13 @@ import GHC
   )
 import qualified GHC.Data.Bag as GHC
 import GHC.Fingerprint (Fingerprint, getFileHash)
-import GHC.Plugins
-  ( CommandLineOption
-  , Outputable (ppr)
-  , Plugin (..)
-  , PluginRecompile (MaybeRecompile)
-  , SDoc
-  , UnitId (..)
-  , blankLine
-  , cat
-  , colon
-  , defaultPlugin
-  , dot
-  , doubleQuotes
-  , empty
-  , generatedSrcSpan
-  , hang
-  , hsep
-  , keepRenamedSource
-  , liftIO
-  , neverQualify
-  , purePlugin
-  , sep
-  , text
-  , unitIdString
-  , vcat
-  )
+import GHC.Plugins (CommandLineOption, DiagnosticReason (..), Messages, Outputable (ppr), Plugin (..), PluginRecompile (MaybeRecompile), SDoc, UnitId (..), blankLine, cat, colon, defaultPlugin, dot, doubleQuotes, empty, generatedSrcSpan, hang, hsep, keepRenamedSource, liftIO, neverQualify, purePlugin, sep, text, unitIdString, vcat)
+import qualified GHC.Tc.Errors.Types as GHC
 import GHC.Tc.Utils.Monad (TcGblEnv (tcg_mod, tcg_rn_imports), TcM)
 import qualified GHC.Tc.Utils.Monad as GHC
-import qualified GHC.Types.Error as GHC
-
-import Data.Typeable (Typeable)
-import GHC.Plugins (DiagnosticReason (..), Messages)
-import qualified GHC.Tc.Errors.Types as GHC
 import GHC.Types.Error (MsgEnvelope (..), mkSimpleDecorated)
+import qualified GHC.Types.Error as GHC
+import qualified Toml
 
 #if __GLASGOW_HASKELL__ == 904
 import qualified GHC
@@ -244,15 +221,34 @@ addMessages =
 mkMessagesFromList :: [MsgEnvelope e] -> Messages e
 mkMessagesFromList = GHC.mkMessages . GHC.listToBag
 
--- -- | Dhall decoder for 'ModuleName'
-moduleNameDecoder :: Dhall.Decoder ModuleName
-moduleNameDecoder =
-  fmap mkModuleName Dhall.string
+{- | Toml codec for 'ModuleName'. Note that the encode here may not be what is desired, but
+Henforcer does not, as of this writing, actually create Toml, just consume it.
+-}
+moduleNameCodec :: Toml.Key -> Toml.TomlCodec ModuleName
+moduleNameCodec =
+  Toml.dimap show mkModuleName . Toml.string
 
--- -- | Dhall decoder for qualification style so that it can be read from configuration
-qualificationDecoder :: Dhall.Decoder GHC.ImportDeclQualifiedStyle
-qualificationDecoder =
-  Dhall.union $
-    (const GHC.QualifiedPre <$> Dhall.constructor (T.pack "QualifiedPre") Dhall.unit)
-      <> (const GHC.NotQualified <$> Dhall.constructor (T.pack "Unqualified") Dhall.unit)
-      <> (const GHC.QualifiedPost <$> Dhall.constructor (T.pack "QualifiedPost") Dhall.unit)
+moduleNameListCodec :: Toml.Key -> Toml.TomlCodec [ModuleName]
+moduleNameListCodec =
+  Toml.arrayOf (Toml._TextBy (T.pack . show) (pure . mkModuleName . T.unpack))
+
+moduleNameMapCodec :: Toml.TomlCodec a -> Toml.Key -> Toml.TomlCodec (Map.Map ModuleName a)
+moduleNameMapCodec =
+  Toml.map (moduleNameCodec $ String.fromString "module")
+
+qualificationStyleCodec :: Toml.Key -> Toml.TomlCodec GHC.ImportDeclQualifiedStyle
+qualificationStyleCodec =
+  Toml.textBy qualificationToText parseQualification
+
+qualificationToText :: GHC.ImportDeclQualifiedStyle -> T.Text
+qualificationToText GHC.QualifiedPre = T.pack "QualifiedPre"
+qualificationToText GHC.NotQualified = T.pack "NotQualified"
+qualificationToText GHC.QualifiedPost = T.pack "QualifiedPost"
+
+parseQualification :: T.Text -> Either T.Text GHC.ImportDeclQualifiedStyle
+parseQualification txt =
+  case T.unpack txt of
+    "QualifiedPre" -> Right GHC.QualifiedPre
+    "Unqualified" -> Right GHC.NotQualified
+    "QualifiedPost" -> Right GHC.QualifiedPost
+    other -> Left . T.pack $ "Unsupported qualification: " <> other

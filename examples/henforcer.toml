@@ -1,0 +1,58 @@
+[forAnyModule]
+allowedOpenUnaliasedImports = 1
+maximumExportsPlusHeaderUndocumented = 1
+minimumExportsPlusHeaderDocumented = 2
+maximumExportsWithoutSince = 0
+minimumExportsWithSince = 1
+moduleHeaderCopyrightMustExistNonEmpty = true
+moduleHeaderDescriptionMustExistNonEmpty = true
+moduleHeaderLicenseMustExistNonEmpty = true
+moduleHeaderMaintainerMustExistNonEmpty = false
+encapsulatedTrees = [ "Service.ThirdPartyPetsSite"]
+treeDependencies = [ {moduleTree = "PetStore", dependencies = ["Service"]} ]
+allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "M" ] }
+
+[[forAnyModule.allowedQualifications]]
+module = "UnliftIO"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = { qualifiedPre = true, qualifiedPost = true }
+alias = "Foo"
+packageQualified = "unliftio"
+
+[[forAnyModule.allowedQualifications]]
+module = "Prelude"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = { qualifiedPre = true, qualifiedPost = true, unqualified = true}
+
+[[forAnyModule.allowedQualifications]]
+module = "Data.List"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = { qualifiedPre = true}
+alias = "L"
+
+[[forAnyModule.allowedQualifications]]
+module = "Data.Bool"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = {unqualified = true}
+safe=true
+
+[[forAnyModule.allowedQualifications]]
+module = "Data.Text"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = {qualifiedPre = true}
+alias = "T"
+packageQualified = "text"
+
+[[forAnyModule.allowedQualifications]]
+module = "PetStore.Pet.Model"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified =  {qualifiedPost = true}
+alias="PetModel"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = {unqualified = true}
+# safe = false
+
+[[forSpecifiedModules]]
+module ="PetStore.Store"
+allowedOpenUnaliasedImports = 2
+moduleHeaderCopyrightMustExistNonEmpty = true

@@ -222,7 +222,7 @@ rebuildImportStatementFromScheme modName schema =
         , CompatGHC.ppr modName
         , case CodeStructure.qualification schema of
             CompatGHC.QualifiedPre -> CompatGHC.empty
-            CompatGHC.QualifiedPost -> CompatGHC.text "qualifed"
+            CompatGHC.QualifiedPost -> CompatGHC.text "qualified"
             CompatGHC.NotQualified -> CompatGHC.empty
         , case CodeStructure.alias schema of
             CodeStructure.WithoutAlias ->

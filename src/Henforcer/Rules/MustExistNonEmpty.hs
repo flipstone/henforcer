@@ -1,23 +1,23 @@
 {- |
 Module      : Henforcer.Rules.MustExistNonEmpty
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2024
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.MustExistNonEmpty
   ( MustExistNonEmpty
-  , mustExistNonEmptyDecoder
+  , mustExistNonEmptyCodec
   , checkExistsAndNonEmptyString
   ) where
 
-import qualified Dhall
+import qualified Toml
 
 newtype MustExistNonEmpty = MustExistNonEmpty Bool
+  deriving (Show)
 
-mustExistNonEmptyDecoder :: Dhall.Decoder MustExistNonEmpty
-mustExistNonEmptyDecoder =
-  fmap MustExistNonEmpty Dhall.bool
+mustExistNonEmptyCodec :: Toml.Key -> Toml.TomlCodec MustExistNonEmpty
+mustExistNonEmptyCodec = Toml.diwrap . Toml.bool
 
 checkExistsAndNonEmptyString ::
   MustExistNonEmpty

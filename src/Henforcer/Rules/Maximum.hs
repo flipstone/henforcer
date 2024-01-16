@@ -10,13 +10,14 @@ Maintainer  : maintainers@flipstone.com
 module Henforcer.Rules.Maximum
   ( checkMaximum
   , MaximumAllowed (..)
-  , maximumAllowedDecoder
+  , maximumAllowedFromMaybe
+  , maximumAllowedCodec
   , MaximumNat
+  , maximumNatCodec
   ) where
 
-import qualified Data.Text as T
-import qualified Dhall
 import qualified Numeric.Natural as Nat
+import qualified Toml
 
 import qualified CompatGHC
 
@@ -43,20 +44,27 @@ particular module into a single type and be checked against.
 data MaximumAllowed
   = NoMaximumToEnforce
   | MaximumAllowed !MaximumNat
+  deriving (Show)
 
-maximumAllowedDecoder :: Dhall.Decoder MaximumAllowed
-maximumAllowedDecoder =
-  Dhall.union $
-    fmap (const NoMaximumToEnforce) (Dhall.constructor (T.pack "NoMaximumToEnforce") Dhall.unit)
-      <> fmap MaximumAllowed (Dhall.constructor (T.pack "MaximumAllowed") maximumNatDecoder)
+maximumAllowedFromMaybe :: Maybe MaximumNat -> MaximumAllowed
+maximumAllowedFromMaybe Nothing = NoMaximumToEnforce
+maximumAllowedFromMaybe (Just x) = MaximumAllowed x
+
+maybeFromMaximumAllowed :: MaximumAllowed -> Maybe MaximumNat
+maybeFromMaximumAllowed NoMaximumToEnforce = Nothing
+maybeFromMaximumAllowed (MaximumAllowed x) = Just x
+
+maximumAllowedCodec :: Toml.Key -> Toml.TomlCodec MaximumAllowed
+maximumAllowedCodec =
+  Toml.dimap maybeFromMaximumAllowed maximumAllowedFromMaybe . Toml.dioptional . maximumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity
 newtype MaximumNat = MaximumNat Nat.Natural
-  deriving (Num, Eq, Ord, Real, Enum, Integral)
+  deriving (Num, Eq, Ord, Real, Enum, Integral, Show)
 
 instance CompatGHC.Outputable MaximumNat where
   ppr (MaximumNat nat) = CompatGHC.text $ show nat
 
-maximumNatDecoder :: Dhall.Decoder MaximumNat
-maximumNatDecoder =
-  fmap MaximumNat Dhall.natural
+maximumNatCodec :: Toml.Key -> Toml.TomlCodec MaximumNat
+maximumNatCodec =
+  Toml.diwrap . Toml.natural

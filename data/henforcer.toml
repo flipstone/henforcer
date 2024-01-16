@@ -1,0 +1,7 @@
+[forAnyModule]
+moduleHeaderCopyrightMustExistNonEmpty = false
+moduleHeaderDescriptionMustExistNonEmpty = false
+moduleHeaderLicenseMustExistNonEmpty = false
+moduleHeaderMaintainerMustExistNonEmpty = false
+encapsulatedTrees = [ ]
+[[forSpecifiedModules]]
