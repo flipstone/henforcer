@@ -46,7 +46,7 @@ compliation with `cabal` or `stack`, add `henforcer` as a dependency in your cab
 package.yaml as applicable and add `-fplugin Henforcer` to `ghc-flags`. Specifying plugin options is
 done with `ghc-flags` as well. Currently only supported is the path to the configuration, which if
 it is at `foo/bar/henforcer.toml` this would be as
-`-fplugin-opt=Henforcer:-cfoo/bar/henforcer.toml`.
+`"-fplugin-opt=Henforcer:-cfoo/bar/henforcer.toml"`.
 
 ## Configuration
 
