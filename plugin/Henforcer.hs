@@ -11,6 +11,8 @@ module Henforcer
   ( plugin
   ) where
 
+import qualified Data.ByteString as BS
+import qualified Data.Function as Function
 import qualified Control.Concurrent.MVar as MVar
 import qualified Control.Monad as M
 import qualified System.IO.Unsafe as UnsafeIO
@@ -50,16 +52,21 @@ typeCheckResultAction commandLineOpts _modSummary tcGblEnv = do
   config <- CompatGHC.liftIO $ loadConfigIfNeeded commandLineOpts
   let
     modName = CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv
+    isPrefixOf = BS.isPrefixOf `Function.on` (CompatGHC.bytesFS . CompatGHC.moduleNameFS)
 
-  CompatGHC.addMessages
-    . Checks.errorMessagesFromList
-    $ Checks.checkImports (Checks.determineChecks config modName) tcGblEnv
+  if any (`isPrefixOf` modName) $ Config.ignoreModulesWithPrefix config
+    then
+      pure ()
+    else do
+      CompatGHC.addMessages
+        . Checks.errorMessagesFromList
+        $ Checks.checkImports (Checks.determineChecks config modName) tcGblEnv
 
-  pollockModuleInfo <- CompatGHC.liftIO $ Pollock.processModule tcGblEnv
+      pollockModuleInfo <- CompatGHC.liftIO $ Pollock.processModule tcGblEnv
 
-  CompatGHC.addMessages
-    . Checks.docErrorMessagesFromList
-    $ Checks.checkDocumentation (Checks.determineDocumentationChecks config modName) pollockModuleInfo
+      CompatGHC.addMessages
+        . Checks.docErrorMessagesFromList
+        $ Checks.checkDocumentation (Checks.determineDocumentationChecks config modName) pollockModuleInfo
 
   pure tcGblEnv
 

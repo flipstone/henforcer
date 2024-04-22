@@ -36,6 +36,7 @@ module CompatGHC
   , ideclImportList
   , locA
   , moduleName
+  , moduleNameFS
   , moduleNameString
   , unLoc
   -- GHC.Fingerprint
@@ -83,6 +84,8 @@ module CompatGHC
   , moduleNameListCodec
   , moduleNameMapCodec
   , qualificationStyleCodec
+  -- GHC.Data.FastString
+  , bytesFS
   ) where
 
 import qualified Data.Map.Strict as Map
@@ -113,6 +116,7 @@ import GHC
   , unLoc
   )
 import qualified GHC.Data.Bag as GHC
+import GHC.Data.FastString (bytesFS)
 import GHC.Fingerprint (Fingerprint, getFileHash)
 import GHC.Plugins (CommandLineOption, DiagnosticReason (..), Messages, Outputable (ppr), Plugin (..), PluginRecompile (MaybeRecompile), SDoc, UnitId (..), blankLine, cat, colon, defaultPlugin, dot, doubleQuotes, empty, generatedSrcSpan, hang, hsep, keepRenamedSource, liftIO, neverQualify, purePlugin, sep, text, unitIdString, vcat)
 import qualified GHC.Tc.Errors.Types as GHC
@@ -120,6 +124,11 @@ import GHC.Tc.Utils.Monad (TcGblEnv (tcg_mod, tcg_rn_imports), TcM)
 import qualified GHC.Tc.Utils.Monad as GHC
 import GHC.Types.Error (MsgEnvelope (..), mkSimpleDecorated)
 import qualified GHC.Types.Error as GHC
+#if __GLASGOW_HASKELL__ >= 906
+import Language.Haskell.Syntax.Module.Name (moduleNameFS)
+#else
+import GHC.Unit.Module.Name (moduleNameFS)
+#endif
 import qualified Toml
 
 #if __GLASGOW_HASKELL__ == 904

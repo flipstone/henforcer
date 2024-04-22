@@ -1,7 +1,7 @@
 cabal-version: 3.4
 
 name:           henforcer
-version:        0.1.0.0
+version:        0.1.0.1
 synopsis:       GHC plugin to enforce user specified rules on code.
 description:    Please see the README on GitHub at <https://github.com/flipstone/henforcer#readme>
 category:       Development, Compiler Plugin, static-analysis
@@ -121,6 +121,7 @@ library
   build-depends:
       henforcer:henforcer-internal
     , base >=4.7 && <5
+    , bytestring >= 0.9 && < 0.13
     , pollock >= 0.1 && <0.2
 
   default-language: Haskell2010

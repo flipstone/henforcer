@@ -115,6 +115,7 @@ type SpecifiedModuleMap = M.Map CompatGHC.ModuleName ForSpecifiedModule
 data Config = Config
   { forAnyModule :: !ForAnyModule
   , forSpecifiedModules :: !SpecifiedModuleMap
+  , ignoreModulesWithPrefix :: ![CompatGHC.ModuleName]
   }
 
 configCodec :: Toml.TomlCodec Config
@@ -122,6 +123,7 @@ configCodec =
   Config
     <$> TomlHelper.addField "forAnyModule" forAnyModule (Toml.table forAnyModuleCodec)
     <*> TomlHelper.addField "forSpecifiedModules" forSpecifiedModules (CompatGHC.moduleNameMapCodec forSpecifiedModuleCodec)
+    <*> TomlHelper.addField "ignoreModulesWithPrefix" ignoreModulesWithPrefix CompatGHC.moduleNameListCodec
 
 loadConfigFileWithFingerprint :: FilePath -> IO (Config, CompatGHC.Fingerprint)
 loadConfigFileWithFingerprint filepath = do
