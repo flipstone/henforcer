@@ -114,7 +114,34 @@ import GHC
   )
 import qualified GHC.Data.Bag as GHC
 import GHC.Fingerprint (Fingerprint, getFileHash)
-import GHC.Plugins (CommandLineOption, DiagnosticReason (..), Messages, Outputable (ppr), Plugin (..), PluginRecompile (MaybeRecompile), SDoc, UnitId (..), blankLine, cat, colon, defaultPlugin, dot, doubleQuotes, empty, generatedSrcSpan, hang, hsep, keepRenamedSource, liftIO, neverQualify, purePlugin, sep, text, unitIdString, vcat)
+import GHC.Plugins
+  ( CommandLineOption
+  , DiagnosticReason (..)
+  , Messages
+  , Outputable (ppr)
+  , Plugin (..)
+  , PluginRecompile (MaybeRecompile)
+  , SDoc
+  , UnitId (..)
+  , blankLine
+  , cat
+  , colon
+  , defaultPlugin
+  , dot
+  , doubleQuotes
+  , empty
+  , generatedSrcSpan
+  , hang
+  , hsep
+  , keepRenamedSource
+  , liftIO
+  , neverQualify
+  , purePlugin
+  , sep
+  , text
+  , unitIdString
+  , vcat
+  )
 import qualified GHC.Tc.Errors.Types as GHC
 import GHC.Tc.Utils.Monad (TcGblEnv (tcg_mod, tcg_rn_imports), TcM)
 import qualified GHC.Tc.Utils.Monad as GHC

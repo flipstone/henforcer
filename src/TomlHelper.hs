@@ -13,7 +13,8 @@ module TomlHelper
 import qualified Data.String as String
 import qualified Toml
 
-addField :: String -> (object -> field) -> (Toml.Key -> Toml.TomlCodec field) -> Toml.Codec object field
+addField ::
+  String -> (object -> field) -> (Toml.Key -> Toml.TomlCodec field) -> Toml.Codec object field
 addField fieldName fieldAccessor codec =
   codec (String.fromString fieldName) Toml..= fieldAccessor
 

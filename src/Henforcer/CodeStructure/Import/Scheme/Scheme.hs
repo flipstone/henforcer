@@ -10,9 +10,9 @@ Maintainer  : maintainers@flipstone.com
 module Henforcer.CodeStructure.Import.Scheme.Scheme
   ( Scheme (..)
   , AllowedSchemes
+  , SchemeWithNote (..)
   , buildScheme
   , allowedSchemesCodec
-  , schemeCodec
   , keepOnlyPackageNameInQualifier
   , filterAliased
   , isAliasIn
@@ -38,7 +38,14 @@ import Henforcer.CodeStructure.Import.Scheme.PackageQualifier
   , packageQualifierCodec
   )
 import Henforcer.CodeStructure.Import.Scheme.Safe (Safe (WithoutSafe), determineSafe, safeCodec)
+import qualified Henforcer.Rules as Rules
 import qualified TomlHelper
+
+data SchemeWithNote = SchemeWithNote
+  { schemeNote :: !Rules.UserNote
+  , underlyingScheme :: !Scheme
+  }
+  deriving (Eq)
 
 {- | Representation of the structure of on an import, covering the qualification, any aliasing, and
 the safety.
@@ -51,31 +58,32 @@ data Scheme = Scheme
   }
   deriving (Eq)
 
-showScheme :: Scheme -> String
-showScheme s =
-  showStyle (qualification s) <> " " <> show (alias s) <> " " <> show (safe s) <> " " <> show (packageQualification s)
+showSchemeWithoutNote :: SchemeWithNote -> String
+showSchemeWithoutNote withNote =
+  let
+    s = underlyingScheme withNote
+   in
+    showStyle (qualification s)
+      <> " "
+      <> show (alias s)
+      <> " "
+      <> show (safe s)
+      <> " "
+      <> show (packageQualification s)
 
 showStyle :: CompatGHC.ImportDeclQualifiedStyle -> String
 showStyle CompatGHC.QualifiedPre = "QualifiedPre"
 showStyle CompatGHC.QualifiedPost = "QualifiedPost"
 showStyle CompatGHC.NotQualified = "NotQualified"
 
-schemeCodec :: Toml.TomlCodec Scheme
-schemeCodec =
-  Scheme
-    <$> TomlHelper.addField "qualified" qualification (CompatGHC.qualificationStyleCodec)
-    <*> TomlHelper.addField "alias" alias aliasCodecWithDefault
-    <*> TomlHelper.addField "safe" safe (TomlHelper.setDefault WithoutSafe safeCodec)
-    <*> TomlHelper.addField "packageQualified" packageQualification (TomlHelper.setDefault WithoutPackageQualifier packageQualifierCodec)
-
 type AllowedSchemes =
-  Map.Map CompatGHC.ModuleName [Scheme]
+  Map.Map CompatGHC.ModuleName [SchemeWithNote]
 
 showAllowedSchemes :: AllowedSchemes -> String
 showAllowedSchemes =
-  show . (fmap . fmap) showScheme
+  show . (fmap . fmap) showSchemeWithoutNote
 
-allowedSchemesCodec :: Toml.Key -> Toml.TomlCodec (Map.Map CompatGHC.ModuleName [Scheme])
+allowedSchemesCodec :: Toml.Key -> Toml.TomlCodec (Map.Map CompatGHC.ModuleName [SchemeWithNote])
 allowedSchemesCodec =
   Toml.dimap ((fmap . fmap) schemeToToml) (fmap tomlsToSchemes)
     . Toml.map (CompatGHC.moduleNameCodec "module") (Toml.list schemeTomlCodec "importScheme")
@@ -95,6 +103,7 @@ data SchemeToml = SchemeToml
   , tomlSafe :: !Safe
   , tomlPackageQualification :: !PackageQualifier
   , tomlQualification :: !QualificationToml
+  , tomlSchemeNote :: !Rules.UserNote
   }
 
 schemeTomlCodec :: Toml.TomlCodec SchemeToml
@@ -102,25 +111,38 @@ schemeTomlCodec =
   SchemeToml
     <$> TomlHelper.addField "alias" tomlAlias aliasCodecWithDefault
     <*> TomlHelper.addField "safe" tomlSafe (TomlHelper.setDefault WithoutSafe safeCodec)
-    <*> TomlHelper.addField "packageQualified" tomlPackageQualification (TomlHelper.setDefault WithoutPackageQualifier packageQualifierCodec)
+    <*> TomlHelper.addField
+      "packageQualified"
+      tomlPackageQualification
+      (TomlHelper.setDefault WithoutPackageQualifier packageQualifierCodec)
     <*> TomlHelper.addField "qualified" tomlQualification (Toml.table qualificationTomlCodec)
+    <*> Rules.userNoteField tomlSchemeNote
 
-schemeToToml :: Scheme -> SchemeToml
-schemeToToml s =
-  SchemeToml
-    { tomlAlias = alias s
-    , tomlSafe = safe s
-    , tomlPackageQualification = packageQualification s
-    , tomlQualification = qualificationStyleToToml $ qualification s
-    }
+schemeToToml :: SchemeWithNote -> SchemeToml
+schemeToToml withNote =
+  let
+    s = underlyingScheme withNote
+   in
+    SchemeToml
+      { tomlAlias = alias s
+      , tomlSafe = safe s
+      , tomlPackageQualification = packageQualification s
+      , tomlQualification = qualificationStyleToToml $ qualification s
+      , tomlSchemeNote = schemeNote withNote
+      }
 
-tomlsToSchemes :: [SchemeToml] -> [Scheme]
+tomlsToSchemes :: [SchemeToml] -> [SchemeWithNote]
 tomlsToSchemes =
   M.join . fmap explodeSchemeToml
 
-explodeSchemeToml :: SchemeToml -> [Scheme]
+explodeSchemeToml :: SchemeToml -> [SchemeWithNote]
 explodeSchemeToml st =
-  explodeQualificationToml (tomlAlias st) (tomlSafe st) (tomlPackageQualification st) (tomlQualification st)
+  explodeQualificationToml
+    (tomlSchemeNote st)
+    (tomlAlias st)
+    (tomlSafe st)
+    (tomlPackageQualification st)
+    (tomlQualification st)
 
 keepOnlyPackageNameInQualifier :: Scheme -> Scheme
 keepOnlyPackageNameInQualifier s =
@@ -178,10 +200,11 @@ qualificationStyleToToml CompatGHC.QualifiedPre = QualificationToml True False F
 qualificationStyleToToml CompatGHC.QualifiedPost = QualificationToml False True False
 qualificationStyleToToml CompatGHC.NotQualified = QualificationToml False False True
 
-explodeQualificationToml :: Alias -> Safe -> PackageQualifier -> QualificationToml -> [Scheme]
-explodeQualificationToml a s p =
+explodeQualificationToml ::
+  Rules.UserNote -> Alias -> Safe -> PackageQualifier -> QualificationToml -> [SchemeWithNote]
+explodeQualificationToml note a s p =
   let
     mkScheme q =
-      Scheme q a s p
+      SchemeWithNote note (Scheme q a s p)
    in
     fmap mkScheme . qualificationTomlToQualifications

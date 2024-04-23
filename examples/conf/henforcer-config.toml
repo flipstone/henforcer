@@ -1,7 +1,7 @@
 [forAnyModule]
 allowedOpenUnaliasedImports = 1
 maximumExportsPlusHeaderUndocumented = 1
-minimumExportsPlusHeaderDocumented = 2
+minimumExportsPlusHeaderDocumented = 0
 maximumExportsWithoutSince = 0
 minimumExportsWithSince = 1
 moduleHeaderCopyrightMustExistNonEmpty = true
@@ -9,8 +9,8 @@ moduleHeaderDescriptionMustExistNonEmpty = true
 moduleHeaderLicenseMustExistNonEmpty = true
 moduleHeaderMaintainerMustExistNonEmpty = false
 encapsulatedTrees = [ "Service.ThirdPartyPetsSite"]
-treeDependencies = [ {moduleTree = "PetStore", dependencies = ["Service"]} ]
-allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "M" ] }
+treeDependencies = [ {moduleTree = "Control.Monad", dependencies = ["PetStore"], note= "This is nonsensical but shows the kind of things we can here."} ]
+allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "M" ], note = "We only allow M to be a repeated alias because of reasons" }
 
 [[forAnyModule.allowedQualifications]]
 module = "UnliftIO"
@@ -29,12 +29,23 @@ module = "Data.List"
 [[forAnyModule.allowedQualifications.importScheme]]
 qualified = { qualifiedPre = true}
 alias = "L"
+note = "List must always be imported as L when prepositive for reasons"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = { qualifiedPre = true}
+alias = "LPost"
+note = "List must always be imported as LPost when postpositive for reasons"
 
 [[forAnyModule.allowedQualifications]]
 module = "Data.Bool"
 [[forAnyModule.allowedQualifications.importScheme]]
 qualified = {unqualified = true}
 safe=true
+
+[[forAnyModule.allowedQualifications]]
+module = "Control.Arrow"
+[[forAnyModule.allowedQualifications.importScheme]]
+# this prevents import of Control.Arrow as no schemes will be allowed.
+qualified = { }
 
 [[forAnyModule.allowedQualifications]]
 module = "Data.Text"

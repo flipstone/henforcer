@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-missing-methods #-}
 
@@ -10,6 +11,7 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Checks.ImportCheck.CheckFailure
   ( CheckFailure (..)
+  , CheckFailureWithNote
   , CheckedDependency (..)
   , errorMessagesFromList
   ) where
@@ -23,8 +25,11 @@ import qualified Henforcer.Rules as Rules
 
 data CheckedDependency = CheckedDependency
   { dependencySource :: !CodeStructure.TreeName
+  , dependencyNote :: !Rules.UserNote
   , dependencyTarget :: !CodeStructure.TreeName
   }
+
+type CheckFailureWithNote = Rules.FailureWithUserNote CheckFailure
 
 data CheckFailure
   = DependencyViolation !CodeStructure.Import !CheckedDependency
@@ -45,7 +50,7 @@ instance CompatGHC.Outputable CheckFailure where
 {- | Convert a list of 'CheckFailure' to 'CompatGHC.Messages' so we can hand off to GHC printing mechanism
  in the plugin.
 -}
-errorMessagesFromList :: [CheckFailure] -> CompatGHC.Messages CheckFailure
+errorMessagesFromList :: [CheckFailureWithNote] -> CompatGHC.Messages CheckFailureWithNote
 errorMessagesFromList =
   CompatGHC.mkMessagesFromList . fmap mkEnv
 
@@ -62,16 +67,19 @@ checkFailureLoc = CodeStructure.srcLocation . checkFailureImport
 {- | The only part of the 'CompatGHC.Diagnostic' class that we really care about is the
  'diagnosticMessage', used for printing.
 -}
-instance CompatGHC.Diagnostic CheckFailure where
-  type DiagnosticOpts CheckFailure = CompatGHC.NoDiagnosticOpts
+instance CompatGHC.Diagnostic CheckFailureWithNote where
+  type DiagnosticOpts (Rules.FailureWithUserNote CheckFailure) = CompatGHC.NoDiagnosticOpts
   diagnosticMessage _ = CompatGHC.mkSimpleDecorated . CompatGHC.ppr
   diagnosticReason = const CompatGHC.ErrorWithoutFlag
   diagnosticHints = const []
   diagnosticCode = const Nothing
 
-mkEnv :: CheckFailure -> CompatGHC.MsgEnvelope CheckFailure
+mkEnv :: CheckFailureWithNote -> CompatGHC.MsgEnvelope (Rules.FailureWithUserNote CheckFailure)
 mkEnv cf =
-  CompatGHC.mkErrorMsgEnvelope (checkFailureLoc cf) CompatGHC.neverQualify cf
+  CompatGHC.mkErrorMsgEnvelope
+    (checkFailureLoc $ Rules.underlyingFailure cf)
+    CompatGHC.neverQualify
+    cf
 
 formatDependencyViolation :: CodeStructure.Import -> CheckedDependency -> CompatGHC.SDoc
 formatDependencyViolation imp dep =

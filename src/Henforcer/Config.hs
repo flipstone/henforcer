@@ -26,6 +26,7 @@ import qualified TomlHelper
 data DependencyDeclaration = DependencyDeclaration
   { moduleTree :: CodeStructure.TreeName
   , treeDependencies :: [CodeStructure.TreeName]
+  , dependencyDeclarationNote :: Rules.UserNote
   }
 
 dependencyDeclarationCodec :: Toml.TomlCodec DependencyDeclaration
@@ -33,6 +34,7 @@ dependencyDeclarationCodec =
   DependencyDeclaration
     <$> TomlHelper.addField "moduleTree" moduleTree CodeStructure.treeNameCodec
     <*> TomlHelper.addField "dependencies" treeDependencies CodeStructure.treeNameListCodec
+    <*> Rules.userNoteField dependencyDeclarationNote
 
 data ForAnyModule = ForAnyModule
   { anyModuleDependencyDeclarations :: ![DependencyDeclaration]
@@ -53,22 +55,59 @@ data ForAnyModule = ForAnyModule
 forAnyModuleCodec :: Toml.TomlCodec ForAnyModule
 forAnyModuleCodec =
   ForAnyModule
-    <$> TomlHelper.addField "treeDependencies" anyModuleDependencyDeclarations (Toml.list dependencyDeclarationCodec)
+    <$> TomlHelper.addField
+      "treeDependencies"
+      anyModuleDependencyDeclarations
+      (Toml.list dependencyDeclarationCodec)
     <*> TomlHelper.addField "encapsulatedTrees" anyModuleEncapsulatedTrees CodeStructure.treeNameListCodec
-    <*> TomlHelper.addField "allowedQualifications" anyModuleAllowedQualifications CodeStructure.allowedSchemesCodec
-    <*> TomlHelper.addField "allowedOpenUnaliasedImports" anyModuleAllowedOpenUnaliasedImports Rules.maximumAllowedCodec
-    <*> TomlHelper.addField "allowedAliasUniqueness" anyModuleAllowedAliasUniqueness CodeStructure.allowedAliasUniquenessCodec
-    <*> TomlHelper.addField "maximumExportsPlusHeaderUndocumented" anyModuleAllowedOpenUnaliasedImports Rules.maximumAllowedCodec
-    <*> TomlHelper.addField "minimumExportsPlusHeaderDocumented" anyModuleMinimumDocumentedExports Rules.minimumAllowedCodec
-    <*> TomlHelper.addField "maximumExportsWithoutSince" anyModuleMaximumExportsWithoutSince Rules.maximumAllowedCodec
-    <*> TomlHelper.addField "minimumExportsWithSince" anyModuleMinimumExportsWithSince Rules.minimumAllowedCodec
-    <*> TomlHelper.addField "moduleHeaderCopyrightMustExistNonEmpty" anyModuleModuleHeaderCopyrightMustExistNonEmpty Rules.mustExistNonEmptyCodec
-    <*> TomlHelper.addField "moduleHeaderDescriptionMustExistNonEmpty" anyModuleModuleHeaderDescriptionMustExistNonEmpty Rules.mustExistNonEmptyCodec
-    <*> TomlHelper.addField "moduleHeaderLicenseMustExistNonEmpty" anyModuleModuleHeaderLicenseMustExistNonEmpty Rules.mustExistNonEmptyCodec
-    <*> TomlHelper.addField "moduleHeaderMaintainerMustExistNonEmpty" anyModuleModuleHeaderMaintainerMustExistNonEmpty Rules.mustExistNonEmptyCodec
+    <*> TomlHelper.addField
+      "allowedQualifications"
+      anyModuleAllowedQualifications
+      CodeStructure.allowedSchemesCodec
+    <*> TomlHelper.addField
+      "allowedOpenUnaliasedImports"
+      anyModuleAllowedOpenUnaliasedImports
+      Rules.maximumAllowedCodec
+    <*> TomlHelper.addField
+      "allowedAliasUniqueness"
+      anyModuleAllowedAliasUniqueness
+      CodeStructure.allowedAliasUniquenessCodec
+    <*> TomlHelper.addField
+      "maximumExportsPlusHeaderUndocumented"
+      anyModuleAllowedOpenUnaliasedImports
+      Rules.maximumAllowedCodec
+    <*> TomlHelper.addField
+      "minimumExportsPlusHeaderDocumented"
+      anyModuleMinimumDocumentedExports
+      Rules.minimumAllowedCodec
+    <*> TomlHelper.addField
+      "maximumExportsWithoutSince"
+      anyModuleMaximumExportsWithoutSince
+      Rules.maximumAllowedCodec
+    <*> TomlHelper.addField
+      "minimumExportsWithSince"
+      anyModuleMinimumExportsWithSince
+      Rules.minimumAllowedCodec
+    <*> TomlHelper.addField
+      "moduleHeaderCopyrightMustExistNonEmpty"
+      anyModuleModuleHeaderCopyrightMustExistNonEmpty
+      Rules.mustExistNonEmptyCodec
+    <*> TomlHelper.addField
+      "moduleHeaderDescriptionMustExistNonEmpty"
+      anyModuleModuleHeaderDescriptionMustExistNonEmpty
+      Rules.mustExistNonEmptyCodec
+    <*> TomlHelper.addField
+      "moduleHeaderLicenseMustExistNonEmpty"
+      anyModuleModuleHeaderLicenseMustExistNonEmpty
+      Rules.mustExistNonEmptyCodec
+    <*> TomlHelper.addField
+      "moduleHeaderMaintainerMustExistNonEmpty"
+      anyModuleModuleHeaderMaintainerMustExistNonEmpty
+      Rules.mustExistNonEmptyCodec
 
 data ForSpecifiedModule = ForSpecifiedModule
-  { specifiedModuleAllowedOpenUnaliasedImports :: !(Maybe Rules.MaximumAllowed)
+  { specifiedModuleAllowedQualifications :: !(Maybe CodeStructure.AllowedSchemes)
+  , specifiedModuleAllowedOpenUnaliasedImports :: !(Maybe Rules.MaximumAllowed)
   , specifiedModuleAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
   , specifiedModuleMaximumUndocumentedExports :: !(Maybe Rules.MaximumAllowed)
   , specifiedModuleMinimumDocumentedExports :: !(Maybe Rules.MinimumAllowed)
@@ -79,12 +118,12 @@ data ForSpecifiedModule = ForSpecifiedModule
   , specifiedModuleModuleHeaderLicenseMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
   , specifiedModuleModuleHeaderMaintainerMustExistNonEmpty :: !(Maybe Rules.MustExistNonEmpty)
   }
-  deriving (Show)
 
 emptyForSpecifiedModule :: ForSpecifiedModule
 emptyForSpecifiedModule =
   ForSpecifiedModule
-    { specifiedModuleAllowedOpenUnaliasedImports = Nothing
+    { specifiedModuleAllowedQualifications = Nothing
+    , specifiedModuleAllowedOpenUnaliasedImports = Nothing
     , specifiedModuleAllowedAliasUniqueness = Nothing
     , specifiedModuleMaximumUndocumentedExports = Nothing
     , specifiedModuleMinimumDocumentedExports = Nothing
@@ -99,16 +138,50 @@ emptyForSpecifiedModule =
 forSpecifiedModuleCodec :: Toml.TomlCodec ForSpecifiedModule
 forSpecifiedModuleCodec =
   ForSpecifiedModule
-    <$> TomlHelper.addField "allowedOpenUnaliasedImports" specifiedModuleAllowedOpenUnaliasedImports (Toml.dioptional . Rules.maximumAllowedCodec)
-    <*> TomlHelper.addField "allowedAliasUniqueness" specifiedModuleAllowedAliasUniqueness (Toml.dioptional . CodeStructure.allowedAliasUniquenessCodec)
-    <*> TomlHelper.addField "maximumExportsPlusHeaderUndocumented" specifiedModuleMaximumUndocumentedExports (Toml.dioptional . Rules.maximumAllowedCodec)
-    <*> TomlHelper.addField "minimumExportsPlusHeaderDocumented" specifiedModuleMinimumDocumentedExports (Toml.dioptional . Rules.minimumAllowedCodec)
-    <*> TomlHelper.addField "maximumExportsWithoutSince" specifiedModuleMaximumExportsWithoutSince (Toml.dioptional . Rules.maximumAllowedCodec)
-    <*> TomlHelper.addField "minimumExportsWithSince" specifiedModuleMinimumExportsWithSince (Toml.dioptional . Rules.minimumAllowedCodec)
-    <*> TomlHelper.addField "moduleHeaderCopyrightMustExistNonEmpty" specifiedModuleModuleHeaderCopyrightMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
-    <*> TomlHelper.addField "moduleHeaderDescriptionMustExistNonEmpty" specifiedModuleModuleHeaderDescriptionMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
-    <*> TomlHelper.addField "moduleHeaderLicenseMustExistNonEmpty" specifiedModuleModuleHeaderLicenseMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
-    <*> TomlHelper.addField "moduleHeaderMaintainerMustExistNonEmpty" specifiedModuleModuleHeaderMaintainerMustExistNonEmpty (Toml.dioptional . Rules.mustExistNonEmptyCodec)
+    <$> TomlHelper.addField
+      "allowedQualifications"
+      specifiedModuleAllowedQualifications
+      (Toml.dioptional . CodeStructure.allowedSchemesCodec)
+    <*> TomlHelper.addField
+      "allowedOpenUnaliasedImports"
+      specifiedModuleAllowedOpenUnaliasedImports
+      (Toml.dioptional . Rules.maximumAllowedCodec)
+    <*> TomlHelper.addField
+      "allowedAliasUniqueness"
+      specifiedModuleAllowedAliasUniqueness
+      (Toml.dioptional . CodeStructure.allowedAliasUniquenessCodec)
+    <*> TomlHelper.addField
+      "maximumExportsPlusHeaderUndocumented"
+      specifiedModuleMaximumUndocumentedExports
+      (Toml.dioptional . Rules.maximumAllowedCodec)
+    <*> TomlHelper.addField
+      "minimumExportsPlusHeaderDocumented"
+      specifiedModuleMinimumDocumentedExports
+      (Toml.dioptional . Rules.minimumAllowedCodec)
+    <*> TomlHelper.addField
+      "maximumExportsWithoutSince"
+      specifiedModuleMaximumExportsWithoutSince
+      (Toml.dioptional . Rules.maximumAllowedCodec)
+    <*> TomlHelper.addField
+      "minimumExportsWithSince"
+      specifiedModuleMinimumExportsWithSince
+      (Toml.dioptional . Rules.minimumAllowedCodec)
+    <*> TomlHelper.addField
+      "moduleHeaderCopyrightMustExistNonEmpty"
+      specifiedModuleModuleHeaderCopyrightMustExistNonEmpty
+      (Toml.dioptional . Rules.mustExistNonEmptyCodec)
+    <*> TomlHelper.addField
+      "moduleHeaderDescriptionMustExistNonEmpty"
+      specifiedModuleModuleHeaderDescriptionMustExistNonEmpty
+      (Toml.dioptional . Rules.mustExistNonEmptyCodec)
+    <*> TomlHelper.addField
+      "moduleHeaderLicenseMustExistNonEmpty"
+      specifiedModuleModuleHeaderLicenseMustExistNonEmpty
+      (Toml.dioptional . Rules.mustExistNonEmptyCodec)
+    <*> TomlHelper.addField
+      "moduleHeaderMaintainerMustExistNonEmpty"
+      specifiedModuleModuleHeaderMaintainerMustExistNonEmpty
+      (Toml.dioptional . Rules.mustExistNonEmptyCodec)
 
 type SpecifiedModuleMap = M.Map CompatGHC.ModuleName ForSpecifiedModule
 
@@ -121,7 +194,10 @@ configCodec :: Toml.TomlCodec Config
 configCodec =
   Config
     <$> TomlHelper.addField "forAnyModule" forAnyModule (Toml.table forAnyModuleCodec)
-    <*> TomlHelper.addField "forSpecifiedModules" forSpecifiedModules (CompatGHC.moduleNameMapCodec forSpecifiedModuleCodec)
+    <*> TomlHelper.addField
+      "forSpecifiedModules"
+      forSpecifiedModules
+      (CompatGHC.moduleNameMapCodec forSpecifiedModuleCodec)
 
 loadConfigFileWithFingerprint :: FilePath -> IO (Config, CompatGHC.Fingerprint)
 loadConfigFileWithFingerprint filepath = do

@@ -75,252 +75,81 @@ The `forAnyModule` key is a TOML table containing all of the checks that apply w
 given module. You can think of these as "global" but they do *not* apply to multiple modules at
 once.
 
-##### allowedAliasUniqueness
+| fieldName                                  | type                          | required | description |
+|--------------------------------------------|-------------------------------|----------|-------------|
+| `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
+| `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias` |
+| `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported. |
+| `encapsulatedTrees`                        | array of string               | yes      | Lets you declare that the root of a module tree is effectively a public interface that any modules outside the tree should be using. `henforcer` will report an error if any module outside the tree attempts to import a module from inside the encapsulated tree. |
+| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation. |
+| `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation. |
+| `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock. |
+| `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation. |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | yes      | If the `Haddock` module header field of `Copyright` must be populated. |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | yes      | If the `Haddock` module header field of `Description` must be populated. |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | yes      | If the `Haddock` module header field of `License` must be populated. |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | yes      | If the `Haddock` module header field of `Maintainer` must be populated. |
+| `treeDependencies`                         | array of TreeDependency       | no       | Declares that one module tree depends on other trees. Declaring such a dependency tells `henforcer` that you don't want the dependency targets to import anything from the dependent tree, which would cause a backwards dependency rendering the two module trees logically inseparable. |
+
+#### forSpecifiedModules
+
+Henforcer allows for certain rules to be overriden on a module by module basis. When provided, the
+most specific rule will be applied.
+
+| fieldName                                  | type                          | required | description |
+|--------------------------------------------|-------------------------------|----------|-------------|
+| `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
+| `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias` |
+| `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported. |
+| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation. |
+| `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation. |
+| `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock. |
+| `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation. |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | yes      | If the `Haddock` module header field of `Copyright` must be populated. |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | yes      | If the `Haddock` module header field of `Description` must be populated. |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | yes      | If the `Haddock` module header field of `License` must be populated. |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | yes      | If the `Haddock` module header field of `Maintainer` must be populated. |
+
+#### Shared types
+
+Below are the reused definitions between the `forAnyModule` and `forSpecifiedModules`.
+
+##### AllowedAliasUniqueness
+| fieldName          | type            | required | description                                                                                                                                                                  |
+|--------------------|-----------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `allAliasesUnique` | bool            | yes      | When true it determines that every alias should be unique, except those given. When false it determines that only the given aliases should correspond to exactly one import. |
+| `aliases`          | array of string | yes      | Aliases to be checked with. |
+| `note`             | string          | no       | User defined message to be displayed with errors for additional context. |
+
+##### AllowedQualification
+| fieldName    | type                  | required | description                                                                 |
+|--------------|-----------------------|----------|-----------------------------------------------------------------------------|
+| `module`       | string                | yes      | `module` is a string of the module name.                                    |
+| `importScheme` | array of ImportScheme | yes      | The list of specifications for each way that the given module may imported. |
+
+##### ImportScheme
+| fieldName | type      | required | description                                                                                                                                                                     |
+|-----------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| qualified | Qualified | yes      | Description of ways the import can be qualified, or not.                                                                                                                        |
+| `alias`     | string    | no       | Controls if and what alias can be used as part of an import scheme. This is the part of an import that comes after the `as` keyword, such as "Foo" in `import UnliftIO as Foo`. |
+| `safe`      | boolean   | no       | Controls if the import is required to use the `safe` keyword. Most users are not expected to need this option.                                                                  |
+| `note`      | string    | no       | User defined message to be displayed with errors for additional context. |
+
+##### Qualified
+
+| fieldName       | type | required | description |
+|-----------------|------|----------|-------------|
+| `qualifiedPre`  | bool | no       | Describes if import can be qualified prepositive like `import qualified UnliftIO`. |
+| `qualifiedPost` | bool | no       | Describes if import can be qualified postpositive like `import UnliftIO qualified`. |
+| `unqualified`   | bool | no       | Describes if import can be unqualified like `import UnliftIO`. |
+
+##### TreeDependency
+| fieldName      | type            | required | description |
+|----------------|-----------------|----------|-------------|
+| `moduleTree`   | string          | yes      | The tree which depends on others. |
+| `dependencies` | array of string | yes      | The trees which are depended upon. |
+| `note`         | string          | no       | User defined message to be displayed with errors for additional context. |
 
-Required: No
-
-`allowedAliasUniqueness` allows to check either that all aliases in the module being compiled are
-unique except for some, or that a given set of aliases is unique but others may be duplicated. This
-is specified as a TOML table with two keys:
-
-- `aliases` is an array of strings that are the aliases to be checked with.
-- `allAliasesUnique` is a boolean field. When true it determines that every alias should be unique,
-  except those given. When false it determines that only the given aliases should correspond to
-  exactly one import.
-
-The following determines that aliases should be unique by default but that repeated use of "M" is
-allowed.
-
-```toml
-[forAnyModule]
-allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "M" ] }
-```
-
-##### allowedOpenUnaliasedImports
-
-Required: No
-
-`allowedOpenUnaliasedImports` is a non-negative integer that specifies how many imports are allowed
-to be done without using the `qualified` keyword, as well as without using an `alias`. For example
-`import Prelude`. This allows for a check similar to `-Wno-missing-import-lists` but that is
-explictly without issue for modules that re-export others using an alias.
-
-##### allowedQualifications
-
-Required: No
-
-`allowedQualifications` is an array of tables that represent how certain modules should be
-imported. This can be thought of as a map of module name to a list of ways that module may be
-imported.
-
-###### module
-
-Required: Yes
-
-`module` is a string of the module name.
-
-###### importScheme
-
-Required: Yes
-
-`importScheme` defines the way that the module may be imported. The value is an array of
-tables. Which allows for several separate schemes to be specified for a module. The table includes
-checks for qualification, aliasing, safe imports and package qualification. Each of those are
-detailed below.
-
-```toml
-
-[[forAnyModule.allowedQualifications]]
-module = "UnliftIO"
-[[forAnyModule.allowedQualifications.importScheme]]
-qualified = { qualifiedPre = true, qualifiedPost = true }
-alias = "Foo"
-packageQualified = "unliftio"
-```
-
-####### qualified
-
-Required: Yes
-
-`qualified` controls how an import statement should use the qualified keyword. This is a TOML table
-with three boolean keys which all default to false:
-- `qualifiedPre` whether or not an import can be written with the qualifier before the module name, such as
-```haskell
-import qualified UnliftIO`
-```
-- `qualifiedPost` whether or not an import can be written with the qualifier after the module name, such as
-```haskell
-import UnliftIO qualified`
-```
-
-- `unqualified` whether or not an import can be written without the qualified keyword entirely, such as
-```haskell
-import UnliftIO`
-```
-
-####### alias
-
-Required: No
-
-`alias` controls what alias can be used as part of an import scheme. It is a string value of what is allowed for this particular `importScheme`. This is the part of an import that comes after the `as` keyword, such as
-
-```haskell
-import UnliftIO as Foo`
-```
-
-####### safe
-
-Required: No
-
-`safe` is a boolean field that controls if the import is required to use the `safe` keyword. Most
-users are not expected to need this option.
-
-```haskell
-import safe Data.Bool
-```
-####### packageQualified
-
-Required: No
-
-`packageQualified` is a boolean field that controls if the import is required to use the package
-qualified imports feature. Most users are not expected to need this option.
-
-```haskell
-import "unliftio" UnliftIO
-```
-##### encapsulatedTrees
-
-Required: Yes
-
-The `encapsulatedTrees` option lets you declare that the root of a module tree is effectively a
-public interface that any modules outside the tree should be using. `henforcer` will report an error
-if any module outside the tree attempts to import a module from inside the encapsulated tree.
-
-This option is a TOML array of strings which are module names.
-
-```toml
-[forAnyModule]
-encapsulatedTrees = [ "Service.ThirdPartyPetsSite" ]
-```
-
-##### treeDependencies
-
-Required: No
-
-The `treeDependencies` options lets you declare that one module tree depends on other
-trees. Declaring such a dependency tells `henforcer` that you don't want the dependency targetso to
-import anything from the dependent tree, which would cause a backwards dependency rendering the two
-module trees logically inseparable.  `henforcer` will report any imports causing a backward
-dependency as an error.
-
-This option has a value of a TOML array of tables with two keys:
-- `moduleTree` has a value of string representing the tree which depends on others.
-- `dependencies` has a value of an array of strings, which are the trees that the one specified by
-  `moduleTree`dependes upon.
-
-
-```toml
-[forAnyModule]
-treeDependencies = [ {moduleTree = "PetStore", dependencies = ["Service"]} ]
-```
-
-##### maximumExportsPlusHeaderUndocumented
-
-Required: No
-
-`maximumExportsPlusHeaderUndocumented` is an non-negative integer to enforce a maximum number of
-exported items, along with the module header, from a module that may be missing Haddock
-documentation. This allows a codebase or module that is partially annotated to gradually dial the
-option down over time as Haddock coverage increases.
-
-
-```toml
-[forAnyModule]
-maximumExportsPlusHeaderUndocumented = 1
-```
-##### minimumExportsPlusHeaderDocumented
-
-Required: No
-
-`minimumExportsPlusHeaderDocumented` is an non-negative integer to enforce a minimum number of
-exported items, along with the module header, from a module that must have Haddock
-documentation. This allows a codebase or module that is partially documented to continue to have at
-least as much Haddock coverage.
-
-```toml
-[forAnyModule]
-minimumExportsPlusHeaderDocumented = 1
-```
-##### maximumExportsWithoutSince
-
-Required: No
-
-`maximumExportsWithoutSince` is an non-negative integer to enforce a maximum number of exported
-items from a module that can be lacking the `@since` annotation in their Haddock. This allows a
-codebase or module that is partially annotated to gradually dial the option down over time as
-coverage for the `@since` annotation increases.
-
-```toml
-[forAnyModule]
-maximumExportsWithoutSince = 1
-```
-##### minimumExportsWithSince
-
-Required: No
-
-`minimumExportsWithSince` is an non-negative integer to enforce a minimum number of exported items
-from a module that must have in their Haddock the `@since` annotation. This allows a codebase or
-module that is partially annotated to continue to have at least as much coverage for the `@since`
-annotations.
-
-```toml
-[forAnyModule]
-minimumExportsWithSince = 1
-```
-##### moduleHeaderCopyrightMustExistNonEmpty
-
-Required: Yes
-
-`moduleHeaderCopyrightMustExistNonEmpty` is a boolean that determines if the `Haddock` module header
-field of `Copyright` must be populated.
-
-```toml
-[forAnyModule]
-moduleHeaderCopyrightMustExistNonEmpty = false
-```
-##### moduleHeaderDescriptionMustExistNonEmpty
-
-Required: Yes
-
-`moduleHeaderDescriptionMustExistNonEmpty` is a boolean that determines if the `Haddock` module
-header field of `Description` must be populated.
-
-```toml
-[forAnyModule]
-moduleHeaderDescriptionMustExistNonEmpty = false
-```
-##### moduleHeaderLicenseMustExistNonEmpty
-
-Required: Yes
-
-`moduleHeaderLicenseMustExistNonEmpty` is a boolean that determines if the `Haddock` module header
-field of `License` must be populated.
-
-```toml
-[forAnyModule]
-moduleHeaderLicenseMustExistNonEmpty = false
-```
-##### moduleHeaderMaintainerMustExistNonEmpty
-
-Required: Yes
-
-`moduleHeaderMaintainerMustExistNonEmpty` is a boolean that determines if the `Haddock` module
-header field of `Maintainer` must be populated.
-
-```toml
-[forAnyModule]
-moduleHeaderMaintainerMustExistNonEmpty = false
-```
 #### forSpecifiedModules
 
 `forSpecifiedModules` is a top level array of tables for specifying checks that apply _only_ to a

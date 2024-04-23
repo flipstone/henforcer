@@ -38,8 +38,8 @@ freebsd_test_task:
       - chmod +x /usr/local/bin/ghcup
       - export PATH=$PATH:/.local/bin:/.ghcup/bin
       - export GHC_VERSIONS=9.4.5
-      - export STACK_YAMLS=stack.yaml
-      - make setup
+      - export STACK_YAMLS=
+      - make setup-ghc setup-cabal
   upload_caches:
     - ghcup
   install_script:
@@ -48,15 +48,15 @@ freebsd_test_task:
     - chmod +x /usr/local/bin/ghcup
     - export PATH=$PATH:/.local/bin:/.ghcup/bin
     - export GHC_VERSIONS=9.4.5
-    - export STACK_YAMLS=stack.yaml
-    - make setup
+    - export STACK_YAMLS=
+    - make setup-ghc setup-cabal
   test_script:
     - export PATH=$PATH:/.local/bin:/.ghcup/bin
     - export GHC_VERSIONS=9.4.5
-    - export STACK_YAMLS=stack.yaml
-    - make ci
+    - export STACK_YAMLS=
+    # no reason to test everything, like formatting, on every platform
+    - make build-cabal
   upload_caches:
-    - stack
     - cabal
 
 macos_test_task:
@@ -74,7 +74,7 @@ macos_test_task:
       - brew install haskell-stack cabal-install bmake
       - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
       - source /Users/admin/.ghcup/env
-      - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup
+      - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
   upload_caches:
     - ghcup
   install_script:
@@ -82,11 +82,12 @@ macos_test_task:
     - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
     - source /Users/admin/.ghcup/env
     - export PATH=$PATH:/Users/admin/.local/bin
-    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup
+    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
   test_script:
     - source /Users/admin/.ghcup/env
     - export PATH=$PATH:/Users/admin/.local/bin
-    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake ci
+    # no reason to test everything, like formatting, on every platform
+    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake build-cabal build-stack
   upload_caches:
     - stack
     - cabal

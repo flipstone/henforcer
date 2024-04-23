@@ -64,20 +64,19 @@ formatUnderMinimumDocumentedViolation ::
   Rules.MinimumNat -> Rules.MinimumNat -> CompatGHC.SDoc
 formatUnderMinimumDocumentedViolation current rule =
   let beginningDoc =
-        ( CompatGHC.sep
-            [ CompatGHC.hsep
-                [ CompatGHC.text "There were not enough documented exports."
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The minimum allowed is:"
-                , CompatGHC.ppr rule
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The number documented is:"
-                , CompatGHC.ppr current
-                ]
-            ]
-        )
+        CompatGHC.sep
+          [ CompatGHC.hsep
+              [ CompatGHC.text "There were not enough documented exports."
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The minimum allowed is:"
+              , CompatGHC.ppr rule
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The number documented is:"
+              , CompatGHC.ppr current
+              ]
+          ]
    in CompatGHC.vcat
         [ beginningDoc
         , CompatGHC.blankLine

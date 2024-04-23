@@ -9,7 +9,7 @@ homepage:       https://github.com/flipstone/henforcer#readme
 bug-reports:    https://github.com/flipstone/henforcer/issues
 author:         Flipstone Technology Partners
 maintainer:     maintainers@flipstone.com
-copyright:      2023 Flipstone Technology Partners
+copyright:      2023-2024 Flipstone Technology Partners
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
@@ -18,6 +18,8 @@ extra-source-files:
     data/henforcer.toml
 extra-doc-files:
     ChangeLog.md
+
+tested-with: GHC == 9.4.5, GHC == 9.6.3, GHC == 9.8.1
 
 source-repository head
   type: git
@@ -78,6 +80,7 @@ library henforcer-internal
       Henforcer.Rules.Maximum
       Henforcer.Rules.Minimum
       Henforcer.Rules.MustExistNonEmpty
+      Henforcer.Rules.UserNote
       TomlHelper
 
   autogen-modules:
@@ -96,6 +99,7 @@ library henforcer-internal
       base >=4.7 && <5
     , containers >=0.6 && < 0.8
     , dlist >=1.0 && <1.1
+--    , filepattern >=0.1 && <0.2
     , ghc >= 9.2.1 && <9.9
     , optparse-applicative >=0.14 && <0.19
     , pollock >= 0.1 && <0.2

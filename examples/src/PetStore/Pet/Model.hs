@@ -13,6 +13,7 @@ commentary with @some markup@.
 
 module PetStore.Pet.Model where
 
+import Control.Arrow qualified as A
 import Control.Monad as M
 import Data.Foldable as F
 import Data.Functor as F
