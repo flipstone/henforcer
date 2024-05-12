@@ -12,7 +12,6 @@ module Henforcer
   ) where
 
 import qualified Control.Concurrent.MVar as MVar
-import qualified Control.Monad as M
 import qualified System.IO.Unsafe as UnsafeIO
 
 import qualified CompatGHC
@@ -63,30 +62,41 @@ typeCheckResultAction commandLineOpts _modSummary tcGblEnv = do
 
   pure tcGblEnv
 
-{- | Determines if recompilation of previous modules should happen. This always reloads the
-configuration so that a cached version does not conflict with the recompilation checks.
+{- | Determines if recompilation of previous modules should happen. This always gets the fingerprint
+of the configuration so that a cached version does not conflict with the recompilation checks.
 -}
 recompile :: [CompatGHC.CommandLineOption] -> IO CompatGHC.PluginRecompile
 recompile =
-  fmap (CompatGHC.MaybeRecompile . snd) . loadConfigFileFromOpts
+  fmap (CompatGHC.MaybeRecompile . snd) . getConfigPathAndFingerprint
 
 -- | Load the config into the global state, if it isn't there.
 loadConfigIfNeeded :: [CompatGHC.CommandLineOption] -> IO Config.Config
 loadConfigIfNeeded commandLineOpts = do
   mbConfigWithFingerprint <- MVar.tryReadMVar globalConfigState
   case mbConfigWithFingerprint of
-    Just (conf, _) ->
-      pure conf
+    Just (conf, mvarFingerprint) -> do
+      (configPath, currentFingerprint) <- getConfigPathAndFingerprint commandLineOpts
+      -- A small optimization here, if the fingerprint is unchanged we do not need to reload the
+      -- config. If it has changed then make sure to reload the config.
+      if currentFingerprint == mvarFingerprint
+        then pure conf
+        else do
+          loadedConfig <- Config.loadConfig configPath
+          _ <- MVar.tryPutMVar globalConfigState (loadedConfig, currentFingerprint)
+          pure loadedConfig
     Nothing -> do
-      configWithFingerprint@(conf, _) <- loadConfigFileFromOpts commandLineOpts
+      (configPath, currentFingerprint) <- getConfigPathAndFingerprint commandLineOpts
+      loadedConfig <- Config.loadConfig configPath
       -- If we've been beaten to filling the global config, then oh well, but we do not want to
       -- block on it.
-      _ <- MVar.tryPutMVar globalConfigState configWithFingerprint
-      pure conf
+      _ <- MVar.tryPutMVar globalConfigState (loadedConfig, currentFingerprint)
+      pure loadedConfig
 
--- | Parse options to get configuration path and load the config.
-loadConfigFileFromOpts :: [String] -> IO (Config.Config, CompatGHC.Fingerprint)
-loadConfigFileFromOpts =
-  M.join
-    . fmap (Config.loadConfigFileWithFingerprint . Options.configPath)
-    . Options.parseGivenOptions
+{- | Parse the command line options for the path to the config and compute the fingerprint of that
+config.
+-}
+getConfigPathAndFingerprint :: [CompatGHC.CommandLineOption] -> IO (FilePath, CompatGHC.Fingerprint)
+getConfigPathAndFingerprint commandLineOpts = do
+  configPath <- fmap Options.configPath $ Options.parseGivenOptions commandLineOpts
+  fingerprint <- CompatGHC.getFileHash configPath
+  pure (configPath, fingerprint)

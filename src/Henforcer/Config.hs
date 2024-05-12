@@ -8,11 +8,10 @@ Maintainer  : maintainers@flipstone.com
 module Henforcer.Config
   ( DependencyDeclaration (..)
   , Config (..)
-  , loadConfigFileWithFingerprint
+  , loadConfig
   , ForAnyModule (..)
   , ForSpecifiedModule (..)
   , emptyForSpecifiedModule
-  , configCodec
   ) where
 
 import qualified Data.Map.Strict as M
@@ -199,8 +198,6 @@ configCodec =
       forSpecifiedModules
       (CompatGHC.moduleNameMapCodec forSpecifiedModuleCodec)
 
-loadConfigFileWithFingerprint :: FilePath -> IO (Config, CompatGHC.Fingerprint)
-loadConfigFileWithFingerprint filepath = do
-  fingerprint <- CompatGHC.getFileHash filepath
-  config <- Toml.decodeFile configCodec filepath
-  pure (config, fingerprint)
+loadConfig :: FilePath -> IO Config
+loadConfig =
+  Toml.decodeFile configCodec
