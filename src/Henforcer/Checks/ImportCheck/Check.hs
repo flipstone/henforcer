@@ -215,6 +215,7 @@ importQualificationCheck checks imp accum =
         (schemes, notes) =
           unzip $
             fmap (\note -> (CodeStructure.underlyingScheme note, CodeStructure.schemeNote note)) allowedSchemes
+        withNotes :: CheckFailure -> CheckFailureWithNote
         withNotes = Rules.failureWithUserNotes notes
        in
         if elem

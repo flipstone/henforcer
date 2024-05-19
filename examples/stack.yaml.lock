@@ -5,12 +5,16 @@
 
 packages:
 - completed:
-    hackage: pollock-0.1.0.0@sha256:c9b95b5144d788dfb0b79704e3bc706e6ce39114f100883977fd80db7eb34014,3642
+    commit: bcdc0a1668ff2bc4c8233637100249ae9af616f4
+    git: https://github.com/telser/pollock.git
+    name: pollock
     pantry-tree:
-      sha256: d15e311f8f1b2bea7778ec38f45bbb589b656baeac7fe862f217e8b0e5faf924
-      size: 1182
+      sha256: 927e8af5e4914e426188be93f8f4c05b02859e88b6d11e3359f42625b3d242c1
+      size: 1640
+    version: 0.1.0.1
   original:
-    hackage: pollock-0.1.0.0@sha256:c9b95b5144d788dfb0b79704e3bc706e6ce39114f100883977fd80db7eb34014,3642
+    commit: bcdc0a1668ff2bc4c8233637100249ae9af616f4
+    git: https://github.com/telser/pollock.git
 - completed:
     hackage: tomland-1.3.3.2@sha256:887dc39a8c9819deb8fcb6fde72e87dad4c94108b1736a5bf7215ccf3117bd0f,9474
     pantry-tree:
@@ -27,7 +31,7 @@ packages:
     hackage: validation-selective-0.2.0.0@sha256:e1ab5482dede8bf676d729a09109c7c5f798363b9d458e4197a27afb8b48fdd3,3907
 snapshots:
 - completed:
-    sha256: 23bb9bb355bfdb1635252e120a29b712f0d5e8a6c6a65c5ab5bd6692f46c438e
-    size: 640457
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/7.yaml
-  original: lts-21.7
+    sha256: 4be1ca5d31689b524a7f0f17a439bbe9136465213edc498e9a395899a670f2aa
+    size: 718486
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/22.yaml
+  original: lts-22.22

@@ -49,10 +49,21 @@ common ci-warnings
       -Wpartial-fields
       -Wcpp-undef
       -Wredundant-constraints
+      -Wredundant-strictness-flags
+      -Wmissing-local-signatures
       -Wunused-packages
       -Wunused-matches
       -Wunused-type-patterns
       -fwrite-ide-info
+  if impl (ghc >= 9.8)
+    ghc-options:
+      -Wincomplete-export-warnings
+      -Wimplicit-rhs-quantification
+      -Wterm-variable-capture
+  if impl (ghc >= 9.10)
+    ghc-options:
+      -Wdeprecated-type-abstractions
+      -Wdefaulted-exception-context
 
 library henforcer-internal
   exposed-modules:
@@ -100,9 +111,9 @@ library henforcer-internal
     , containers >=0.6 && < 0.8
     , dlist >=1.0 && <1.1
 --    , filepattern >=0.1 && <0.2
-    , ghc >= 9.2.1 && <9.9
+    , ghc >= 9.2.1 && <9.11
     , optparse-applicative >=0.14 && <0.19
-    , pollock >= 0.1 && <0.2
+    , pollock >= 0.1.0.1 && <0.2
     , text >=1.2 && <2.2
     , tomland == 1.3.3.2
 
@@ -125,7 +136,7 @@ library
   build-depends:
       henforcer:henforcer-internal
     , base >=4.7 && <5
-    , pollock >= 0.1 && <0.2
+    , pollock >= 0.1.0.1 && <0.2
 
   default-language: Haskell2010
 

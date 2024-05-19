@@ -49,7 +49,7 @@ module CompatGHC
   , Plugin (..)
   , PluginRecompile (MaybeRecompile)
   , SDoc
-  , TcGblEnv (tcg_rn_exports, tcg_rn_imports, tcg_mod, tcg_doc_hdr)
+  , TcGblEnv (tcg_rn_exports, tcg_rn_imports, tcg_mod)
   , TcM
   , UnitId (..)
   , blankLine
@@ -83,6 +83,7 @@ module CompatGHC
   , moduleNameListCodec
   , moduleNameMapCodec
   , qualificationStyleCodec
+  , getHeaderInfo
   ) where
 
 import qualified Data.Map.Strict as Map
@@ -91,6 +92,7 @@ import qualified Data.Text as T
 import Data.Typeable (Typeable)
 import GHC
   ( GhcRn
+  , HsDocString
   , IE (..)
   , ImportDecl
   , ImportDeclQualifiedStyle (..)
@@ -101,6 +103,7 @@ import GHC
   , PkgQual (..)
   , SrcSpan
   , getLoc
+  , hsDocString
   , ideclAs
   , ideclName
   , ideclPkgQual
@@ -165,7 +168,16 @@ import GHC.Types.Error (Diagnostic(..), NoDiagnosticOpts(NoDiagnosticOpts))
 import GHC.Utils.Error (mkErrorMsgEnvelope)
 #endif
 
+#if __GLASGOW_HASKELL__ == 910
+import GHC (ideclImportList)
+import GHC.Types.Error (Diagnostic(..), NoDiagnosticOpts(NoDiagnosticOpts))
+import GHC.Utils.Error (mkErrorMsgEnvelope)
+#endif
+
 #if __GLASGOW_HASKELL__ == 904
+-- | Compatibility helper to ease development against multiple versions
+getHeaderInfo :: TcGblEnv -> Maybe HsDocString
+getHeaderInfo = fmap (hsDocString . unLoc) . GHC.tcg_doc_hdr
 
 data NoDiagnosticOpts = NoDiagnosticOpts
 
@@ -213,6 +225,9 @@ addMessages =
 #endif
 
 #if __GLASGOW_HASKELL__ == 906
+-- | Compatibility helper to ease development against multiple versions
+getHeaderInfo :: TcGblEnv -> Maybe HsDocString
+getHeaderInfo = fmap (hsDocString . unLoc) . GHC.tcg_doc_hdr
 
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
@@ -229,6 +244,28 @@ addMessages =
 #endif
 
 #if __GLASGOW_HASKELL__ == 908
+-- | Compatibility helper to ease development against multiple versions
+getHeaderInfo :: TcGblEnv -> Maybe HsDocString
+getHeaderInfo = fmap (hsDocString . unLoc) . GHC.tcg_doc_hdr
+
+-- | Helper to add messages to the type checking monad so our plugin will print our output and fail
+-- a build.
+addMessages ::
+  ( Typeable a
+  , Diagnostic a
+  , GHC.DiagnosticOpts a ~ GHC.NoDiagnosticOpts
+  ) =>
+  Messages a ->
+  TcM ()
+addMessages =
+  GHC.addMessages . fmap GHC.mkTcRnUnknownMessage
+
+#endif
+
+#if __GLASGOW_HASKELL__ == 910
+-- | Compatibility helper to ease development against multiple version
+getHeaderInfo :: TcGblEnv -> Maybe HsDocString
+getHeaderInfo = fmap (hsDocString . unLoc) . fst . GHC.tcg_hdr_info
 
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.

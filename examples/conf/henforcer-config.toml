@@ -10,7 +10,7 @@ moduleHeaderLicenseMustExistNonEmpty = true
 moduleHeaderMaintainerMustExistNonEmpty = false
 encapsulatedTrees = [ "Service.ThirdPartyPetsSite"]
 treeDependencies = [ {moduleTree = "Control.Monad", dependencies = ["PetStore"], note= "This is nonsensical but shows the kind of things we can here."} ]
-allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "M" ], note = "We only allow M to be a repeated alias because of reasons" }
+allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "Export" ], note = "Only 'Export' is allowed to be repeated so that we can create re-export modules with a single export of the form 'module Export'." } # The 'note' here is arbitrary but shows a real world use case
 
 [[forAnyModule.allowedQualifications]]
 module = "UnliftIO"

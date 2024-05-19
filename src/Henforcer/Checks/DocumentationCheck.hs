@@ -286,6 +286,7 @@ checkUndocumented ::
   -> [CheckFailure]
 checkUndocumented maximumAllowed pollockModInfo =
   let
+    getUndocumented :: Pollock.ModuleInfo -> Rules.MaximumNat
     getUndocumented x = fromIntegral $ Pollock.haddockableExports x - Pollock.haddockedExports x
    in
     Rules.checkMaximum
