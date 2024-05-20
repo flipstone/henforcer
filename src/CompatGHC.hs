@@ -1,11 +1,12 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-orphans -Wno-missing-methods #-}
 #if __GLASGOW_HASKELL__ == 904
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+#else
+{-# LANGUAGE TypeOperators #-}
 #endif
 
 {- |
@@ -82,8 +83,6 @@ module CompatGHC
   , moduleNameCodec
   , moduleNameListCodec
   , moduleNameMapCodec
-  , qualificationStyleCodec
-  , getHeaderInfo
   ) where
 
 import qualified Data.Map.Strict as Map
@@ -92,7 +91,6 @@ import qualified Data.Text as T
 import Data.Typeable (Typeable)
 import GHC
   ( GhcRn
-  , HsDocString
   , IE (..)
   , ImportDecl
   , ImportDeclQualifiedStyle (..)
@@ -103,7 +101,6 @@ import GHC
   , PkgQual (..)
   , SrcSpan
   , getLoc
-  , hsDocString
   , ideclAs
   , ideclName
   , ideclPkgQual
@@ -175,10 +172,6 @@ import GHC.Utils.Error (mkErrorMsgEnvelope)
 #endif
 
 #if __GLASGOW_HASKELL__ == 904
--- | Compatibility helper to ease development against multiple versions
-getHeaderInfo :: TcGblEnv -> Maybe HsDocString
-getHeaderInfo = fmap (hsDocString . unLoc) . GHC.tcg_doc_hdr
-
 data NoDiagnosticOpts = NoDiagnosticOpts
 
 -- | The 'Diagnostic' class has seen a frustrating amount of churn, changing in every release, here
@@ -225,10 +218,6 @@ addMessages =
 #endif
 
 #if __GLASGOW_HASKELL__ == 906
--- | Compatibility helper to ease development against multiple versions
-getHeaderInfo :: TcGblEnv -> Maybe HsDocString
-getHeaderInfo = fmap (hsDocString . unLoc) . GHC.tcg_doc_hdr
-
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
 addMessages ::
@@ -244,10 +233,6 @@ addMessages =
 #endif
 
 #if __GLASGOW_HASKELL__ == 908
--- | Compatibility helper to ease development against multiple versions
-getHeaderInfo :: TcGblEnv -> Maybe HsDocString
-getHeaderInfo = fmap (hsDocString . unLoc) . GHC.tcg_doc_hdr
-
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
 addMessages ::
@@ -263,10 +248,6 @@ addMessages =
 #endif
 
 #if __GLASGOW_HASKELL__ == 910
--- | Compatibility helper to ease development against multiple version
-getHeaderInfo :: TcGblEnv -> Maybe HsDocString
-getHeaderInfo = fmap (hsDocString . unLoc) . fst . GHC.tcg_hdr_info
-
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
 addMessages ::
@@ -299,20 +280,3 @@ moduleNameListCodec =
 moduleNameMapCodec :: Toml.TomlCodec a -> Toml.Key -> Toml.TomlCodec (Map.Map ModuleName a)
 moduleNameMapCodec =
   Toml.map (moduleNameCodec $ String.fromString "module")
-
-qualificationStyleCodec :: Toml.Key -> Toml.TomlCodec GHC.ImportDeclQualifiedStyle
-qualificationStyleCodec =
-  Toml.textBy qualificationToText parseQualification
-
-qualificationToText :: GHC.ImportDeclQualifiedStyle -> T.Text
-qualificationToText GHC.QualifiedPre = T.pack "QualifiedPre"
-qualificationToText GHC.NotQualified = T.pack "NotQualified"
-qualificationToText GHC.QualifiedPost = T.pack "QualifiedPost"
-
-parseQualification :: T.Text -> Either T.Text GHC.ImportDeclQualifiedStyle
-parseQualification txt =
-  case T.unpack txt of
-    "QualifiedPre" -> Right GHC.QualifiedPre
-    "Unqualified" -> Right GHC.NotQualified
-    "QualifiedPost" -> Right GHC.QualifiedPost
-    other -> Left . T.pack $ "Unsupported qualification: " <> other
