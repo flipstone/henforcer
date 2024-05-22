@@ -85,10 +85,10 @@ once.
 | `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation. |
 | `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock. |
 | `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation. |
-| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | yes      | If the `Haddock` module header field of `Copyright` must be populated. |
-| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | yes      | If the `Haddock` module header field of `Description` must be populated. |
-| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | yes      | If the `Haddock` module header field of `License` must be populated. |
-| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | yes      | If the `Haddock` module header field of `Maintainer` must be populated. |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | no      | If the `Haddock` module header field of `Copyright` must be populated. |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | no      | If the `Haddock` module header field of `Description` must be populated. |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no      | If the `Haddock` module header field of `License` must be populated. |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no      | If the `Haddock` module header field of `Maintainer` must be populated. |
 | `treeDependencies`                         | array of TreeDependency       | no       | Declares that one module tree depends on other trees. Declaring such a dependency tells `henforcer` that you don't want the dependency targets to import anything from the dependent tree, which would cause a backwards dependency rendering the two module trees logically inseparable. |
 
 #### forSpecifiedModules
@@ -96,8 +96,8 @@ once.
 Henforcer allows for certain rules to be overriden on a module by module basis. When provided, the
 most specific rule will be applied.
 
-| fieldName                                  | type                          | required | description |
-|--------------------------------------------|-------------------------------|----------|-------------|
+| fieldName                                  | type                          | required | description                                                                                                                                                       |
+|--------------------------------------------|-------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
 | `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias` |
 | `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported. |
@@ -105,10 +105,35 @@ most specific rule will be applied.
 | `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation. |
 | `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock. |
 | `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation. |
-| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | yes      | If the `Haddock` module header field of `Copyright` must be populated. |
-| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | yes      | If the `Haddock` module header field of `Description` must be populated. |
-| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | yes      | If the `Haddock` module header field of `License` must be populated. |
-| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | yes      | If the `Haddock` module header field of `Maintainer` must be populated. |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | no      | If the `Haddock` module header field of `Copyright` must be populated. |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | no      | If the `Haddock` module header field of `Description` must be populated. |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no      | If the `Haddock` module header field of `License` must be populated. |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no      | If the `Haddock` module header field of `Maintainer` must be populated. |
+| `rulesToIgnore`                            | RulesToIgnore                 | no       | Specifies what, if any, rules should be ignored for the given module. |
+
+##### RulesToIgnore
+This is allowed to take two forms that are both TOML tables.
+
+###### First form
+| fieldName | type | required | description                                |
+| `all`     | bool | no       | Controls if *all* rules should be ignored. |
+
+###### Second form
+| fieldName                                  | type    | required | description                             |
+|--------------------------------------------|---------|----------|-----------------------------------------|
+| `allowedAliasUniqueness`                   | boolean | no       | Controls if the rule should be ignored. |
+| `allowedOpenUnaliasedImports`              | boolean | no       | Controls if the rule should be ignored. |
+| `allowedQualifications`                    | boolean | no       | Controls if the rule should be ignored. |
+| `encapsulatedTrees`                        | boolean | no       | Controls if the rule should be ignored. |
+| `maximumExportsPlusHeaderUndocumented`     | boolean | no       | Controls if the rule should be ignored. |
+| `minimumExportsPlusHeaderDocumented`       | boolean | no       | Controls if the rule should be ignored. |
+| `maximumExportsWithoutSince`               | boolean | no       | Controls if the rule should be ignored. |
+| `minimumExportsWithSince`                  | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean | no       | Controls if the rule should be ignored. |
+| `treeDependencies`                         | boolean | no       | Controls if the rule should be ignored. |
 
 #### Shared types
 
@@ -149,16 +174,3 @@ Below are the reused definitions between the `forAnyModule` and `forSpecifiedMod
 | `moduleTree`   | string          | yes      | The tree which depends on others. |
 | `dependencies` | array of string | yes      | The trees which are depended upon. |
 | `note`         | string          | no       | User defined message to be displayed with errors for additional context. |
-
-#### forSpecifiedModules
-
-`forSpecifiedModules` is a top level array of tables for specifying checks that apply _only_ to a
-given module. Any checks specified here are _more_ specific than those in `forAnyModule` and as such
-will have precedence.
-
-```toml
-[[forSpecifiedModules]]
-module ="PetStore.Store"
-allowedOpenUnaliasedImports = 2
-moduleHeaderCopyrightMustExistNonEmpty = true
-```
