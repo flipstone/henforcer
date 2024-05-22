@@ -8,7 +8,6 @@ Maintainer  : maintainers@flipstone.com
 module Henforcer.Rules.UserNote
   ( UserNote (..)
   , userNoteField
-  , combineUserNotes
   , FailureWithUserNote (userNotes, underlyingFailure)
   , failureWithUserNotes
   , failureWithUserNote
@@ -23,7 +22,6 @@ import qualified CompatGHC
 import qualified TomlHelper
 
 newtype UserNote = UserNote (Maybe String)
-  deriving (Show, Eq)
 
 userNoteMbStr :: UserNote -> Maybe String
 userNoteMbStr (UserNote mbStr) = mbStr
@@ -38,17 +36,6 @@ userNoteField accessor =
 
 noUserNote :: UserNote
 noUserNote = UserNote Nothing
-
-combineUserNotes :: [UserNote] -> UserNote
-combineUserNotes =
-  let
-    foldfn (UserNote mbNote) mbAccum =
-      case (mbNote, mbAccum) of
-        (Nothing, _) -> mbAccum
-        (Just _, Nothing) -> mbNote
-        (Just note, Just accum) -> Just $ note <> "\n" <> accum
-   in
-    UserNote . foldr foldfn Nothing
 
 data FailureWithUserNote a = FailureWithUserNote
   { userNotes :: ![UserNote]

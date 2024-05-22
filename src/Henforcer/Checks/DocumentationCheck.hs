@@ -1,6 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-missing-methods #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 {- |
 Module      : Henforcer.Checks.DocumentationCheck
@@ -17,7 +16,6 @@ module Henforcer.Checks.DocumentationCheck
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
-import qualified Numeric.Natural as Nat
 import qualified Pollock
 
 import qualified CompatGHC
@@ -163,9 +161,6 @@ formatMustBeNonEmpty fieldStr =
         ]
     , CompatGHC.blankLine
     ]
-
-instance CompatGHC.Outputable Nat.Natural where
-  ppr n = CompatGHC.text $ show n
 
 mkEnv :: CheckFailure -> CompatGHC.MsgEnvelope CheckFailure
 mkEnv = CompatGHC.mkErrorMsgEnvelope CompatGHC.generatedSrcSpan CompatGHC.neverQualify

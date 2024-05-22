@@ -15,7 +15,7 @@ import qualified CompatGHC
 
 data TreeName
   = TreeName !String !(Maybe TreeName)
-  deriving (Ord, Eq)
+  deriving (Eq)
 
 instance CompatGHC.Outputable TreeName where
   ppr =

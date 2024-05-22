@@ -17,7 +17,6 @@ data Options = Options
   { configPath :: FilePath
   , initialize :: Bool
   }
-  deriving (Show)
 
 parseOptions :: IO Options
 parseOptions =

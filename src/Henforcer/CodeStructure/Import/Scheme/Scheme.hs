@@ -14,9 +14,6 @@ module Henforcer.CodeStructure.Import.Scheme.Scheme
   , buildScheme
   , allowedSchemesCodec
   , keepOnlyPackageNameInQualifier
-  , filterAliased
-  , isAliasIn
-  , showAllowedSchemes
   ) where
 
 import qualified Control.Monad as M
@@ -26,10 +23,9 @@ import qualified Toml
 
 import qualified CompatGHC
 import Henforcer.CodeStructure.Import.Scheme.Alias
-  ( Alias (WithAlias, WithoutAlias)
+  ( Alias
   , aliasCodecWithDefault
   , determineAlias
-  , isAliased
   )
 import Henforcer.CodeStructure.Import.Scheme.PackageQualifier
   ( PackageQualifier (WithPackageQualifier, WithoutPackageQualifier)
@@ -45,7 +41,6 @@ data SchemeWithNote = SchemeWithNote
   { schemeNote :: !Rules.UserNote
   , underlyingScheme :: !Scheme
   }
-  deriving (Eq)
 
 {- | Representation of the structure of on an import, covering the qualification, any aliasing, and
 the safety.
@@ -58,30 +53,8 @@ data Scheme = Scheme
   }
   deriving (Eq)
 
-showSchemeWithoutNote :: SchemeWithNote -> String
-showSchemeWithoutNote withNote =
-  let
-    s = underlyingScheme withNote
-   in
-    showStyle (qualification s)
-      <> " "
-      <> show (alias s)
-      <> " "
-      <> show (safe s)
-      <> " "
-      <> show (packageQualification s)
-
-showStyle :: CompatGHC.ImportDeclQualifiedStyle -> String
-showStyle CompatGHC.QualifiedPre = "QualifiedPre"
-showStyle CompatGHC.QualifiedPost = "QualifiedPost"
-showStyle CompatGHC.NotQualified = "NotQualified"
-
 type AllowedSchemes =
   Map.Map CompatGHC.ModuleName [SchemeWithNote]
-
-showAllowedSchemes :: AllowedSchemes -> String
-showAllowedSchemes =
-  show . (fmap . fmap) showSchemeWithoutNote
 
 allowedSchemesCodec :: Toml.Key -> Toml.TomlCodec (Map.Map CompatGHC.ModuleName [SchemeWithNote])
 allowedSchemesCodec =
@@ -157,17 +130,6 @@ keepOnlyPackageNameInQualifier s =
         Just t -> WithPackageQualifier t
    in
     s{packageQualification = newQualifier}
-
-filterAliased :: [Scheme] -> [Scheme]
-filterAliased =
-  filter (isAliased . alias)
-
-isAliasIn :: [CompatGHC.ModuleName] -> Scheme -> Bool
-isAliasIn modNames scheme =
-  case alias scheme of
-    WithoutAlias -> False
-    WithAlias n ->
-      elem n modNames
 
 -- | Representation of the choices for qualification as it is presented in the toml config.
 data QualificationToml = QualificationToml

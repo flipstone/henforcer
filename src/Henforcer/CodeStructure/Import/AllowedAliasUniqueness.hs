@@ -21,7 +21,6 @@ data AllowedAliasUniqueness
   = AllAliasesUniqueExcept !(Set.Set CompatGHC.ModuleName) UserNote.UserNote
   | AliasesToBeUnique !(Set.Set CompatGHC.ModuleName) UserNote.UserNote
   | NoAliasUniqueness
-  deriving (Show)
 
 data Intermediate = Intermediate
   { allAliasesUnique :: !Bool

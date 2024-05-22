@@ -9,8 +9,6 @@ module Henforcer.CodeStructure.Import.Scheme.Alias
   ( Alias (..)
   , aliasCodecWithDefault
   , determineAlias
-  , isAliased
-  , isAliasedAs
   ) where
 
 import qualified Toml
@@ -21,7 +19,7 @@ import qualified CompatGHC
 data Alias
   = WithAlias !CompatGHC.ModuleName
   | WithoutAlias
-  deriving (Show, Eq, Ord)
+  deriving (Eq)
 
 maybeFromAlias :: Alias -> Maybe CompatGHC.ModuleName
 maybeFromAlias WithoutAlias = Nothing
@@ -43,11 +41,3 @@ aliasCodecWithDefault =
 determineAlias :: CompatGHC.ImportDecl CompatGHC.GhcRn -> Alias
 determineAlias =
   maybe WithoutAlias (WithAlias . CompatGHC.unLoc) . CompatGHC.ideclAs
-
-isAliased :: Alias -> Bool
-isAliased (WithAlias _) = True
-isAliased WithoutAlias = False
-
-isAliasedAs :: CompatGHC.ModuleName -> Alias -> Bool
-isAliasedAs modName (WithAlias alias) = modName == alias
-isAliasedAs _ WithoutAlias = False
