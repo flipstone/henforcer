@@ -1,9 +1,9 @@
 ---
-resolver: lts-22.17
+resolver: lts-22.22
 packages:
   - .
 
 extra-deps:
-  - pollock-0.1.0.0
+  - pollock-0.1.0.1
   - tomland-1.3.3.2
   - validation-selective-0.2.0.0

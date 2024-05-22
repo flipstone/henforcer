@@ -70,7 +70,7 @@ checkImportAgainstEncapsulation imp encapsulatedTree =
       else mempty
 
 data ImportChecks = ImportChecks
-  { importChecksDependencyDeclarations :: !(Maybe (NEL.NonEmpty CheckedDependency)) -- Nothing means we won't even check
+  { importChecksTreeDependencies :: !(Maybe (NEL.NonEmpty CheckedDependency)) -- Nothing means we won't even check
   , importChecksEncapsulatedTrees :: !(Maybe (NEL.NonEmpty CodeStructure.TreeName)) -- Nothing means we won't even check
   , importChecksAllowedQualifications :: !CodeStructure.AllowedSchemes
   , importChecksAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
@@ -81,7 +81,7 @@ determineChecks :: Config.Config -> CompatGHC.ModuleName -> ImportChecks
 determineChecks config modName =
   determineChecksForModule
     (Config.forAnyModule config)
-    . maybe Config.emptyForSpecifiedModule id
+    . Maybe.fromMaybe Config.emptyForSpecifiedModule
     . Map.lookup modName
     $ Config.forSpecifiedModules config
 
@@ -91,27 +91,93 @@ determineChecksForModule ::
   -> ImportChecks
 determineChecksForModule fam fsm =
   let
+   in ImportChecks
+        { importChecksTreeDependencies =
+            determineTreeDependencies fam fsm
+        , importChecksEncapsulatedTrees =
+            determineEncapsulatedTrees fam fsm
+        , importChecksAllowedQualifications =
+            determineAllowedQualifications fam fsm
+        , importChecksAllowedOpenUnaliasedImports =
+            determineAllowedOpenUnaliasedImports fam fsm
+        , importChecksAllowedAliasUniqueness =
+            determineAllowedAliasUniqueness fam fsm
+        }
+
+determineTreeDependencies ::
+  Config.ForAnyModule
+  -> Config.ForSpecifiedModule
+  -> Maybe (NEL.NonEmpty CheckedDependency)
+determineTreeDependencies fam fsm =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesTreeDependencies) $ Config.specifiedModuleRulesToIgnore fsm
     explodeDependencies decl =
-      fmap (CheckedDependency (Config.moduleTree decl) (Config.dependencyDeclarationNote decl)) $
-        Config.treeDependencies decl
+      fmap (CheckedDependency (Config.moduleTree decl) (Config.treeDependencyNote decl)) $ Config.treeDependencies decl
    in
-    ImportChecks
-      { importChecksDependencyDeclarations =
-          NEL.nonEmpty . concatMap explodeDependencies $ Config.anyModuleDependencyDeclarations fam
-      , importChecksEncapsulatedTrees = NEL.nonEmpty $ Config.anyModuleEncapsulatedTrees fam
-      , importChecksAllowedQualifications =
-          case Config.specifiedModuleAllowedQualifications fsm of
-            Nothing -> Config.anyModuleAllowedQualifications fam
-            Just quals -> Map.union quals $ Config.anyModuleAllowedQualifications fam
-      , importChecksAllowedOpenUnaliasedImports =
-          Maybe.fromMaybe
-            (Config.anyModuleAllowedOpenUnaliasedImports fam)
-            (Config.specifiedModuleAllowedOpenUnaliasedImports fsm)
-      , importChecksAllowedAliasUniqueness =
-          Maybe.fromMaybe
-            (Config.anyModuleAllowedAliasUniqueness fam)
-            (Config.specifiedModuleAllowedAliasUniqueness fsm)
-      }
+    if shouldBeIgnored
+      then mempty
+      else NEL.nonEmpty . concatMap explodeDependencies $ Config.anyModuleTreeDependencies fam
+
+determineEncapsulatedTrees ::
+  Config.ForAnyModule
+  -> Config.ForSpecifiedModule
+  -> Maybe (NEL.NonEmpty CodeStructure.TreeName)
+determineEncapsulatedTrees fam fsm =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesEncapsulatedTrees) $ Config.specifiedModuleRulesToIgnore fsm
+   in
+    if shouldBeIgnored
+      then Nothing
+      else NEL.nonEmpty $ Config.anyModuleEncapsulatedTrees fam
+
+determineAllowedOpenUnaliasedImports ::
+  Config.ForAnyModule
+  -> Config.ForSpecifiedModule
+  -> Rules.MaximumAllowed
+determineAllowedOpenUnaliasedImports fam fsm =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedOpenUnaliasedImports) $ Config.specifiedModuleRulesToIgnore fsm
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
+          (Config.anyModuleAllowedOpenUnaliasedImports fam)
+          (Config.specifiedModuleAllowedOpenUnaliasedImports fsm)
+
+determineAllowedQualifications ::
+  Config.ForAnyModule
+  -> Config.ForSpecifiedModule
+  -> CodeStructure.AllowedSchemes
+determineAllowedQualifications fam fsm =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedQualifications) $ Config.specifiedModuleRulesToIgnore fsm
+   in
+    if shouldBeIgnored
+      then mempty
+      else case Config.specifiedModuleAllowedQualifications fsm of
+        Nothing -> Config.anyModuleAllowedQualifications fam
+        Just quals -> Map.union quals $ Config.anyModuleAllowedQualifications fam
+
+determineAllowedAliasUniqueness ::
+  Config.ForAnyModule
+  -> Config.ForSpecifiedModule
+  -> CodeStructure.AllowedAliasUniqueness
+determineAllowedAliasUniqueness fam fsm =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedAliasUniqueness) $ Config.specifiedModuleRulesToIgnore fsm
+   in
+    if shouldBeIgnored
+      then CodeStructure.NoAliasUniqueness
+      else
+        Maybe.fromMaybe
+          (Config.anyModuleAllowedAliasUniqueness fam)
+          (Config.specifiedModuleAllowedAliasUniqueness fsm)
 
 data ImportCheckAccum = ImportCheckAccum
   { failures :: !(DList.DList CheckFailureWithNote)
@@ -188,7 +254,7 @@ dependencyCheck ::
   -> ImportCheckAccum
   -> ImportCheckAccum
 dependencyCheck checks imp accum =
-  case importChecksDependencyDeclarations checks of
+  case importChecksTreeDependencies checks of
     Nothing ->
       accum
     Just nonEmptyDependencies ->
@@ -237,9 +303,9 @@ mbAddOpenImport ::
   -> ImportCheckAccum
 mbAddOpenImport checks imp accum =
   case importChecksAllowedOpenUnaliasedImports checks of
-    Rules.NoMaximumToEnforce ->
+    Rules.NotEnforced ->
       accum
-    Rules.MaximumAllowed _ ->
+    Rules.Enforced _ ->
       if CodeStructure.importIsOpenWithNoHidingOrAlias imp
         then
           accum

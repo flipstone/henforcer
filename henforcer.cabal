@@ -73,6 +73,10 @@ library henforcer-internal
       Henforcer.Options
   other-modules:
       Paths_henforcer
+      Henforcer.Checks.DocumentationCheck
+      Henforcer.Checks.ImportCheck
+      Henforcer.Checks.ImportCheck.Check
+      Henforcer.Checks.ImportCheck.CheckFailure
       Henforcer.CodeStructure
       Henforcer.CodeStructure.Import
       Henforcer.CodeStructure.Import.AllowedAliasUniqueness
@@ -83,11 +87,13 @@ library henforcer-internal
       Henforcer.CodeStructure.Import.Scheme.Safe
       Henforcer.CodeStructure.Import.Scheme.Scheme
       Henforcer.CodeStructure.TreeName
-      Henforcer.Checks.DocumentationCheck
-      Henforcer.Checks.ImportCheck
-      Henforcer.Checks.ImportCheck.Check
-      Henforcer.Checks.ImportCheck.CheckFailure
+      Henforcer.Config.Config
+      Henforcer.Config.ForAnyModule
+      Henforcer.Config.ForSpecifiedModule
+      Henforcer.Config.IgnoreRules
+      Henforcer.Config.TreeDependencies
       Henforcer.Rules
+      Henforcer.Rules.ConditionallyEnforced
       Henforcer.Rules.Maximum
       Henforcer.Rules.Minimum
       Henforcer.Rules.MustExistNonEmpty

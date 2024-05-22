@@ -11,6 +11,7 @@ module Henforcer.Rules
   ( module Export
   ) where
 
+import Henforcer.Rules.ConditionallyEnforced as Export
 import Henforcer.Rules.Maximum as Export
 import Henforcer.Rules.Minimum as Export
 import Henforcer.Rules.MustExistNonEmpty as Export

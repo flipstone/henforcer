@@ -199,38 +199,138 @@ determineDocumentationChecks config modName =
    in
     DocumentationChecks
       { maximumUndocumentedExports =
-          Maybe.fromMaybe
+        determineMaxiumumUndocumentedExports forAnyModule forSpecifiedModule
+      , minimumDocumentedExports =
+        determineMiniumumDocumentedExports forAnyModule forSpecifiedModule
+      , maximumExportsWithoutSince =
+        determineMaxiumumExportsWithoutSince forAnyModule forSpecifiedModule
+      , minimumExportsWithSince =
+        determineMiniumumExportsWithSince forAnyModule forSpecifiedModule
+      , moduleHeaderCopyrightMustExistNonEmpty =
+          determineModuleHeaderCopyrightMustExistNonEmpty forAnyModule forSpecifiedModule
+      , moduleHeaderDescriptionMustExistNonEmpty =
+          determineModuleHeaderDescriptionMustExistNonEmpty forAnyModule forSpecifiedModule
+      , moduleHeaderLicenseMustExistNonEmpty =
+        determineModuleHeaderLicenseMustExistNonEmpty forAnyModule forSpecifiedModule
+      , moduleHeaderMaintainerMustExistNonEmpty =
+        determineModuleHeaderMaintainerMustExistNonEmpty forAnyModule forSpecifiedModule
+      }
+
+determineMaxiumumUndocumentedExports :: Config.ForAnyModule
+                                              -> Config.ForSpecifiedModule -> Rules.MaximumAllowed
+determineMaxiumumUndocumentedExports forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesMaximumUndocumentedExports) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
             (Config.anyModuleMaximumUndocumentedExports forAnyModule)
             (Config.specifiedModuleMaximumUndocumentedExports forSpecifiedModule)
-      , minimumDocumentedExports =
-          Maybe.fromMaybe
+
+determineMiniumumDocumentedExports :: Config.ForAnyModule
+                                            -> Config.ForSpecifiedModule -> Rules.MinimumAllowed
+determineMiniumumDocumentedExports forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesMinimumDocumentedExports) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
             (Config.anyModuleMinimumDocumentedExports forAnyModule)
             (Config.specifiedModuleMinimumDocumentedExports forSpecifiedModule)
-      , maximumExportsWithoutSince =
-          Maybe.fromMaybe
+
+determineMaxiumumExportsWithoutSince :: Config.ForAnyModule
+                                              -> Config.ForSpecifiedModule -> Rules.MaximumAllowed
+determineMaxiumumExportsWithoutSince forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesMaximumExportsWithoutSince) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
             (Config.anyModuleMaximumExportsWithoutSince forAnyModule)
             (Config.specifiedModuleMaximumExportsWithoutSince forSpecifiedModule)
-      , minimumExportsWithSince =
-          Maybe.fromMaybe
+
+determineMiniumumExportsWithSince :: Config.ForAnyModule
+                                            -> Config.ForSpecifiedModule -> Rules.MinimumAllowed
+determineMiniumumExportsWithSince forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesMinimumExportsWithSince) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
             (Config.anyModuleMinimumExportsWithSince forAnyModule)
             (Config.specifiedModuleMinimumExportsWithSince forSpecifiedModule)
-      , moduleHeaderCopyrightMustExistNonEmpty =
-          Maybe.fromMaybe
+
+determineModuleHeaderCopyrightMustExistNonEmpty :: Config.ForAnyModule
+                                                -> Config.ForSpecifiedModule
+                                                -> Rules.MustExistNonEmpty
+determineModuleHeaderCopyrightMustExistNonEmpty forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesModuleHeaderCopyrightMustExistNonEmpty) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
             (Config.anyModuleModuleHeaderCopyrightMustExistNonEmpty forAnyModule)
             (Config.specifiedModuleModuleHeaderCopyrightMustExistNonEmpty forSpecifiedModule)
-      , moduleHeaderDescriptionMustExistNonEmpty =
-          Maybe.fromMaybe
+
+determineModuleHeaderDescriptionMustExistNonEmpty :: Config.ForAnyModule
+                                                -> Config.ForSpecifiedModule
+                                                -> Rules.MustExistNonEmpty
+determineModuleHeaderDescriptionMustExistNonEmpty forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesModuleHeaderDescriptionMustExistNonEmpty) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+      Maybe.fromMaybe
             (Config.anyModuleModuleHeaderDescriptionMustExistNonEmpty forAnyModule)
             (Config.specifiedModuleModuleHeaderDescriptionMustExistNonEmpty forSpecifiedModule)
-      , moduleHeaderLicenseMustExistNonEmpty =
-          Maybe.fromMaybe
+
+determineModuleHeaderLicenseMustExistNonEmpty :: Config.ForAnyModule
+                                                -> Config.ForSpecifiedModule
+                                                -> Rules.MustExistNonEmpty
+determineModuleHeaderLicenseMustExistNonEmpty forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesModuleHeaderLicenseMustExistNonEmpty) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
             (Config.anyModuleModuleHeaderLicenseMustExistNonEmpty forAnyModule)
             (Config.specifiedModuleModuleHeaderLicenseMustExistNonEmpty forSpecifiedModule)
-      , moduleHeaderMaintainerMustExistNonEmpty =
-          Maybe.fromMaybe
+
+determineModuleHeaderMaintainerMustExistNonEmpty :: Config.ForAnyModule
+                                                -> Config.ForSpecifiedModule
+                                                -> Rules.MustExistNonEmpty
+determineModuleHeaderMaintainerMustExistNonEmpty forAnyModule forSpecifiedModule =
+  let
+    shouldBeIgnored =
+      maybe False (Config.isRuleIgnored Config.ignoreRulesModuleHeaderMaintainerMustExistNonEmpty) $ Config.specifiedModuleRulesToIgnore forSpecifiedModule
+   in
+    if shouldBeIgnored
+      then Rules.NotEnforced
+      else
+        Maybe.fromMaybe
             (Config.anyModuleModuleHeaderMaintainerMustExistNonEmpty forAnyModule)
             (Config.specifiedModuleModuleHeaderMaintainerMustExistNonEmpty forSpecifiedModule)
-      }
 
 checkDocumentation ::
   DocumentationChecks

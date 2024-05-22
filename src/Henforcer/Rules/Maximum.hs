@@ -9,8 +9,7 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.Maximum
   ( checkMaximum
-  , MaximumAllowed (..)
-  , maximumAllowedFromMaybe
+  , MaximumAllowed
   , maximumAllowedCodec
   , MaximumNat
   , maximumNatCodec
@@ -20,6 +19,7 @@ import qualified Numeric.Natural as Nat
 import qualified Toml
 
 import qualified CompatGHC
+import Henforcer.Rules.ConditionallyEnforced (ConditionallyEnforced(Enforced, NotEnforced), conditionallyEnforcedCodec)
 
 checkMaximum ::
   MaximumAllowed
@@ -29,38 +29,22 @@ checkMaximum ::
   -> [b]
 checkMaximum maximumAllowed a getNat handleFailure =
   case maximumAllowed of
-    NoMaximumToEnforce ->
+    NotEnforced ->
       mempty
-    MaximumAllowed maxNat ->
+    Enforced maxNat ->
       let moduleNat = getNat a
        in if moduleNat > maxNat
             then pure $ handleFailure a maxNat
             else mempty
 
-{- | Represent a maximum for a given module or perhaps _any_ module. This is used to collapse a
-stated rule in configuration of a maximum for any module with a rule specified as applying to a
-particular module into a single type and be checked against.
--}
-data MaximumAllowed
-  = NoMaximumToEnforce
-  | MaximumAllowed !MaximumNat
-  deriving (Show)
-
-maximumAllowedFromMaybe :: Maybe MaximumNat -> MaximumAllowed
-maximumAllowedFromMaybe Nothing = NoMaximumToEnforce
-maximumAllowedFromMaybe (Just x) = MaximumAllowed x
-
-maybeFromMaximumAllowed :: MaximumAllowed -> Maybe MaximumNat
-maybeFromMaximumAllowed NoMaximumToEnforce = Nothing
-maybeFromMaximumAllowed (MaximumAllowed x) = Just x
+type MaximumAllowed = ConditionallyEnforced MaximumNat
 
 maximumAllowedCodec :: Toml.Key -> Toml.TomlCodec MaximumAllowed
-maximumAllowedCodec =
-  Toml.dimap maybeFromMaximumAllowed maximumAllowedFromMaybe . Toml.dioptional . maximumNatCodec
+maximumAllowedCodec = conditionallyEnforcedCodec maximumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity
 newtype MaximumNat = MaximumNat Nat.Natural
-  deriving (Num, Eq, Ord, Real, Enum, Integral, Show)
+  deriving (Num, Eq, Ord)
 
 instance CompatGHC.Outputable MaximumNat where
   ppr (MaximumNat nat) = CompatGHC.text $ show nat

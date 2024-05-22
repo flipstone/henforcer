@@ -5,16 +5,12 @@
 
 packages:
 - completed:
-    commit: bcdc0a1668ff2bc4c8233637100249ae9af616f4
-    git: https://github.com/telser/pollock.git
-    name: pollock
+    hackage: pollock-0.1.0.0@sha256:c9b95b5144d788dfb0b79704e3bc706e6ce39114f100883977fd80db7eb34014,3642
     pantry-tree:
-      sha256: 927e8af5e4914e426188be93f8f4c05b02859e88b6d11e3359f42625b3d242c1
-      size: 1640
-    version: 0.1.0.1
+      sha256: d15e311f8f1b2bea7778ec38f45bbb589b656baeac7fe862f217e8b0e5faf924
+      size: 1182
   original:
-    commit: bcdc0a1668ff2bc4c8233637100249ae9af616f4
-    git: https://github.com/telser/pollock.git
+    hackage: pollock-0.1.0.0@sha256:c9b95b5144d788dfb0b79704e3bc706e6ce39114f100883977fd80db7eb34014,3642
 - completed:
     hackage: tomland-1.3.3.2@sha256:887dc39a8c9819deb8fcb6fde72e87dad4c94108b1736a5bf7215ccf3117bd0f,9474
     pantry-tree:

@@ -9,8 +9,8 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.Minimum
   ( checkMinimum
-  , MinimumAllowed
   , minimumAllowedCodec
+  , MinimumAllowed
   , MinimumNat
   , minimumNatCodec
   ) where
@@ -19,6 +19,7 @@ import qualified Numeric.Natural as Nat
 import qualified Toml
 
 import qualified CompatGHC
+import Henforcer.Rules.ConditionallyEnforced (ConditionallyEnforced(Enforced, NotEnforced), conditionallyEnforcedCodec)
 
 checkMinimum ::
   MinimumAllowed
@@ -28,38 +29,23 @@ checkMinimum ::
   -> [b]
 checkMinimum minimumAllowed a getNat handleFailure =
   case minimumAllowed of
-    NoMinimumToEnforce ->
+    NotEnforced ->
       mempty
-    MinimumAllowed minNat ->
+    Enforced minNat ->
       let moduleNat = getNat a
        in if moduleNat < minNat
             then pure $ handleFailure a minNat
             else mempty
 
-{- | Represent a minimum for a given module or perhaps _any_ module. This is used to collapse a
-stated rule in configuration of a minimum for any module with a rule specified as applying to a
-particular module into a single type and be checked against.
--}
-data MinimumAllowed
-  = NoMinimumToEnforce
-  | MinimumAllowed !MinimumNat
-  deriving (Show)
 
-minimumAllowedFromMaybe :: Maybe MinimumNat -> MinimumAllowed
-minimumAllowedFromMaybe Nothing = NoMinimumToEnforce
-minimumAllowedFromMaybe (Just x) = MinimumAllowed x
-
-maybeFromMinimumAllowed :: MinimumAllowed -> Maybe MinimumNat
-maybeFromMinimumAllowed NoMinimumToEnforce = Nothing
-maybeFromMinimumAllowed (MinimumAllowed x) = Just x
+type MinimumAllowed = ConditionallyEnforced MinimumNat
 
 minimumAllowedCodec :: Toml.Key -> Toml.TomlCodec MinimumAllowed
-minimumAllowedCodec =
-  Toml.dimap maybeFromMinimumAllowed minimumAllowedFromMaybe . Toml.dioptional . minimumNatCodec
+minimumAllowedCodec = conditionallyEnforcedCodec minimumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity
 newtype MinimumNat = MinimumNat Nat.Natural
-  deriving (Num, Eq, Ord, Real, Enum, Integral, Show)
+  deriving (Num, Eq, Ord)
 
 instance CompatGHC.Outputable MinimumNat where
   ppr (MinimumNat nat) = CompatGHC.text $ show nat

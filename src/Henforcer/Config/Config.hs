@@ -1,0 +1,36 @@
+{- |
+Module      : Henforcer.Config.Config
+Description : Haskell representation of the toml configuration file that is used to define the checks to be enforced. As well as related functionality.
+Copyright   : (c) Flipstone Technology Partners, 2023-2024
+License     : BSD-3-clause
+Maintainer  : maintainers@flipstone.com
+-}
+module Henforcer.Config.Config
+  ( Config (..)
+  , loadConfig
+  ) where
+
+import qualified Toml
+
+import qualified TomlHelper
+
+import Henforcer.Config.ForAnyModule (ForAnyModule, forAnyModuleCodec)
+import Henforcer.Config.ForSpecifiedModule (SpecifiedModuleMap, specifiedModuleMapCodecField)
+
+data Config = Config
+  { forAnyModule :: !ForAnyModule
+  , forSpecifiedModules :: !SpecifiedModuleMap
+  }
+
+configCodec :: Toml.TomlCodec Config
+configCodec =
+  Config
+    <$> TomlHelper.addField "forAnyModule" forAnyModule (Toml.table forAnyModuleCodec)
+    <*> TomlHelper.addField
+      "forSpecifiedModules"
+      forSpecifiedModules
+      specifiedModuleMapCodecField
+
+loadConfig :: FilePath -> IO Config
+loadConfig =
+  Toml.decodeFile configCodec

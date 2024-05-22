@@ -13,11 +13,12 @@ module Henforcer.Rules.MustExistNonEmpty
 
 import qualified Toml
 
-newtype MustExistNonEmpty = MustExistNonEmpty Bool
-  deriving (Show)
+import Henforcer.Rules.ConditionallyEnforced (ConditionallyEnforced(Enforced, NotEnforced), conditionallyEnforcedCodec)
+
+type MustExistNonEmpty = ConditionallyEnforced Bool
 
 mustExistNonEmptyCodec :: Toml.Key -> Toml.TomlCodec MustExistNonEmpty
-mustExistNonEmptyCodec = Toml.diwrap . Toml.bool
+mustExistNonEmptyCodec = conditionallyEnforcedCodec Toml.bool
 
 checkExistsAndNonEmptyString ::
   MustExistNonEmpty
@@ -25,13 +26,17 @@ checkExistsAndNonEmptyString ::
   -> (a -> Maybe String)
   -> (a -> b)
   -> [b]
-checkExistsAndNonEmptyString (MustExistNonEmpty bool) a getStr handleFailure =
-  if bool
-    then case getStr a of
-      Nothing ->
-        pure $ handleFailure a
-      Just "" ->
-        pure $ handleFailure a
-      Just _ ->
-        mempty
-    else mempty
+checkExistsAndNonEmptyString mustExistNonEmpty a getStr handleFailure =
+  case mustExistNonEmpty of
+    NotEnforced ->
+      mempty
+    Enforced False ->
+      mempty
+    Enforced True ->
+      case getStr a of
+        Nothing ->
+          pure $ handleFailure a
+        Just "" ->
+          pure $ handleFailure a
+        Just _ ->
+          mempty

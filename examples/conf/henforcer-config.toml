@@ -67,3 +67,4 @@ qualified = {unqualified = true}
 module ="PetStore.Store"
 allowedOpenUnaliasedImports = 2
 moduleHeaderCopyrightMustExistNonEmpty = true
+[forSpecifiedModules.rulesToIgnore]
