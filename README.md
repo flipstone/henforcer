@@ -199,6 +199,7 @@ This is allowed to take two forms that are both TOML tables.
 
 ###### First form
 | fieldName | type | required | description                                |
+|-----------|------|----------|--------------------------------------------|
 | `all`     | bool | no       | Controls if *all* rules should be ignored. |
 
 ###### Second form
