@@ -89,6 +89,7 @@ library henforcer-internal
       Henforcer.CodeStructure.TreeName
       Henforcer.Config.Config
       Henforcer.Config.ForAnyModule
+      Henforcer.Config.ForPatternModule
       Henforcer.Config.ForSpecifiedModule
       Henforcer.Config.IgnoreRules
       Henforcer.Config.TreeDependencies
@@ -116,7 +117,7 @@ library henforcer-internal
       base >=4.7 && <5
     , containers >=0.6 && < 0.8
     , dlist >=1.0 && <1.1
---    , filepattern >=0.1 && <0.2
+    , filepattern >=0.1 && <0.2
     , ghc >= 9.2.1 && <9.11
     , optparse-applicative >=0.14 && <0.19
     , pollock >= 0.1.0.1 && <0.2

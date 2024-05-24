@@ -13,6 +13,7 @@ module Henforcer.Config
 
 import Henforcer.Config.Config as Export
 import Henforcer.Config.ForAnyModule as Export
+import Henforcer.Config.ForPatternModule as Export
 import Henforcer.Config.ForSpecifiedModule as Export
 import Henforcer.Config.IgnoreRules as Export
 import Henforcer.Config.TreeDependencies as Export

@@ -12,6 +12,7 @@ module Henforcer.Checks.ImportCheck.Check
 
 import qualified Control.Monad as Monad
 import qualified Data.DList as DList
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -74,16 +75,24 @@ data ImportChecks = ImportChecks
   , importChecksEncapsulatedTrees :: !(Maybe (NEL.NonEmpty CodeStructure.TreeName)) -- Nothing means we won't even check
   , importChecksAllowedQualifications :: !CodeStructure.AllowedSchemes
   , importChecksAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
-  , importChecksAllowedAliasUniqueness :: !CodeStructure.AllowedAliasUniqueness
+  , importChecksAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
   }
 
 determineChecks :: Config.Config -> CompatGHC.ModuleName -> ImportChecks
 determineChecks config modName =
-  determineChecksForModule
-    (Config.forAnyModule config)
-    . Maybe.fromMaybe Config.emptyForSpecifiedModule
-    . Map.lookup modName
-    $ Config.forSpecifiedModules config
+  let
+    specifiedModule =
+      Maybe.fromMaybe Config.emptyForSpecifiedModule
+        . List.lookup modName
+        $ Config.forSpecifiedModules config
+    patternModule =
+      case Config.moduleMatchesPattern (CompatGHC.moduleNameString modName) $ Config.forPatternModules config of
+        Nothing -> Config.emptyForSpecifiedModule
+        Just fpm -> snd fpm
+   in
+    determineChecksForModule
+      (Config.forAnyModule config)
+      $ Config.unionPatternAndSpecifiedModule patternModule specifiedModule
 
 determineChecksForModule ::
   Config.ForAnyModule
@@ -111,9 +120,11 @@ determineTreeDependencies ::
 determineTreeDependencies fam fsm =
   let
     shouldBeIgnored =
-      maybe False (Config.isRuleIgnored Config.ignoreRulesTreeDependencies) $ Config.specifiedModuleRulesToIgnore fsm
+      maybe False (Config.isRuleIgnored Config.ignoreRulesTreeDependencies) $
+        Config.specifiedModuleRulesToIgnore fsm
     explodeDependencies decl =
-      fmap (CheckedDependency (Config.moduleTree decl) (Config.treeDependencyNote decl)) $ Config.treeDependencies decl
+      fmap (CheckedDependency (Config.moduleTree decl) (Config.treeDependencyNote decl)) $
+        Config.treeDependencies decl
    in
     if shouldBeIgnored
       then mempty
@@ -126,7 +137,8 @@ determineEncapsulatedTrees ::
 determineEncapsulatedTrees fam fsm =
   let
     shouldBeIgnored =
-      maybe False (Config.isRuleIgnored Config.ignoreRulesEncapsulatedTrees) $ Config.specifiedModuleRulesToIgnore fsm
+      maybe False (Config.isRuleIgnored Config.ignoreRulesEncapsulatedTrees) $
+        Config.specifiedModuleRulesToIgnore fsm
    in
     if shouldBeIgnored
       then Nothing
@@ -139,7 +151,8 @@ determineAllowedOpenUnaliasedImports ::
 determineAllowedOpenUnaliasedImports fam fsm =
   let
     shouldBeIgnored =
-      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedOpenUnaliasedImports) $ Config.specifiedModuleRulesToIgnore fsm
+      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedOpenUnaliasedImports) $
+        Config.specifiedModuleRulesToIgnore fsm
    in
     if shouldBeIgnored
       then Rules.NotEnforced
@@ -155,7 +168,8 @@ determineAllowedQualifications ::
 determineAllowedQualifications fam fsm =
   let
     shouldBeIgnored =
-      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedQualifications) $ Config.specifiedModuleRulesToIgnore fsm
+      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedQualifications) $
+        Config.specifiedModuleRulesToIgnore fsm
    in
     if shouldBeIgnored
       then mempty
@@ -166,18 +180,19 @@ determineAllowedQualifications fam fsm =
 determineAllowedAliasUniqueness ::
   Config.ForAnyModule
   -> Config.ForSpecifiedModule
-  -> CodeStructure.AllowedAliasUniqueness
+  -> Maybe CodeStructure.AllowedAliasUniqueness
 determineAllowedAliasUniqueness fam fsm =
   let
     shouldBeIgnored =
-      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedAliasUniqueness) $ Config.specifiedModuleRulesToIgnore fsm
+      maybe False (Config.isRuleIgnored Config.ignoreRulesAllowedAliasUniqueness) $
+        Config.specifiedModuleRulesToIgnore fsm
    in
     if shouldBeIgnored
-      then CodeStructure.NoAliasUniqueness
-      else
-        Maybe.fromMaybe
-          (Config.anyModuleAllowedAliasUniqueness fam)
-          (Config.specifiedModuleAllowedAliasUniqueness fsm)
+      then Nothing
+      else case Config.specifiedModuleAllowedAliasUniqueness fsm of
+        Nothing ->
+          Config.anyModuleAllowedAliasUniqueness fam
+        Just allowedAliasUniq -> Just allowedAliasUniq
 
 data ImportCheckAccum = ImportCheckAccum
   { failures :: !(DList.DList CheckFailureWithNote)
@@ -227,7 +242,6 @@ checkImport checks imp =
       checks
       imp
     . addToAliasMap
-      checks
       imp
 
 encapsulationCheck ::
@@ -315,29 +329,25 @@ mbAddOpenImport checks imp accum =
         else accum
 
 addToAliasMap ::
-  ImportChecks
-  -> CodeStructure.Import
+  CodeStructure.Import
   -> ImportCheckAccum
   -> ImportCheckAccum
-addToAliasMap checks imp accum =
-  case importChecksAllowedAliasUniqueness checks of
-    CodeStructure.NoAliasUniqueness ->
+addToAliasMap imp accum =
+  case CodeStructure.alias . CodeStructure.buildScheme . CompatGHC.unLoc $ CodeStructure.importDecl imp of
+    CodeStructure.WithAlias modName ->
       accum
-    _ ->
-      case CodeStructure.alias . CodeStructure.buildScheme . CompatGHC.unLoc $ CodeStructure.importDecl imp of
-        CodeStructure.WithAlias modName ->
-          accum
-            { aliasedImportsByAliasName =
-                Map.insertWith (<>) modName (pure imp) (aliasedImportsByAliasName accum)
-            }
-        CodeStructure.WithoutAlias ->
-          accum
+        { aliasedImportsByAliasName =
+            Map.insertWith (<>) modName (pure imp) (aliasedImportsByAliasName accum)
+        }
+    CodeStructure.WithoutAlias ->
+      accum
 
 checkAllowedAliasUniquness ::
-  CodeStructure.AllowedAliasUniqueness
+  Maybe CodeStructure.AllowedAliasUniqueness
   -> Map.Map CompatGHC.ModuleName [CodeStructure.Import]
   -> [CheckFailureWithNote]
-checkAllowedAliasUniquness allowedUniqueness aliasedImports =
+checkAllowedAliasUniquness Nothing _ = mempty
+checkAllowedAliasUniquness (Just allowedUniqueness) aliasedImports =
   let
     buildUniquenessViolation ::
       Rules.UserNote -> Map.Map k [CodeStructure.Import] -> [CheckFailureWithNote]
@@ -348,9 +358,7 @@ checkAllowedAliasUniquness allowedUniqueness aliasedImports =
         . Map.filter ((<) 1 . length)
    in
     case allowedUniqueness of
-      CodeStructure.NoAliasUniqueness ->
-        mempty
-      CodeStructure.AliasesToBeUnique modNames userNote ->
+      CodeStructure.AliasesToBeUnique (CodeStructure.AliasUniquenessRequired modNames userNote) ->
         buildUniquenessViolation userNote $ Map.restrictKeys aliasedImports modNames
-      CodeStructure.AllAliasesUniqueExcept modNames userNote ->
+      CodeStructure.AllAliasesUniqueExcept (CodeStructure.AliasUniquenessExceptions modNames userNote) ->
         buildUniquenessViolation userNote $ Map.withoutKeys aliasedImports modNames

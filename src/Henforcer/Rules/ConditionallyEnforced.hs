@@ -6,7 +6,7 @@ License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.ConditionallyEnforced
-  ( ConditionallyEnforced(..)
+  ( ConditionallyEnforced (..)
   , conditionallyEnforcedCodec
   ) where
 
@@ -25,6 +25,9 @@ maybeFromConditionallyEnforced :: ConditionallyEnforced a -> Maybe a
 maybeFromConditionallyEnforced NotEnforced = Nothing
 maybeFromConditionallyEnforced (Enforced x) = Just x
 
-conditionallyEnforcedCodec :: (Toml.Key -> Toml.TomlCodec a) -> Toml.Key -> Toml.TomlCodec (ConditionallyEnforced a)
+conditionallyEnforcedCodec ::
+  (Toml.Key -> Toml.TomlCodec a) -> Toml.Key -> Toml.TomlCodec (ConditionallyEnforced a)
 conditionallyEnforcedCodec underlyingCodec =
-  Toml.dimap maybeFromConditionallyEnforced conditionallyEnforcedFromMaybe . Toml.dioptional . underlyingCodec
+  Toml.dimap maybeFromConditionallyEnforced conditionallyEnforcedFromMaybe
+    . Toml.dioptional
+    . underlyingCodec

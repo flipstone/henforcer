@@ -23,8 +23,7 @@ data ForAnyModule = ForAnyModule
   , anyModuleEncapsulatedTrees :: ![CodeStructure.TreeName]
   , anyModuleAllowedQualifications :: !CodeStructure.AllowedSchemes
   , anyModuleAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
-  , anyModuleAllowedAliasUniqueness :: !CodeStructure.AllowedAliasUniqueness
-
+  , anyModuleAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
   , anyModuleMaximumUndocumentedExports :: !Rules.MaximumAllowed
   , anyModuleMinimumDocumentedExports :: !Rules.MinimumAllowed
   , anyModuleMaximumExportsWithoutSince :: !Rules.MaximumAllowed
@@ -42,7 +41,10 @@ forAnyModuleCodec =
       "treeDependencies"
       anyModuleTreeDependencies
       (Toml.list treeDependencyCodec)
-    <*> TomlHelper.addField "encapsulatedTrees" anyModuleEncapsulatedTrees CodeStructure.treeNameListCodec
+    <*> TomlHelper.addField
+      "encapsulatedTrees"
+      anyModuleEncapsulatedTrees
+      CodeStructure.treeNameListCodec
     <*> TomlHelper.addField
       "allowedQualifications"
       anyModuleAllowedQualifications
@@ -54,7 +56,7 @@ forAnyModuleCodec =
     <*> TomlHelper.addField
       "allowedAliasUniqueness"
       anyModuleAllowedAliasUniqueness
-      CodeStructure.allowedAliasUniquenessCodec
+      (Toml.dioptional . Toml.table CodeStructure.allowedAliasUniquenessCodec)
     <*> TomlHelper.addField
       "maximumExportsPlusHeaderUndocumented"
       anyModuleAllowedOpenUnaliasedImports

@@ -10,7 +10,7 @@ moduleHeaderLicenseMustExistNonEmpty = true
 moduleHeaderMaintainerMustExistNonEmpty = false
 encapsulatedTrees = [ "Service.ThirdPartyPetsSite"]
 treeDependencies = [ {moduleTree = "Control.Monad", dependencies = ["PetStore"], note= "This is nonsensical but shows the kind of things we can here."} ]
-allowedAliasUniqueness = { allAliasesUnique = true, aliases = [ "Export" ], note = "Only 'Export' is allowed to be repeated so that we can create re-export modules with a single export of the form 'module Export'." } # The 'note' here is arbitrary but shows a real world use case
+allowedAliasUniqueness = { allAliasesUniqueExcept = [ "Export" ], note = "Only 'Export' is allowed to be repeated so that we can create re-export modules with a single export of the form 'module Export'." } # The 'note' here is arbitrary but shows a real world use case
 
 [[forAnyModule.allowedQualifications]]
 module = "UnliftIO"
@@ -62,6 +62,16 @@ alias="PetModel"
 [[forAnyModule.allowedQualifications.importScheme]]
 qualified = {unqualified = true}
 # safe = false
+
+[[forPatternModules]]
+pattern = "Pet*.**.Model"
+allowedOpenUnaliasedImports = 0
+
+[[forPatternModules]]
+# Note this will not be applied to PetStore.Pet.Model! The following pattern overlaps with the above
+# and the first matching pattern rule is the one that will win.
+pattern = "**.Model"
+allowedOpenUnaliasedImports = 1
 
 [[forSpecifiedModules]]
 module ="PetStore.Store"

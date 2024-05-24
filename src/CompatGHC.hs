@@ -82,11 +82,8 @@ module CompatGHC
   , mkErrorMsgEnvelope
   , moduleNameCodec
   , moduleNameListCodec
-  , moduleNameMapCodec
   ) where
 
-import qualified Data.Map.Strict as Map
-import qualified Data.String as String
 import qualified Data.Text as T
 import Data.Typeable (Typeable)
 import GHC
@@ -276,7 +273,3 @@ moduleNameCodec =
 moduleNameListCodec :: Toml.Key -> Toml.TomlCodec [ModuleName]
 moduleNameListCodec =
   Toml.arrayOf (Toml._TextBy (T.pack . show) (pure . mkModuleName . T.unpack))
-
-moduleNameMapCodec :: Toml.TomlCodec a -> Toml.Key -> Toml.TomlCodec (Map.Map ModuleName a)
-moduleNameMapCodec =
-  Toml.map (moduleNameCodec $ String.fromString "module")

@@ -13,7 +13,10 @@ module Henforcer.Rules.MustExistNonEmpty
 
 import qualified Toml
 
-import Henforcer.Rules.ConditionallyEnforced (ConditionallyEnforced(Enforced, NotEnforced), conditionallyEnforcedCodec)
+import Henforcer.Rules.ConditionallyEnforced
+  ( ConditionallyEnforced (Enforced, NotEnforced)
+  , conditionallyEnforcedCodec
+  )
 
 type MustExistNonEmpty = ConditionallyEnforced Bool
 

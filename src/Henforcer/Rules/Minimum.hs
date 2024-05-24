@@ -19,7 +19,10 @@ import qualified Numeric.Natural as Nat
 import qualified Toml
 
 import qualified CompatGHC
-import Henforcer.Rules.ConditionallyEnforced (ConditionallyEnforced(Enforced, NotEnforced), conditionallyEnforcedCodec)
+import Henforcer.Rules.ConditionallyEnforced
+  ( ConditionallyEnforced (Enforced, NotEnforced)
+  , conditionallyEnforcedCodec
+  )
 
 checkMinimum ::
   MinimumAllowed
@@ -36,7 +39,6 @@ checkMinimum minimumAllowed a getNat handleFailure =
        in if moduleNat < minNat
             then pure $ handleFailure a minNat
             else mempty
-
 
 type MinimumAllowed = ConditionallyEnforced MinimumNat
 

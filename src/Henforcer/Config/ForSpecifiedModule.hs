@@ -9,11 +9,11 @@ module Henforcer.Config.ForSpecifiedModule
   ( ForSpecifiedModule (..)
   , emptyForSpecifiedModule
   , forSpecifiedModuleCodec
-  , specifiedModuleMapCodecField
-  , SpecifiedModuleMap
+  , forSpecifiedModulesCodecField
+  , ForSpecifiedModules
   ) where
 
-import qualified Data.Map.Strict as M
+import qualified Data.String as String
 import qualified Toml
 
 import qualified CompatGHC
@@ -68,7 +68,7 @@ forSpecifiedModuleCodec =
     <*> TomlHelper.addField
       "allowedAliasUniqueness"
       specifiedModuleAllowedAliasUniqueness
-      (Toml.dioptional . CodeStructure.allowedAliasUniquenessCodec)
+      (Toml.dioptional . Toml.table CodeStructure.allowedAliasUniquenessCodec)
     <*> TomlHelper.addField
       "maximumExportsPlusHeaderUndocumented"
       specifiedModuleMaximumUndocumentedExports
@@ -106,9 +106,9 @@ forSpecifiedModuleCodec =
       specifiedModuleRulesToIgnore
       (Toml.dioptional . (Toml.table IgnoreRules.rulestoIgnoreCodec))
 
-type SpecifiedModuleMap = M.Map CompatGHC.ModuleName ForSpecifiedModule
+type ForSpecifiedModules = [(CompatGHC.ModuleName, ForSpecifiedModule)]
 
-specifiedModuleMapCodecField ::
-  Toml.Key
-  -> Toml.TomlCodec (M.Map CompatGHC.ModuleName ForSpecifiedModule)
-specifiedModuleMapCodecField = CompatGHC.moduleNameMapCodec forSpecifiedModuleCodec
+forSpecifiedModulesCodecField :: Toml.Key -> Toml.TomlCodec ForSpecifiedModules
+forSpecifiedModulesCodecField =
+  Toml.list
+    (Toml.pair (CompatGHC.moduleNameCodec $ String.fromString "module") forSpecifiedModuleCodec)

@@ -19,7 +19,10 @@ import qualified Numeric.Natural as Nat
 import qualified Toml
 
 import qualified CompatGHC
-import Henforcer.Rules.ConditionallyEnforced (ConditionallyEnforced(Enforced, NotEnforced), conditionallyEnforcedCodec)
+import Henforcer.Rules.ConditionallyEnforced
+  ( ConditionallyEnforced (Enforced, NotEnforced)
+  , conditionallyEnforcedCodec
+  )
 
 checkMaximum ::
   MaximumAllowed

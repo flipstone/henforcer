@@ -15,11 +15,13 @@ import qualified Toml
 import qualified TomlHelper
 
 import Henforcer.Config.ForAnyModule (ForAnyModule, forAnyModuleCodec)
-import Henforcer.Config.ForSpecifiedModule (SpecifiedModuleMap, specifiedModuleMapCodecField)
+import Henforcer.Config.ForPatternModule (ForPatternModules, forPatternModulesCodecField)
+import Henforcer.Config.ForSpecifiedModule (ForSpecifiedModules, forSpecifiedModulesCodecField)
 
 data Config = Config
   { forAnyModule :: !ForAnyModule
-  , forSpecifiedModules :: !SpecifiedModuleMap
+  , forPatternModules :: !ForPatternModules
+  , forSpecifiedModules :: !ForSpecifiedModules
   }
 
 configCodec :: Toml.TomlCodec Config
@@ -27,9 +29,13 @@ configCodec =
   Config
     <$> TomlHelper.addField "forAnyModule" forAnyModule (Toml.table forAnyModuleCodec)
     <*> TomlHelper.addField
+      "forPatternModules"
+      forPatternModules
+      forPatternModulesCodecField
+    <*> TomlHelper.addField
       "forSpecifiedModules"
       forSpecifiedModules
-      specifiedModuleMapCodecField
+      forSpecifiedModulesCodecField
 
 loadConfig :: FilePath -> IO Config
 loadConfig =

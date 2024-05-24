@@ -98,53 +98,72 @@ most specific rule will be applied.
 
 | fieldName                                  | type                          | required | description                                                                                                                                                       |
 |--------------------------------------------|-------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `module`                                   | string                        | yes      | `module` is a string of the module name the rules in this table will apply to.                                                                                    |
 | `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
-| `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias` |
-| `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported. |
-| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation. |
-| `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation. |
-| `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock. |
-| `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation. |
-| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | no      | If the `Haddock` module header field of `Copyright` must be populated. |
-| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | no      | If the `Haddock` module header field of `Description` must be populated. |
-| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no      | If the `Haddock` module header field of `License` must be populated. |
-| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no      | If the `Haddock` module header field of `Maintainer` must be populated. |
-| `rulesToIgnore`                            | RulesToIgnore                 | no       | Specifies what, if any, rules should be ignored for the given module. |
+| `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias`                                                      |
+| `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported.                  |
+| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation.                                         |
+| `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation.                                               |
+| `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock.                                                      |
+| `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation.                                                           |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | no       | If the `Haddock` module header field of `Copyright` must be populated.                                                                                            |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | no       | If the `Haddock` module header field of `Description` must be populated.                                                                                          |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no       | If the `Haddock` module header field of `License` must be populated.                                                                                              |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no       | If the `Haddock` module header field of `Maintainer` must be populated.                                                                                           |
+| `rulesToIgnore`                            | RulesToIgnore                 | no       | Specifies what, if any, rules should be ignored for the given module.                                                                                             |
+#### forPatternModules
 
-##### RulesToIgnore
-This is allowed to take two forms that are both TOML tables.
+Henforcer supports a limited form of using patterns to match rules against multiple modules, but not any module in a more concise way.
 
-###### First form
-| fieldName | type | required | description                                |
-| `all`     | bool | no       | Controls if *all* rules should be ignored. |
+`forPatternModules` is an array of TOML tables. Effectively this is a map keyed by the `pattern` field.
 
-###### Second form
-| fieldName                                  | type    | required | description                             |
-|--------------------------------------------|---------|----------|-----------------------------------------|
-| `allowedAliasUniqueness`                   | boolean | no       | Controls if the rule should be ignored. |
-| `allowedOpenUnaliasedImports`              | boolean | no       | Controls if the rule should be ignored. |
-| `allowedQualifications`                    | boolean | no       | Controls if the rule should be ignored. |
-| `encapsulatedTrees`                        | boolean | no       | Controls if the rule should be ignored. |
-| `maximumExportsPlusHeaderUndocumented`     | boolean | no       | Controls if the rule should be ignored. |
-| `minimumExportsPlusHeaderDocumented`       | boolean | no       | Controls if the rule should be ignored. |
-| `maximumExportsWithoutSince`               | boolean | no       | Controls if the rule should be ignored. |
-| `minimumExportsWithSince`                  | boolean | no       | Controls if the rule should be ignored. |
-| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean | no       | Controls if the rule should be ignored. |
-| `moduleHeaderDescriptionMustExistNonEmpty` | boolean | no       | Controls if the rule should be ignored. |
-| `moduleHeaderLicenseMustExistNonEmpty`     | boolean | no       | Controls if the rule should be ignored. |
-| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean | no       | Controls if the rule should be ignored. |
-| `treeDependencies`                         | boolean | no       | Controls if the rule should be ignored. |
+Important items to note:
+  - When determining which version of a rule to pick the definition in `forSpecifiedModules` is most
+    preferred, followed by `forPatternModules` and finally `forAnyModule`.
+  - If there are overlapping `pattern` keys in `forPatternModules` the first specified in the TOML will be chosen.
+  - Patterns use `*` and `**`. `*` can be used to match up to the module seperator `.`, where `**`
+    matches across the `.` seperator.
+
+| fieldName                                  | type                          | required | description                                                                                                                                                       |
+|--------------------------------------------|-------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pattern`                                  | string with wildcard          | yes      | `module` is a string, with wildcard support, of the module name the rules described here will apply to.                                                           |
+| `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
+| `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias`                                                      |
+| `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported.                  |
+| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation.                                         |
+| `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation.                                               |
+| `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock.                                                      |
+| `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation.                                                           |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | no       | If the `Haddock` module header field of `Copyright` must be populated.                                                                                            |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | no       | If the `Haddock` module header field of `Description` must be populated.                                                                                          |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no       | If the `Haddock` module header field of `License` must be populated.                                                                                              |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no       | If the `Haddock` module header field of `Maintainer` must be populated.                                                                                           |
+| `rulesToIgnore`                            | RulesToIgnore                 | no       | Specifies what, if any, rules should be ignored for the given module.                                                                                             |
 
 #### Shared types
 
-Below are the reused definitions between the `forAnyModule` and `forSpecifiedModules`.
+Below are the reused definitions between some combination of the `forAnyModule`, `forSpecifiedModules` and `forPatternModules` rules.
 
 ##### AllowedAliasUniqueness
-| fieldName          | type            | required | description                                                                                                                                                                  |
-|--------------------|-----------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `allAliasesUnique` | bool            | yes      | When true it determines that every alias should be unique, except those given. When false it determines that only the given aliases should correspond to exactly one import. |
-| `aliases`          | array of string | yes      | Aliases to be checked with. |
-| `note`             | string          | no       | User defined message to be displayed with errors for additional context. |
+This is allowed to take two forms that are both TOML tables.
+
+###### First Form
+This form states that all aliases in a module must be unique with an allow list for those aliases
+that may be repeated.
+
+| fieldName                | type            | required | description                                                              |
+|--------------------------|-----------------|----------|--------------------------------------------------------------------------|
+| `allAliasesUniqueExcept` | array of string | yes      | Aliases that are allowed to be repeated.                                 |
+| `note`                   | string          | no       | User defined message to be displayed with errors for additional context. |
+
+###### Second Form
+This form states that aliases in a module may repeat with a block list for those aliases
+that must be unique.
+
+| fieldName       | type            | required | description                                                              |
+|-----------------|-----------------|----------|--------------------------------------------------------------------------|
+| `uniqueAliases` | array of string | yes      | Aliases that must be unique.                                             |
+| `note`          | string          | no       | User defined message to be displayed with errors for additional context. |
 
 ##### AllowedQualification
 | fieldName    | type                  | required | description                                                                 |
@@ -174,3 +193,27 @@ Below are the reused definitions between the `forAnyModule` and `forSpecifiedMod
 | `moduleTree`   | string          | yes      | The tree which depends on others. |
 | `dependencies` | array of string | yes      | The trees which are depended upon. |
 | `note`         | string          | no       | User defined message to be displayed with errors for additional context. |
+
+##### RulesToIgnore
+This is allowed to take two forms that are both TOML tables.
+
+###### First form
+| fieldName | type | required | description                                |
+| `all`     | bool | no       | Controls if *all* rules should be ignored. |
+
+###### Second form
+| fieldName                                  | type    | required | description                             |
+|--------------------------------------------|---------|----------|-----------------------------------------|
+| `allowedAliasUniqueness`                   | boolean | no       | Controls if the rule should be ignored. |
+| `allowedOpenUnaliasedImports`              | boolean | no       | Controls if the rule should be ignored. |
+| `allowedQualifications`                    | boolean | no       | Controls if the rule should be ignored. |
+| `encapsulatedTrees`                        | boolean | no       | Controls if the rule should be ignored. |
+| `maximumExportsPlusHeaderUndocumented`     | boolean | no       | Controls if the rule should be ignored. |
+| `minimumExportsPlusHeaderDocumented`       | boolean | no       | Controls if the rule should be ignored. |
+| `maximumExportsWithoutSince`               | boolean | no       | Controls if the rule should be ignored. |
+| `minimumExportsWithSince`                  | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean | no       | Controls if the rule should be ignored. |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean | no       | Controls if the rule should be ignored. |
+| `treeDependencies`                         | boolean | no       | Controls if the rule should be ignored. |
