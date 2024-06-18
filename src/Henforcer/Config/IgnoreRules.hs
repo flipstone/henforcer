@@ -82,7 +82,7 @@ ignoreRulesCodec =
       boolDefaultFalseField
     <*> TomlHelper.addField
       "maximumExportsPlusHeaderUndocumented"
-      ignoreRulesAllowedOpenUnaliasedImports
+      ignoreRulesMaximumUndocumentedExports
       boolDefaultFalseField
     <*> TomlHelper.addField
       "minimumExportsPlusHeaderDocumented"
