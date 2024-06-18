@@ -59,7 +59,7 @@ forAnyModuleCodec =
       (Toml.dioptional . Toml.table CodeStructure.allowedAliasUniquenessCodec)
     <*> TomlHelper.addField
       "maximumExportsPlusHeaderUndocumented"
-      anyModuleAllowedOpenUnaliasedImports
+      anyModuleMaximumUndocumentedExports
       Rules.maximumAllowedCodec
     <*> TomlHelper.addField
       "minimumExportsPlusHeaderDocumented"
