@@ -186,11 +186,16 @@ determineDocumentationChecks ::
   -> DocumentationChecks
 determineDocumentationChecks config modName =
   let
-    forSpecifiedModule =
+    originalSpecifiedModule =
       Maybe.fromMaybe Config.emptyForSpecifiedModule
         . List.lookup modName
         $ Config.forSpecifiedModules config
     forAnyModule = Config.forAnyModule config
+    patternModule =
+      case Config.moduleMatchesPattern (CompatGHC.moduleNameString modName) $ Config.forPatternModules config of
+        Nothing -> Config.emptyForSpecifiedModule
+        Just fpm -> snd fpm
+    forSpecifiedModule = Config.unionPatternAndSpecifiedModule patternModule originalSpecifiedModule
    in
     DocumentationChecks
       { maximumUndocumentedExports =
