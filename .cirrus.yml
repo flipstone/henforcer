@@ -1,14 +1,35 @@
 linux_test_task:
   container:
-    image: ghcr.io/flipstone/haskell-tools:debian-unstable-ghc-9.4.5-2023-07-18-1d8bf61
+    image: ghcr.io/flipstone/haskell-tools:debian-stable-ghc-9.6.6-2024-10-23-eb5da39
     cpu: 6
     memory: 6G
   stack_cache:
     folder: ~/.stack
-  cabal_cache:
-    folder: ~/.cabal
+    fingerprint_script:
+      - cat stack.yaml.lock henforcer.cabal
+    populate_script:
+      - apt update
+      - apt install bmake
+      - export PATH=$PATH:/root/.local/bin:/root/.ghcup/bin
+      - bmake setup-stack
   ghcup_cache:
-    folder: ~/.ghcup
+    folder: /usr/local/.ghcup
+    fingerprint_script:
+      - cat Makefile
+    populate_script:
+      - apt update
+      - apt install bmake
+      - export PATH=$PATH:/root/.local/bin:/root/.ghcup/bin
+      - bmake setup-ghc
+  cabal_cache:
+    folder: ~/.local/state/cabal
+    fingerprint_script:
+      - cat Makefile henforcer.cabal
+    populate_script:
+      - apt update
+      - apt install bmake
+      - export PATH=$PATH:/root/.local/bin:/root/.ghcup/bin
+      - bmake setup-cabal
   install_script:
     - apt update
     - apt install bmake
@@ -19,43 +40,50 @@ linux_test_task:
     - bmake ci
   upload_caches:
     - stack
+    - ghcup
     - cabal
 
 freebsd_test_task:
   freebsd_instance:
-    image_family: freebsd-13-2
+    image_family: freebsd-14-1
     cpu: 6
     memory: 6G
   stack_cache:
     folder: ~/.stack
+    fingerprint_script:
+      - cat stack.yaml.lock henforcer.cabal
   cabal_cache:
-    folder: ~/.cabal
+    folder: ~/.local/state/cabal
+    fingerprint_script:
+      - cat Makefile henforcer.cabal
   ghcup_cache:
-    folder: ~/.ghcup
+    folder: /usr/local//.ghcup
+    fingerprint_script:
+      - cat Makefile
     populate_script:
       - pkg install -y hs-stack hs-cabal-install curl
-      - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.19.5/x86_64-portbld-freebsd-ghcup-0.1.19.5
+      - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.30.0/x86_64-portbld-freebsd-ghcup-0.1.30.0
       - chmod +x /usr/local/bin/ghcup
       - export PATH=$PATH:/.local/bin:/.ghcup/bin
-      - export GHC_VERSIONS=9.4.5
+      - export GHC_VERSIONS=9.4.8
       - export STACK_YAMLS=
-      - make setup-ghc setup-cabal
+      - make setup-cabal
   upload_caches:
     - ghcup
   install_script:
     - pkg install -y hs-stack hs-cabal-install curl
-    - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.19.5/x86_64-portbld-freebsd-ghcup-0.1.19.5
+    - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.30.0/x86_64-portbld-freebsd-ghcup-0.1.30.0
     - chmod +x /usr/local/bin/ghcup
     - export PATH=$PATH:/.local/bin:/.ghcup/bin
-    - export GHC_VERSIONS=9.4.5
+    - export GHC_VERSIONS=9.4.8
     - export STACK_YAMLS=
-    - make setup-ghc setup-cabal
+    - make setup-cabal
   test_script:
     - export PATH=$PATH:/.local/bin:/.ghcup/bin
-    - export GHC_VERSIONS=9.4.5
+    - export GHC_VERSIONS=9.4.8
     - export STACK_YAMLS=
     # no reason to test everything, like formatting, on every platform
-    - make build-cabal
+    - make test-cabal
   upload_caches:
     - cabal
 
@@ -66,15 +94,21 @@ macos_test_task:
     memory: 6G
   stack_cache:
     folder: ~/.stack
+    fingerprint_script:
+      - cat stack.yaml.lock henforcer.cabal
   cabal_cache:
-    folder: ~/.cabal
+    folder: ~/.local/state/cabal
+    fingerprint_script:
+      - cat Makefile henforcer.cabal
   ghcup_cache:
-    folder: ~/.ghcup
+    folder: /usr/local/.ghcup
+    fingerprint_script:
+      - cat Makefile
     populate_script:
       - brew install haskell-stack cabal-install bmake
       - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
       - source /Users/admin/.ghcup/env
-      - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
+      - GHC_VERSIONS=9.4.8 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
   upload_caches:
     - ghcup
   install_script:
@@ -82,12 +116,12 @@ macos_test_task:
     - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
     - source /Users/admin/.ghcup/env
     - export PATH=$PATH:/Users/admin/.local/bin
-    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
+    - GHC_VERSIONS=9.4.8 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
   test_script:
     - source /Users/admin/.ghcup/env
     - export PATH=$PATH:/Users/admin/.local/bin
     # no reason to test everything, like formatting, on every platform
-    - GHC_VERSIONS=9.4.5 STACK_YAMLS=stack.yaml bmake build-cabal build-stack
+    - GHC_VERSIONS=9.4.8 STACK_YAMLS=stack.yaml bmake test-cabal test-stack
   upload_caches:
     - stack
     - cabal

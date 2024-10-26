@@ -27,16 +27,19 @@ import qualified TomlHelper
 data AllowedAliasUniqueness
   = AllAliasesUniqueExcept AliasUniquenessExceptions
   | AliasesToBeUnique AliasUniquenessRequired
+  deriving (Eq, Show)
 
 data AliasUniquenessExceptions = AliasUniquenessExceptions
   { aliasUniquenessExceptionsAliases :: !(Set.Set CompatGHC.ModuleName)
   , aliasUniquenessExceptionsNote :: !UserNote.UserNote
   }
+  deriving (Eq, Show)
 
 data AliasUniquenessRequired = AliasUniquenessRequired
   { aliasUniquenessRequiredAliases :: !(Set.Set CompatGHC.ModuleName)
   , aliasUniquenessRequiredNote :: !UserNote.UserNote
   }
+  deriving (Eq, Show)
 
 matchExcept :: AllowedAliasUniqueness -> Maybe AliasUniquenessExceptions
 matchExcept (AllAliasesUniqueExcept excepts) = Just excepts

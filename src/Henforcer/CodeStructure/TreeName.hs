@@ -1,5 +1,6 @@
 module Henforcer.CodeStructure.TreeName
   ( TreeName
+  , parse
   , isSuperTreeOf
   , treeContainsModule
   , treeStrictlyContainsModule
@@ -15,7 +16,7 @@ import qualified CompatGHC
 
 data TreeName
   = TreeName !String !(Maybe TreeName)
-  deriving (Eq)
+  deriving (Eq, Show)
 
 instance CompatGHC.Outputable TreeName where
   ppr =

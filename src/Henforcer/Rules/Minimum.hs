@@ -47,7 +47,7 @@ minimumAllowedCodec = conditionallyEnforcedCodec minimumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity
 newtype MinimumNat = MinimumNat Nat.Natural
-  deriving (Num, Eq, Ord)
+  deriving (Num, Eq, Ord, Show)
 
 instance CompatGHC.Outputable MinimumNat where
   ppr (MinimumNat nat) = CompatGHC.text $ show nat

@@ -22,6 +22,7 @@ import qualified CompatGHC
 import qualified TomlHelper
 
 newtype UserNote = UserNote (Maybe String)
+  deriving (Eq, Show)
 
 userNoteMbStr :: UserNote -> Maybe String
 userNoteMbStr (UserNote mbStr) = mbStr

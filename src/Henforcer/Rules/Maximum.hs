@@ -12,6 +12,7 @@ module Henforcer.Rules.Maximum
   , MaximumAllowed
   , maximumAllowedCodec
   , MaximumNat
+  , maximumNatToNatural
   , maximumNatCodec
   ) where
 
@@ -47,10 +48,13 @@ maximumAllowedCodec = conditionallyEnforcedCodec maximumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity
 newtype MaximumNat = MaximumNat Nat.Natural
-  deriving (Num, Eq, Ord)
+  deriving (Num, Eq, Ord, Show)
 
 instance CompatGHC.Outputable MaximumNat where
-  ppr (MaximumNat nat) = CompatGHC.text $ show nat
+  ppr = CompatGHC.text . show . maximumNatToNatural
+
+maximumNatToNatural :: MaximumNat -> Nat.Natural
+maximumNatToNatural (MaximumNat nat) = nat
 
 maximumNatCodec :: Toml.Key -> Toml.TomlCodec MaximumNat
 maximumNatCodec =

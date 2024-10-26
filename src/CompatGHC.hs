@@ -36,6 +36,7 @@ module CompatGHC
   , ideclSafe
   , ideclImportList
   , locA
+  , mkModuleName
   , moduleName
   , moduleNameString
   , unLoc
@@ -273,3 +274,13 @@ moduleNameCodec =
 moduleNameListCodec :: Toml.Key -> Toml.TomlCodec [ModuleName]
 moduleNameListCodec =
   Toml.arrayOf (Toml._TextBy (T.pack . show) (pure . mkModuleName . T.unpack))
+
+instance Show ImportDeclQualifiedStyle where
+  show = declStyleToStr
+
+declStyleToStr :: ImportDeclQualifiedStyle -> String
+declStyleToStr decl =
+  case decl of
+    QualifiedPre -> "QualifiedPre"
+    QualifiedPost -> "QualifiedPost"
+    NotQualified -> "NotQualified"

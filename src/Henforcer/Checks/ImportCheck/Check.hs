@@ -8,6 +8,7 @@ Maintainer  : maintainers@flipstone.com
 module Henforcer.Checks.ImportCheck.Check
   ( checkImports
   , determineChecks
+  , ImportChecks (..)
   ) where
 
 import qualified Control.Monad as Monad
@@ -77,6 +78,7 @@ data ImportChecks = ImportChecks
   , importChecksAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
   , importChecksAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
   }
+  deriving (Eq, Show)
 
 determineChecks :: Config.Config -> CompatGHC.ModuleName -> ImportChecks
 determineChecks config modName =

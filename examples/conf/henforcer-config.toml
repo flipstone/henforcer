@@ -64,6 +64,16 @@ qualified = {unqualified = true}
 # safe = false
 
 [[forPatternModules]]
+pattern = "Pet*.Store.**"
+allowedOpenUnaliasedImports = 5000
+maximumExportsPlusHeaderUndocumented = 5000
+
+[[forPatternModules]]
+pattern = "Pet*.Food.**"
+[forPatternModules.rulesToIgnore]
+allowedOpenUnaliasedImports = true
+
+[[forPatternModules]]
 pattern = "Pet*.**.Model"
 allowedOpenUnaliasedImports = 0
 
@@ -72,6 +82,10 @@ allowedOpenUnaliasedImports = 0
 # and the first matching pattern rule is the one that will win.
 pattern = "**.Model"
 allowedOpenUnaliasedImports = 1
+
+[[forSpecifiedModules]]
+module ="PetStore.Store.Account"
+allowedOpenUnaliasedImports = 3
 
 [[forSpecifiedModules]]
 module ="PetStore.Store"

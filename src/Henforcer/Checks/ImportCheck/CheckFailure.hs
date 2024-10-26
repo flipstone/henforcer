@@ -28,6 +28,7 @@ data CheckedDependency = CheckedDependency
   , dependencyNote :: !Rules.UserNote
   , dependencyTarget :: !CodeStructure.TreeName
   }
+  deriving (Eq, Show)
 
 type CheckFailureWithNote = Rules.FailureWithUserNote CheckFailure
 

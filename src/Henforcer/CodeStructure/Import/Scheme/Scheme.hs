@@ -41,6 +41,7 @@ data SchemeWithNote = SchemeWithNote
   { schemeNote :: !Rules.UserNote
   , underlyingScheme :: !Scheme
   }
+  deriving (Eq, Show)
 
 {- | Representation of the structure of on an import, covering the qualification, any aliasing, and
 the safety.
@@ -51,7 +52,7 @@ data Scheme = Scheme
   , safe :: !Safe
   , packageQualification :: !PackageQualifier
   }
-  deriving (Eq)
+  deriving (Eq, Show)
 
 type AllowedSchemes =
   Map.Map CompatGHC.ModuleName [SchemeWithNote]

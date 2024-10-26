@@ -19,7 +19,7 @@ import qualified CompatGHC
 data Alias
   = WithAlias !CompatGHC.ModuleName
   | WithoutAlias
-  deriving (Eq)
+  deriving (Eq, Show)
 
 maybeFromAlias :: Alias -> Maybe CompatGHC.ModuleName
 maybeFromAlias WithoutAlias = Nothing

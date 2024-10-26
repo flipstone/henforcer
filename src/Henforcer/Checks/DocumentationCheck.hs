@@ -12,6 +12,7 @@ module Henforcer.Checks.DocumentationCheck
   ( docErrorMessagesFromList
   , determineDocumentationChecks
   , checkDocumentation
+  , DocumentationChecks (..)
   ) where
 
 import qualified Data.List as List
@@ -179,6 +180,7 @@ data DocumentationChecks = DocumentationChecks
   , moduleHeaderLicenseMustExistNonEmpty :: !Rules.MustExistNonEmpty
   , moduleHeaderMaintainerMustExistNonEmpty :: !Rules.MustExistNonEmpty
   }
+  deriving (Eq, Show)
 
 determineDocumentationChecks ::
   Config.Config

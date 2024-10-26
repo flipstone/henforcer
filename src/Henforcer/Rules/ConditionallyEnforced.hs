@@ -16,6 +16,7 @@ import qualified Toml
 data ConditionallyEnforced a
   = Enforced !a
   | NotEnforced
+  deriving (Eq, Show)
 
 conditionallyEnforcedFromMaybe :: Maybe a -> ConditionallyEnforced a
 conditionallyEnforcedFromMaybe Nothing = NotEnforced

@@ -21,7 +21,7 @@ import qualified CompatGHC
 data Safe
   = WithSafe
   | WithoutSafe
-  deriving (Eq)
+  deriving (Eq, Show)
 
 -- | Toml codec based on bool for 'Safe'
 safeCodec :: Toml.Key -> Toml.TomlCodec Safe

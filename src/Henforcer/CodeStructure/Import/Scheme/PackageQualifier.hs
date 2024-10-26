@@ -21,7 +21,7 @@ import qualified CompatGHC
 data PackageQualifier
   = WithPackageQualifier T.Text
   | WithoutPackageQualifier
-  deriving (Eq)
+  deriving (Eq, Show)
 
 maybeFromPackageQualifier :: PackageQualifier -> Maybe T.Text
 maybeFromPackageQualifier WithoutPackageQualifier = Nothing

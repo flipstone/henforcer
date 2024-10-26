@@ -1,0 +1,65 @@
+# This is a configuration file used as part of the test suite.
+[forAnyModule]
+allowedOpenUnaliasedImports = 3
+maximumExportsPlusHeaderUndocumented = 3
+minimumExportsPlusHeaderDocumented = 3
+maximumExportsWithoutSince = 3
+minimumExportsWithSince = 3
+moduleHeaderCopyrightMustExistNonEmpty = true
+moduleHeaderDescriptionMustExistNonEmpty = true
+moduleHeaderLicenseMustExistNonEmpty = true
+moduleHeaderMaintainerMustExistNonEmpty = true
+encapsulatedTrees = [ "Service.ThirdPartyPetsSite"]
+treeDependencies = [ {moduleTree = "Control.Monad", dependencies = ["PetStore"]} ]
+allowedAliasUniqueness = { allAliasesUniqueExcept = [ "Export" ] }
+
+[[forAnyModule.allowedQualifications]]
+module = "UnliftIO"
+[[forAnyModule.allowedQualifications.importScheme]]
+qualified = { qualifiedPre = true, qualifiedPost = true }
+alias = "Foo"
+packageQualified = "unliftio"
+
+[[forPatternModules]]
+pattern = "Pattern*.Module.**"
+allowedOpenUnaliasedImports = 2
+maximumExportsPlusHeaderUndocumented = 2
+minimumExportsPlusHeaderDocumented = 2
+maximumExportsWithoutSince = 2
+minimumExportsWithSince = 2
+moduleHeaderCopyrightMustExistNonEmpty = false
+moduleHeaderDescriptionMustExistNonEmpty = false
+moduleHeaderLicenseMustExistNonEmpty = false
+moduleHeaderMaintainerMustExistNonEmpty = false
+
+[[forPatternModules]]
+# Note this will not be applied to Pattern2.Module! The following pattern overlaps with the above
+# and the first matching pattern rule is the one that will win.
+pattern = "Pattern2*.Module.**"
+maximumExportsPlusHeaderUndocumented = 20
+minimumExportsPlusHeaderDocumented = 20
+maximumExportsWithoutSince = 20
+minimumExportsWithSince = 20
+moduleHeaderCopyrightMustExistNonEmpty = true
+moduleHeaderDescriptionMustExistNonEmpty = true
+moduleHeaderLicenseMustExistNonEmpty = true
+moduleHeaderMaintainerMustExistNonEmpty = true
+allowedOpenUnaliasedImports = 20
+treeDependencies = [ {moduleTree = "Control.Monad", dependencies = ["PetStore"]} ]
+
+[[forPatternModules]]
+pattern = "WithIgnoresPattern*.Module.**"
+[forPatternModules.rulesToIgnore]
+all = true
+
+[[forSpecifiedModules]]
+module = "PatternMatchedButSpecifiedWins.Module"
+maximumExportsPlusHeaderUndocumented = 20
+minimumExportsPlusHeaderDocumented = 20
+maximumExportsWithoutSince = 20
+minimumExportsWithSince = 20
+moduleHeaderCopyrightMustExistNonEmpty = true
+moduleHeaderDescriptionMustExistNonEmpty = true
+moduleHeaderLicenseMustExistNonEmpty = true
+moduleHeaderMaintainerMustExistNonEmpty = true
+allowedOpenUnaliasedImports = 20
