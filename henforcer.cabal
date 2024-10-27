@@ -118,7 +118,7 @@ library henforcer-internal
     , containers >=0.6 && < 0.8
     , dlist >=1.0 && <1.1
     , filepattern >=0.1 && <0.2
-    , ghc >= 9.4.1 && <9.11
+    , ghc >= 9.4.1 && <9.13
     , optparse-applicative >=0.14 && <0.19
     , pollock >= 0.1.0.1 && <0.2
     , text >=1.2 && <2.2

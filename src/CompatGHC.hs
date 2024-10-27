@@ -163,7 +163,7 @@ import GHC.Types.Error (Diagnostic(..), NoDiagnosticOpts(NoDiagnosticOpts))
 import GHC.Utils.Error (mkErrorMsgEnvelope)
 #endif
 
-#if __GLASGOW_HASKELL__ == 910
+#if __GLASGOW_HASKELL__ >= 910
 import GHC (ideclImportList)
 import GHC.Types.Error (Diagnostic(..), NoDiagnosticOpts(NoDiagnosticOpts))
 import GHC.Utils.Error (mkErrorMsgEnvelope)
@@ -245,7 +245,7 @@ addMessages =
 
 #endif
 
-#if __GLASGOW_HASKELL__ == 910
+#if __GLASGOW_HASKELL__ >= 910
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
 addMessages ::
