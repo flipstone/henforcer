@@ -76,4 +76,4 @@ format-check:
 
 .PHONY: weeder
 weeder: setup-extra-tools test-stack
-	weeder --require-hs-files --hie-directory .stack-work/dist/
+	stack exec weeder -- --require-hs-files --hie-directory .stack-work/dist/
