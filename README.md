@@ -41,8 +41,8 @@ project.
 
 ## Execution
 
-`henforcer` is a GHC plugin, thus it is executed during compliation. To enable the plugin during
-compliation with `cabal` or `stack`, add `henforcer` as a dependency in your cabal file or
+`henforcer` is a GHC plugin, thus it is executed during compilation. To enable the plugin during
+compilation with `cabal` or `stack`, add `henforcer` as a dependency in your cabal file or
 package.yaml as applicable and add `-fplugin Henforcer` to `ghc-flags`. Specifying plugin options is
 done with `ghc-flags` as well. Currently only supported is the path to the configuration, which if
 it is at `foo/bar/henforcer.toml` this would be as
@@ -75,25 +75,25 @@ The `forAnyModule` key is a TOML table containing all of the checks that apply w
 given module. You can think of these as "global" but they do *not* apply to multiple modules at
 once.
 
-| fieldName                                  | type                          | required | description |
-|--------------------------------------------|-------------------------------|----------|-------------|
-| `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
-| `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias` |
-| `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported. |
-| `encapsulatedTrees`                        | array of string               | yes      | Lets you declare that the root of a module tree is effectively a public interface that any modules outside the tree should be using. `henforcer` will report an error if any module outside the tree attempts to import a module from inside the encapsulated tree. |
-| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation. |
-| `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation. |
-| `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock. |
-| `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation. |
-| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | no      | If the `Haddock` module header field of `Copyright` must be populated. |
-| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | no      | If the `Haddock` module header field of `Description` must be populated. |
-| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no      | If the `Haddock` module header field of `License` must be populated. |
-| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no      | If the `Haddock` module header field of `Maintainer` must be populated. |
+| fieldName                                  | type                          | required | description                                                                                                                                                                                                                                                                               |
+|--------------------------------------------|-------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated.                                                                                                                         |
+| `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias`                                                                                                                                                                              |
+| `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported.                                                                                                                                          |
+| `encapsulatedTrees`                        | array of string               | yes      | Lets you declare that the root of a module tree is effectively a public interface that any modules outside the tree should be using. `henforcer` will report an error if any module outside the tree attempts to import a module from inside the encapsulated tree.                       |
+| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Maximum number of exported items, along with the module header, from a module that may be missing Haddock documentation.                                                                                                                                                                  |
+| `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation.                                                                                                                                                                       |
+| `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock.                                                                                                                                                                              |
+| `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation.                                                                                                                                                                                   |
+| `moduleHeaderCopyrightMustExistNonEmpty`   | boolean                       | no       | If the `Haddock` module header field of `Copyright` must be populated.                                                                                                                                                                                                                    |
+| `moduleHeaderDescriptionMustExistNonEmpty` | boolean                       | no       | If the `Haddock` module header field of `Description` must be populated.                                                                                                                                                                                                                  |
+| `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no       | If the `Haddock` module header field of `License` must be populated.                                                                                                                                                                                                                      |
+| `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no       | If the `Haddock` module header field of `Maintainer` must be populated.                                                                                                                                                                                                                   |
 | `treeDependencies`                         | array of TreeDependency       | no       | Declares that one module tree depends on other trees. Declaring such a dependency tells `henforcer` that you don't want the dependency targets to import anything from the dependent tree, which would cause a backwards dependency rendering the two module trees logically inseparable. |
 
 #### forSpecifiedModules
 
-Henforcer allows for certain rules to be overriden on a module by module basis. When provided, the
+Henforcer allows for certain rules to be overridden on a module by module basis. When provided, the
 most specific rule will be applied.
 
 | fieldName                                  | type                          | required | description                                                                                                                                                       |
@@ -102,7 +102,7 @@ most specific rule will be applied.
 | `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
 | `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias`                                                      |
 | `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported.                  |
-| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation.                                         |
+| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Maximum number of exported items, along with the module header, from a module that may be missing Haddock documentation.                                         |
 | `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation.                                               |
 | `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock.                                                      |
 | `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation.                                                           |
@@ -121,8 +121,8 @@ Important items to note:
   - When determining which version of a rule to pick the definition in `forSpecifiedModules` is most
     preferred, followed by `forPatternModules` and finally `forAnyModule`.
   - If there are overlapping `pattern` keys in `forPatternModules` the first specified in the TOML will be chosen.
-  - Patterns use `*` and `**`. `*` can be used to match up to the module seperator `.`, where `**`
-    matches across the `.` seperator.
+  - Patterns use `*` and `**`. `*` can be used to match up to the module separator `.`, where `**`
+    matches across the `.` separator.
 
 | fieldName                                  | type                          | required | description                                                                                                                                                       |
 |--------------------------------------------|-------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -130,7 +130,7 @@ Important items to note:
 | `allowedAliasUniqueness`                   | AllowedAliasUniqueness        | no       | Specifies either that all aliases in the module being compiled are unique except for some, or that a given set of aliases is unique but others may be duplicated. |
 | `allowedOpenUnaliasedImports`              | non-negative int              | no       | Specifies how many imports are allowed to be done without using the `qualified` keyword, or using an `alias`                                                      |
 | `allowedQualifications`                    | array of AllowedQualification | no       | Represents how certain modules should be imported. This can be thought of as a map of module name to a list of ways that module may be imported.                  |
-| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Mmaximum number of exported items, along with the module header, from a module that may be missing Haddock documentation.                                         |
+| `maximumExportsPlusHeaderUndocumented`     | non-negative integer          | no       | Maximum number of exported items, along with the module header, from a module that may be missing Haddock documentation.                                          |
 | `minimumExportsPlusHeaderDocumented`       | non-negative integer          | no       | Minimum number of exported items, along with the module header, from a module that must have Haddock documentation.                                               |
 | `maximumExportsWithoutSince`               | non-negative integer          | no       | Maximum number of exported items from a module that can be lacking the `@since` annotation in their Haddock.                                                      |
 | `minimumExportsWithSince`                  | non-negative integer          | no       | Minimum number of exported items from a module that must have in their Haddock the `@since` annotation.                                                           |
@@ -166,8 +166,8 @@ that must be unique.
 | `note`          | string          | no       | User defined message to be displayed with errors for additional context. |
 
 ##### AllowedQualification
-| fieldName    | type                  | required | description                                                                 |
-|--------------|-----------------------|----------|-----------------------------------------------------------------------------|
+| fieldName      | type                  | required | description                                                                 |
+|----------------|-----------------------|----------|-----------------------------------------------------------------------------|
 | `module`       | string                | yes      | `module` is a string of the module name.                                    |
 | `importScheme` | array of ImportScheme | yes      | The list of specifications for each way that the given module may imported. |
 
@@ -175,17 +175,17 @@ that must be unique.
 | fieldName | type      | required | description                                                                                                                                                                     |
 |-----------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | qualified | Qualified | yes      | Description of ways the import can be qualified, or not.                                                                                                                        |
-| `alias`     | string    | no       | Controls if and what alias can be used as part of an import scheme. This is the part of an import that comes after the `as` keyword, such as "Foo" in `import UnliftIO as Foo`. |
-| `safe`      | boolean   | no       | Controls if the import is required to use the `safe` keyword. Most users are not expected to need this option.                                                                  |
-| `note`      | string    | no       | User defined message to be displayed with errors for additional context. |
+| `alias`   | string    | no       | Controls if and what alias can be used as part of an import scheme. This is the part of an import that comes after the `as` keyword, such as "Foo" in `import UnliftIO as Foo`. |
+| `safe`    | boolean   | no       | Controls if the import is required to use the `safe` keyword. Most users are not expected to need this option.                                                                  |
+| `note`    | string    | no       | User defined message to be displayed with errors for additional context.                                                                                                        |
 
 ##### Qualified
 
-| fieldName       | type | required | description |
-|-----------------|------|----------|-------------|
-| `qualifiedPre`  | bool | no       | Describes if import can be qualified prepositive like `import qualified UnliftIO`. |
-| `qualifiedPost` | bool | no       | Describes if import can be qualified postpositive like `import UnliftIO qualified`. |
-| `unqualified`   | bool | no       | Describes if import can be unqualified like `import UnliftIO`. |
+| fieldName       | type    | required | description                                                                         |
+|-----------------|---------|----------|-------------------------------------------------------------------------------------|
+| `qualifiedPre`  | boolean | no       | Describes if import can be qualified prepositive like `import qualified UnliftIO`.  |
+| `qualifiedPost` | boolean | no       | Describes if import can be qualified postpositive like `import UnliftIO qualified`. |
+| `unqualified`   | boolean | no       | Describes if import can be unqualified like `import UnliftIO`.                      |
 
 ##### TreeDependency
 | fieldName      | type            | required | description |
@@ -198,9 +198,9 @@ that must be unique.
 This is allowed to take two forms that are both TOML tables.
 
 ###### First form
-| fieldName | type | required | description                                |
-|-----------|------|----------|--------------------------------------------|
-| `all`     | bool | no       | Controls if *all* rules should be ignored. |
+| fieldName | type    | required | description                                |
+|-----------|---------|----------|--------------------------------------------|
+| `all`     | boolean | no       | Controls if *all* rules should be ignored. |
 
 ###### Second form
 | fieldName                                  | type    | required | description                             |
