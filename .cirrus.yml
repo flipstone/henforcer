@@ -3,10 +3,24 @@ linux_test_task:
     image: ghcr.io/flipstone/haskell-tools:debian-stable-ghc-9.6.6-2024-10-23-eb5da39
     cpu: 6
     memory: 6G
+  env:
+    matrix:
+      - GHC_VERSIONS: 9.4.8
+        STACK_YAMLS:
+      - GHC_VERSIONS: 9.6.6
+        STACK_YAMLS:
+      - GHC_VERSIONS: 9.8.4
+        STACK_YAMLS:
+      - GHC_VERSIONS: 9.10.1
+        STACK_YAMLS:
+      - GHC_VERSIONS: 9.12.1
+        STACK_YAMLS:
+      - GHC_VERSIONS:
+        STACK_YAMLS: stack.yaml
   linux_stack_cache:
     folder: ~/.stack
     fingerprint_script:
-      - cat stack.yaml.lock henforcer.cabal
+      - cat stack.yaml stack.yaml.lock henforcer.cabal
     populate_script:
       - apt update
       - apt install bmake

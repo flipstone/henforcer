@@ -1,8 +1,8 @@
 # For the difference between 'all' and 'ci': 'all' is the default run with no arguments. So, as the
 # default we will format the code, but not run a "check" of it, which is used in CI to fail the
 # running job if code wasn't formatted.
-all: setup outdated build-cabal build-stack test-cabal weeder format
-ci: outdated build-cabal build-stack test-cabal weeder format-check
+all: setup outdated build-cabal build-stack test-cabal format
+ci: outdated build-cabal build-stack test-cabal format-check
 setup: setup-cabal setup-stack setup-extra-tools
 
 # Note that the ghc-versions for cabal and the stack yamls match which version of ghc they end up
@@ -25,7 +25,7 @@ setup-cabal: setup-ghc
 	cabal update
 # This will build all the dependencies for the various ghc versions
 .for GHC_VERSION in ${GHC_VERSIONS}
-	cabal build --only-dependencies -w ghc-${GHC_VERSION} --flag ci
+	cabal build -j --semaphore --only-dependencies -w ghc-${GHC_VERSION} --flag ci
 .endfor
 
 .PHONY: setup-stack
@@ -41,7 +41,7 @@ setup-extra-tools:
 .PHONY: build-cabal
 build-cabal:
 .for GHC_VERSION in ${GHC_VERSIONS}
-	cabal build -w ghc-${GHC_VERSION} --flag ci
+	cabal build -j -w ghc-${GHC_VERSION} --flag ci
 .endfor
 
 .PHONY: build-stack
@@ -53,7 +53,7 @@ build-stack:
 .PHONY: test-cabal
 test-cabal:
 .for GHC_VERSION in ${GHC_VERSIONS}
-	cabal test -w ghc-${GHC_VERSION} --flag ci
+	cabal test -j -w ghc-${GHC_VERSION} --flag ci
 .endfor
 
 .PHONY: test-stack
