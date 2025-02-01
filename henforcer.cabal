@@ -45,7 +45,6 @@ common ci-warnings
       -Wmissing-home-modules
       -Wmissed-specialisations
       -Wmonomorphism-restriction
-      -Wcompat-unqualified-imports
       -Wpartial-fields
       -Wcpp-undef
       -Wredundant-constraints
