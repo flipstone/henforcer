@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.CodeStructure.Import.AllowedAliasUniqueness
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -25,8 +25,8 @@ import qualified Henforcer.Rules.UserNote as UserNote
 import qualified TomlHelper
 
 data AllowedAliasUniqueness
-  = AllAliasesUniqueExcept AliasUniquenessExceptions
-  | AliasesToBeUnique AliasUniquenessRequired
+  = AllAliasesUniqueExcept !AliasUniquenessExceptions
+  | AliasesToBeUnique !AliasUniquenessRequired
   deriving (Eq, Show)
 
 data AliasUniquenessExceptions = AliasUniquenessExceptions

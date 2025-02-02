@@ -5,7 +5,7 @@
 {- |
 Module      : Henforcer.Checks.ImportCheck.CheckFailure
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -51,9 +51,11 @@ instance CompatGHC.Outputable CheckFailure where
 {- | Convert a list of 'CheckFailure' to 'CompatGHC.Messages' so we can hand off to GHC printing mechanism
  in the plugin.
 -}
-errorMessagesFromList :: [CheckFailureWithNote] -> CompatGHC.Messages CheckFailureWithNote
+errorMessagesFromList ::
+  CompatGHC.Bag CheckFailureWithNote -> CompatGHC.Messages CheckFailureWithNote
 errorMessagesFromList =
-  CompatGHC.mkMessagesFromList . fmap mkEnv
+  CompatGHC.mkMessages . fmap mkEnv
+{-# INLINEABLE errorMessagesFromList #-}
 
 checkFailureImport :: CheckFailure -> CodeStructure.Import
 checkFailureImport (DependencyViolation i _) = i
@@ -211,12 +213,15 @@ rebuildImportStatementFromScheme modName schema =
     [ CompatGHC.dot
     , CompatGHC.hsep
         [ CompatGHC.text "import"
-        , case CodeStructure.safe schema of
-            CodeStructure.WithoutSafe -> CompatGHC.empty -- Purposely do not mention the safe keyword when not forced, as
-            -- this makes the output needlessly complex and we don't need to
-            -- mention something requiring an extension if users didn't ask for
-            -- it explicitly.
-            CodeStructure.WithSafe -> CompatGHC.text "safe"
+        , if CodeStructure.safeToBool (CodeStructure.safe schema)
+            then
+              CompatGHC.text "safe"
+            else
+              -- Purposely do not mention the safe keyword when not forced, as
+              -- this makes the output needlessly complex and we don't need to
+              -- mention something requiring an extension if users didn't ask for
+              -- it explicitly.
+              CompatGHC.empty
         , case CodeStructure.qualification schema of
             CompatGHC.QualifiedPre -> CompatGHC.text "qualified"
             CompatGHC.QualifiedPost -> CompatGHC.empty

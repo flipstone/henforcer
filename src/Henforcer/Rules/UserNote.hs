@@ -1,12 +1,12 @@
 {- |
 Module      : Henforcer.Rules.UserNote
-Description :
-Copyright   : (c) Flipstone Technology Partners, 2024
+Description : Generic field for user defined notes
+Copyright   : (c) Flipstone Technology Partners, 2024-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.UserNote
-  ( UserNote (..)
+  ( UserNote
   , userNoteField
   , FailureWithUserNote (userNotes, underlyingFailure)
   , failureWithUserNotes
@@ -32,6 +32,7 @@ userNoteCodec =
   Toml.diwrap . Toml.dioptional . Toml.string
 
 userNoteField :: (object -> UserNote) -> Toml.Codec object UserNote
+{-# INLINEABLE userNoteField #-}
 userNoteField accessor =
   TomlHelper.addField "note" accessor userNoteCodec
 

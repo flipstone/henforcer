@@ -4,7 +4,7 @@
 {- |
 Module      : Henforcer.Checks.DocumentationCheck
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -166,9 +166,9 @@ formatMustBeNonEmpty fieldStr =
 mkEnv :: CheckFailure -> CompatGHC.MsgEnvelope CheckFailure
 mkEnv = CompatGHC.mkErrorMsgEnvelope CompatGHC.generatedSrcSpan CompatGHC.neverQualify
 
-docErrorMessagesFromList :: [CheckFailure] -> CompatGHC.Messages CheckFailure
+docErrorMessagesFromList :: CompatGHC.Bag CheckFailure -> CompatGHC.Messages CheckFailure
 docErrorMessagesFromList =
-  CompatGHC.mkMessagesFromList . fmap mkEnv
+  CompatGHC.mkMessages . fmap mkEnv
 
 data DocumentationChecks = DocumentationChecks
   { maximumUndocumentedExports :: !Rules.MaximumAllowed
@@ -194,9 +194,9 @@ determineDocumentationChecks config modName =
         $ Config.forSpecifiedModules config
     forAnyModule = Config.forAnyModule config
     patternModule =
-      case Config.moduleMatchesPattern (CompatGHC.moduleNameString modName) $ Config.forPatternModules config of
-        Nothing -> Config.emptyForSpecifiedModule
-        Just fpm -> snd fpm
+      maybe Config.emptyForSpecifiedModule snd
+        . Config.moduleMatchesPattern (CompatGHC.moduleNameString modName)
+        $ Config.forPatternModules config
     forSpecifiedModule = Config.unionPatternAndSpecifiedModule patternModule originalSpecifiedModule
    in
     DocumentationChecks
@@ -355,9 +355,10 @@ determineModuleHeaderMaintainerMustExistNonEmpty forAnyModule forSpecifiedModule
           (Config.specifiedModuleModuleHeaderMaintainerMustExistNonEmpty forSpecifiedModule)
 
 checkDocumentation ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   DocumentationChecks
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkDocumentation checks pollockModInfo =
   let
     undocumentedChecks =
@@ -403,9 +404,10 @@ checkDocumentation checks pollockModInfo =
       <> withMaintainerChecks
 
 checkUndocumented ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MaximumAllowed
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkUndocumented maximumAllowed pollockModInfo =
   let
     getUndocumented :: Pollock.ModuleInfo -> Rules.MaximumNat
@@ -418,9 +420,10 @@ checkUndocumented maximumAllowed pollockModInfo =
       (OverMaximumUndocumented . getUndocumented)
 
 checkDocumented ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MinimumAllowed
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkDocumented minimumAllowed pollockModInfo =
   let
     getDocumentedNat :: Pollock.ModuleInfo -> Rules.MinimumNat
@@ -433,9 +436,10 @@ checkDocumented minimumAllowed pollockModInfo =
       (UnderMinimumDocumented . getDocumentedNat)
 
 checkWithoutSince ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MaximumAllowed
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkWithoutSince maximumAllowed pollockModInfo =
   let
     numWithoutSinceNat :: Pollock.ModuleInfo -> Rules.MaximumNat
@@ -448,9 +452,10 @@ checkWithoutSince maximumAllowed pollockModInfo =
       (OverMaximumWithoutSince . numWithoutSinceNat)
 
 checkWithSince ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MinimumAllowed
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkWithSince minimumAllowed pollockModInfo =
   let
     numWithSinceNat :: Pollock.ModuleInfo -> Rules.MinimumNat
@@ -463,9 +468,10 @@ checkWithSince minimumAllowed pollockModInfo =
       (UnderMinimumWithSince . numWithSinceNat)
 
 checkModuleHeaderCopyright ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MustExistNonEmpty
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkModuleHeaderCopyright copyrightMustExist pollockModInfo =
   let
     getCopyright = Pollock.copyright . Pollock.moduleHeader
@@ -477,9 +483,10 @@ checkModuleHeaderCopyright copyrightMustExist pollockModInfo =
       (const CopyrightMustBeNonEmpty)
 
 checkModuleHeaderDescription ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MustExistNonEmpty
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkModuleHeaderDescription descriptionMustExist pollockModInfo =
   let
     getDescription = Pollock.description . Pollock.moduleHeader
@@ -491,9 +498,10 @@ checkModuleHeaderDescription descriptionMustExist pollockModInfo =
       (const DescriptionMustBeNonEmpty)
 
 checkModuleHeaderLicense ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MustExistNonEmpty
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkModuleHeaderLicense licenseMustExist pollockModInfo =
   let
     getLicense = Pollock.license . Pollock.moduleHeader
@@ -505,9 +513,10 @@ checkModuleHeaderLicense licenseMustExist pollockModInfo =
       (const LicenseMustBeNonEmpty)
 
 checkModuleHeaderMaintainer ::
+  (Applicative m, Monoid (m CheckFailure)) =>
   Rules.MustExistNonEmpty
   -> Pollock.ModuleInfo
-  -> [CheckFailure]
+  -> m CheckFailure
 checkModuleHeaderMaintainer maintainerMustExist pollockModInfo =
   let
     getMaintainer = Pollock.maintainer . Pollock.moduleHeader

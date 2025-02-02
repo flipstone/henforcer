@@ -15,13 +15,11 @@ extra-deps:
   commit: <SHA of the latest master commit>
 ```
 
-_Note: `henforcer` requires a handful of packages that are not on stackage as of lts-22.7. The following is likely to needed in the `extra-deps` section of your `stack.yaml`
+_Note: `henforcer` requires a handful of packages that are not on stackage as of lts-23.6. The following is likely to needed in the `extra-deps` section of your `stack.yaml`
 
 ```
-# henforcer needs pollock and tomland
-- pollock-0.1.0.0
-- tomland-1.3.3.2
-# tomland needs validation-selective
+# henforcer needs pollock
+- pollock-0.1.0.1
 ```
 
 ## Initialization
@@ -65,6 +63,7 @@ shows a variety of usage possibilities.
 module (e.g. `Data.Text`) and all the modules are prefixed by it (e.g. `Data.Text.Encoding` and
 `Data.Text.Lazy`). For modules in your project this almost always means a `src/Foo/MyModule.hs` file
 and any `.hs` files contained inside the `src/Foo/MyModule` directory.
+
 ### Configuration reference
 
 #### forAnyModule

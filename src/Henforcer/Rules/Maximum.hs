@@ -2,8 +2,8 @@
 
 {- |
 Module      : Henforcer.Rules.Maximum
-Description :
-Copyright   : (c) Flipstone Technology Partners, 2023
+Description : Generic rule for allowing enforcement of an upper bound
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -12,8 +12,6 @@ module Henforcer.Rules.Maximum
   , MaximumAllowed
   , maximumAllowedCodec
   , MaximumNat
-  , maximumNatToNatural
-  , maximumNatCodec
   ) where
 
 import qualified Numeric.Natural as Nat
@@ -26,11 +24,12 @@ import Henforcer.Rules.ConditionallyEnforced
   )
 
 checkMaximum ::
+  (Applicative m, Monoid (m b)) =>
   MaximumAllowed
   -> a
   -> (a -> MaximumNat)
   -> (a -> MaximumNat -> b)
-  -> [b]
+  -> m b
 checkMaximum maximumAllowed a getNat handleFailure =
   case maximumAllowed of
     NotEnforced ->
@@ -44,6 +43,7 @@ checkMaximum maximumAllowed a getNat handleFailure =
 type MaximumAllowed = ConditionallyEnforced MaximumNat
 
 maximumAllowedCodec :: Toml.Key -> Toml.TomlCodec MaximumAllowed
+{-# INLINEABLE maximumAllowedCodec #-}
 maximumAllowedCodec = conditionallyEnforcedCodec maximumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity

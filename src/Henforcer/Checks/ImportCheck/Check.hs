@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Checks.ImportCheck.Check
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023-2024
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -88,9 +88,9 @@ determineChecks config modName =
         . List.lookup modName
         $ Config.forSpecifiedModules config
     patternModule =
-      case Config.moduleMatchesPattern (CompatGHC.moduleNameString modName) $ Config.forPatternModules config of
-        Nothing -> Config.emptyForSpecifiedModule
-        Just fpm -> snd fpm
+      maybe Config.emptyForSpecifiedModule snd
+        . Config.moduleMatchesPattern (CompatGHC.moduleNameString modName)
+        $ Config.forPatternModules config
    in
     determineChecksForModule
       (Config.forAnyModule config)
@@ -205,7 +205,7 @@ data ImportCheckAccum = ImportCheckAccum
 checkImports ::
   ImportChecks
   -> CompatGHC.TcGblEnv
-  -> [CheckFailureWithNote]
+  -> CompatGHC.Bag CheckFailureWithNote
 checkImports checks tcGblEnv =
   let
     imports = CodeStructure.getImports tcGblEnv
@@ -223,7 +223,8 @@ checkImports checks tcGblEnv =
         (importChecksAllowedAliasUniqueness checks)
         (aliasedImportsByAliasName accumulatedResults)
    in
-    DList.toList (failures accumulatedResults) <> openUnaliasedResults <> aliasUniquenessResults
+    CompatGHC.listToBag $
+      DList.toList (failures accumulatedResults) <> openUnaliasedResults <> aliasUniquenessResults
 
 checkImport ::
   ImportChecks

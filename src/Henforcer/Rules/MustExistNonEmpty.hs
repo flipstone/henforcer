@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Rules.MustExistNonEmpty
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023-2024
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -21,14 +21,16 @@ import Henforcer.Rules.ConditionallyEnforced
 type MustExistNonEmpty = ConditionallyEnforced Bool
 
 mustExistNonEmptyCodec :: Toml.Key -> Toml.TomlCodec MustExistNonEmpty
+{-# INLINEABLE mustExistNonEmptyCodec #-}
 mustExistNonEmptyCodec = conditionallyEnforcedCodec Toml.bool
 
 checkExistsAndNonEmptyString ::
+  (Applicative m, Monoid (m b)) =>
   MustExistNonEmpty
   -> a
   -> (a -> Maybe String)
   -> (a -> b)
-  -> [b]
+  -> m b
 checkExistsAndNonEmptyString mustExistNonEmpty a getStr handleFailure =
   case mustExistNonEmpty of
     NotEnforced ->

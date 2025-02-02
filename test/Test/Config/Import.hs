@@ -85,7 +85,7 @@ importAnyModuleRules =
                       CodeStructure.Scheme
                         { CodeStructure.qualification = CompatGHC.QualifiedPre
                         , CodeStructure.alias = CodeStructure.WithAlias (CompatGHC.mkModuleName "Foo")
-                        , CodeStructure.safe = CodeStructure.WithoutSafe
+                        , CodeStructure.safe = CodeStructure.withoutSafe
                         , CodeStructure.packageQualification = CodeStructure.WithPackageQualifier "unliftio"
                         }
                   }
@@ -95,7 +95,7 @@ importAnyModuleRules =
                       CodeStructure.Scheme
                         { CodeStructure.qualification = CompatGHC.QualifiedPost
                         , CodeStructure.alias = CodeStructure.WithAlias (CompatGHC.mkModuleName "Foo")
-                        , CodeStructure.safe = CodeStructure.WithoutSafe
+                        , CodeStructure.safe = CodeStructure.withoutSafe
                         , CodeStructure.packageQualification = CodeStructure.WithPackageQualifier "unliftio"
                         }
                   }
@@ -132,7 +132,7 @@ importPatternModuleRules =
                       CodeStructure.Scheme
                         { CodeStructure.qualification = CompatGHC.QualifiedPre
                         , CodeStructure.alias = CodeStructure.WithAlias (CompatGHC.mkModuleName "Foo")
-                        , CodeStructure.safe = CodeStructure.WithoutSafe
+                        , CodeStructure.safe = CodeStructure.withoutSafe
                         , CodeStructure.packageQualification = CodeStructure.WithPackageQualifier "unliftio"
                         }
                   }
@@ -142,7 +142,7 @@ importPatternModuleRules =
                       CodeStructure.Scheme
                         { CodeStructure.qualification = CompatGHC.QualifiedPost
                         , CodeStructure.alias = CodeStructure.WithAlias (CompatGHC.mkModuleName "Foo")
-                        , CodeStructure.safe = CodeStructure.WithoutSafe
+                        , CodeStructure.safe = CodeStructure.withoutSafe
                         , CodeStructure.packageQualification = CodeStructure.WithPackageQualifier "unliftio"
                         }
                   }
@@ -190,7 +190,7 @@ importSpecifiedModuleRules =
                       CodeStructure.Scheme
                         { CodeStructure.qualification = CompatGHC.QualifiedPre
                         , CodeStructure.alias = CodeStructure.WithAlias (CompatGHC.mkModuleName "Foo")
-                        , CodeStructure.safe = CodeStructure.WithoutSafe
+                        , CodeStructure.safe = CodeStructure.withoutSafe
                         , CodeStructure.packageQualification = CodeStructure.WithPackageQualifier "unliftio"
                         }
                   }
@@ -200,7 +200,7 @@ importSpecifiedModuleRules =
                       CodeStructure.Scheme
                         { CodeStructure.qualification = CompatGHC.QualifiedPost
                         , CodeStructure.alias = CodeStructure.WithAlias (CompatGHC.mkModuleName "Foo")
-                        , CodeStructure.safe = CodeStructure.WithoutSafe
+                        , CodeStructure.safe = CodeStructure.withoutSafe
                         , CodeStructure.packageQualification = CodeStructure.WithPackageQualifier "unliftio"
                         }
                   }

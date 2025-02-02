@@ -12,7 +12,7 @@
 {- |
 Module      : CompatGHC
 Description : This collects all of the imports from GHC to limit the need to handle multiple versions to only this module. The intent is for the rest of the code to never import from GHC directly but use this as the interface. As such this both re-exports from GHC, and creates some helper functions to generally ease development.
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -40,6 +40,9 @@ module CompatGHC
   , moduleName
   , moduleNameString
   , unLoc
+  -- GHC.Data.Bag
+  , Bag
+  , listToBag
   -- GHC.Fingerprint
   , Fingerprint
   , getFileHash
@@ -76,10 +79,10 @@ module CompatGHC
   , MsgEnvelope
   , mkSimpleDecorated
   , NoDiagnosticOpts (NoDiagnosticOpts)
+  , mkMessages
   -- internal defined helpers
   , PkgQual (..)
   , addMessages
-  , mkMessagesFromList
   , mkErrorMsgEnvelope
   , moduleNameCodec
   , moduleNameListCodec
@@ -110,6 +113,7 @@ import GHC
   , moduleNameString
   , unLoc
   )
+import GHC.Data.Bag (Bag, listToBag)
 import qualified GHC.Data.Bag as GHC
 import GHC.Fingerprint (Fingerprint, getFileHash)
 import GHC.Plugins
@@ -143,7 +147,7 @@ import GHC.Plugins
 import qualified GHC.Tc.Errors.Types as GHC
 import GHC.Tc.Utils.Monad (TcGblEnv (tcg_mod, tcg_rn_imports), TcM)
 import qualified GHC.Tc.Utils.Monad as GHC
-import GHC.Types.Error (MsgEnvelope (..), mkSimpleDecorated)
+import GHC.Types.Error (MsgEnvelope (..), mkMessages, mkSimpleDecorated)
 import qualified GHC.Types.Error as GHC
 import qualified Toml
 
@@ -260,20 +264,18 @@ addMessages =
 
 #endif
 
--- | Helper for creating 'Messages'
-mkMessagesFromList :: [MsgEnvelope e] -> Messages e
-mkMessagesFromList = GHC.mkMessages . GHC.listToBag
-
 {- | Toml codec for 'ModuleName'. Note that the encode here may not be what is desired, but
 Henforcer does not, as of this writing, actually create Toml, just consume it.
 -}
 moduleNameCodec :: Toml.Key -> Toml.TomlCodec ModuleName
 moduleNameCodec =
   Toml.dimap show mkModuleName . Toml.string
+{-# INLINEABLE moduleNameCodec #-}
 
 moduleNameListCodec :: Toml.Key -> Toml.TomlCodec [ModuleName]
 moduleNameListCodec =
   Toml.arrayOf (Toml._TextBy (T.pack . show) (pure . mkModuleName . T.unpack))
+{-# INLINEABLE moduleNameListCodec #-}
 
 instance Show ImportDeclQualifiedStyle where
   show = declStyleToStr
@@ -284,3 +286,6 @@ declStyleToStr decl =
     QualifiedPre -> "QualifiedPre"
     QualifiedPost -> "QualifiedPost"
     NotQualified -> "NotQualified"
+
+instance Applicative Bag where
+  pure = GHC.unitBag

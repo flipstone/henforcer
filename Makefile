@@ -25,7 +25,7 @@ setup-cabal: setup-ghc
 	cabal update
 # This will build all the dependencies for the various ghc versions
 .for GHC_VERSION in ${GHC_VERSIONS}
-	cabal build -j --semaphore --only-dependencies -w ghc-${GHC_VERSION} --flag ci
+	cabal build -j --only-dependencies -w ghc-${GHC_VERSION} --flag ci
 .endfor
 
 .PHONY: setup-stack

@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Rules.ConditionallyEnforced
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2024
+Copyright   : (c) Flipstone Technology Partners, 2024-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -18,6 +18,14 @@ data ConditionallyEnforced a
   | NotEnforced
   deriving (Eq, Show)
 
+conditionallyEnforcedCodec ::
+  (Toml.Key -> Toml.TomlCodec a) -> Toml.Key -> Toml.TomlCodec (ConditionallyEnforced a)
+{-# INLINEABLE conditionallyEnforcedCodec #-}
+conditionallyEnforcedCodec underlyingCodec =
+  Toml.dimap maybeFromConditionallyEnforced conditionallyEnforcedFromMaybe
+    . Toml.dioptional
+    . underlyingCodec
+
 conditionallyEnforcedFromMaybe :: Maybe a -> ConditionallyEnforced a
 conditionallyEnforcedFromMaybe Nothing = NotEnforced
 conditionallyEnforcedFromMaybe (Just x) = Enforced x
@@ -25,10 +33,3 @@ conditionallyEnforcedFromMaybe (Just x) = Enforced x
 maybeFromConditionallyEnforced :: ConditionallyEnforced a -> Maybe a
 maybeFromConditionallyEnforced NotEnforced = Nothing
 maybeFromConditionallyEnforced (Enforced x) = Just x
-
-conditionallyEnforcedCodec ::
-  (Toml.Key -> Toml.TomlCodec a) -> Toml.Key -> Toml.TomlCodec (ConditionallyEnforced a)
-conditionallyEnforcedCodec underlyingCodec =
-  Toml.dimap maybeFromConditionallyEnforced conditionallyEnforcedFromMaybe
-    . Toml.dioptional
-    . underlyingCodec

@@ -3,7 +3,7 @@
 {- |
 Module      : Henforcer.CodeStructure.Import.Scheme.Scheme
 Description : Models the style of import including qualification, alias, and safety.
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -33,7 +33,7 @@ import Henforcer.CodeStructure.Import.Scheme.PackageQualifier
   , keepPackageNameOnly
   , packageQualifierCodec
   )
-import Henforcer.CodeStructure.Import.Scheme.Safe (Safe (WithoutSafe), determineSafe, safeCodec)
+import Henforcer.CodeStructure.Import.Scheme.Safe (Safe, determineSafe, safeCodec)
 import qualified Henforcer.Rules as Rules
 import qualified TomlHelper
 
@@ -84,7 +84,7 @@ schemeTomlCodec :: Toml.TomlCodec SchemeToml
 schemeTomlCodec =
   SchemeToml
     <$> TomlHelper.addField "alias" tomlAlias aliasCodecWithDefault
-    <*> TomlHelper.addField "safe" tomlSafe (TomlHelper.setDefault WithoutSafe safeCodec)
+    <*> TomlHelper.addField "safe" tomlSafe safeCodec
     <*> TomlHelper.addField
       "packageQualified"
       tomlPackageQualification

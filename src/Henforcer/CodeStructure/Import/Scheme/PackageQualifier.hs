@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.CodeStructure.Import.Scheme.PackageQualified
 Description : Models the representation of a package qualifier portion of an import statement.
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -17,9 +17,12 @@ import qualified Toml
 
 import qualified CompatGHC
 
--- | Directly represent if an import has a package qualifier or not.
+{- | Directly represent if an import has a package qualifier or not.
+
+@since 1.0.0.0
+-}
 data PackageQualifier
-  = WithPackageQualifier T.Text
+  = WithPackageQualifier !T.Text
   | WithoutPackageQualifier
   deriving (Eq, Show)
 
@@ -28,10 +31,14 @@ maybeFromPackageQualifier WithoutPackageQualifier = Nothing
 maybeFromPackageQualifier (WithPackageQualifier x) = Just x
 
 packageQualifierCodec :: Toml.Key -> Toml.TomlCodec PackageQualifier
+{-# INLINEABLE packageQualifierCodec #-}
 packageQualifierCodec =
   Toml.dimatch maybeFromPackageQualifier WithPackageQualifier . Toml.text
 
--- | Compute the packageQualifier from an import
+{- | Compute the packageQualifier from an import
+
+@since 1.0.0.0
+-}
 determinePackageQualifier :: CompatGHC.ImportDecl CompatGHC.GhcRn -> PackageQualifier
 determinePackageQualifier idecl =
   case CompatGHC.ideclPkgQual idecl of

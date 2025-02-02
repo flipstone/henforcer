@@ -1,44 +1,56 @@
 {- |
 Module      : Henforcer.CodeStructure.Import.Scheme.Safe
 Description : Models the representation of the safe portion of an import statement.
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure.Import.Scheme.Safe
-  ( Safe (..)
+  ( Safe
+  , safeToBool
   , safeCodec
   , determineSafe
+  , withoutSafe
   ) where
 
 import qualified Toml
+import qualified TomlHelper
 
 import qualified CompatGHC
 
--- TODO Safe can be a newtype wrapper around bool, to save some conversions
+{- | Directly represent if an import is 'safe' or not.
 
--- | Directly represent if an import is 'safe' or not.
-data Safe
-  = WithSafe
-  | WithoutSafe
+@since 1.0.0.0
+-}
+newtype Safe = Safe Bool
   deriving (Eq, Show)
 
--- | Toml codec based on bool for 'Safe'
+{- | Toml codec based on bool for 'Safe' with a default of not including 'Safe'
+
+@since 1.0.0.0
+-}
 safeCodec :: Toml.Key -> Toml.TomlCodec Safe
 safeCodec =
-  Toml.dimap safeToBool boolToSafe . Toml.bool
+  TomlHelper.setDefault (Safe False) (Toml.diwrap . Toml.bool)
 
+{- | Conversion to 'Bool' is used for conditional logic, notably checking failure.
+
+@since 1.0.0.0
+-}
 safeToBool :: Safe -> Bool
-safeToBool WithSafe = True
-safeToBool WithoutSafe = False
+safeToBool (Safe b) = b
 
-boolToSafe :: Bool -> Safe
-boolToSafe True = WithSafe
-boolToSafe False = WithoutSafe
+{- | Compute the safety from an import
 
--- | Compute the safety from an import
+@since 1.0.0.0
+-}
 determineSafe :: CompatGHC.ImportDecl pass -> Safe
-determineSafe imp =
-  if CompatGHC.ideclSafe imp
-    then WithSafe
-    else WithoutSafe
+determineSafe =
+  Safe . CompatGHC.ideclSafe
+
+{- | Safe unset, used for tests
+
+@since 1.0.0.0
+-}
+withoutSafe :: Safe
+withoutSafe = Safe False
