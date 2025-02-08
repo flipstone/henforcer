@@ -169,12 +169,13 @@ that must be unique.
 | `importScheme` | array of ImportScheme | yes      | The list of specifications for each way that the given module may imported. |
 
 ##### ImportScheme
-| fieldName | type      | required | description                                                                                                                                                                     |
-|-----------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| qualified | Qualified | yes      | Description of ways the import can be qualified, or not.                                                                                                                        |
-| `alias`   | string    | no       | Controls if and what alias can be used as part of an import scheme. This is the part of an import that comes after the `as` keyword, such as "Foo" in `import UnliftIO as Foo`. |
-| `safe`    | boolean   | no       | Controls if the import is required to use the `safe` keyword. Most users are not expected to need this option.                                                                  |
-| `note`    | string    | no       | User defined message to be displayed with errors for additional context.                                                                                                        |
+| fieldName          | type      | required | description                                                                                                                                                                     |
+|--------------------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| qualified          | Qualified | yes      | Description of ways the import can be qualified, or not.                                                                                                                        |
+| `alias`            | string    | no       | Controls if and what alias can be used as part of an import scheme. This is the part of an import that comes after the `as` keyword, such as "Foo" in `import UnliftIO as Foo`. |
+| `packageQualified` | string    | no       | Controls if and what package qualifier should be used. Most users are not expected to need this option.                                                                         |
+| `safe`             | boolean   | no       | Controls if the import is required to use the `safe` keyword. Most users are not expected to need this option.                                                                  |
+| `note`             | string    | no       | User defined message to be displayed with errors for additional context.                                                                                                        |
 
 ##### Qualified
 
