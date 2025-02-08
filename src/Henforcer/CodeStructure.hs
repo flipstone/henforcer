@@ -12,4 +12,4 @@ module Henforcer.CodeStructure
   ) where
 
 import Henforcer.CodeStructure.Import as Export
-import Henforcer.CodeStructure.TreeName as Export
+import Henforcer.CodeStructure.ModuleTree as Export

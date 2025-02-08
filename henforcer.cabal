@@ -86,7 +86,7 @@ library henforcer-internal
       Henforcer.CodeStructure.Import.Scheme.PackageQualifier
       Henforcer.CodeStructure.Import.Scheme.Safe
       Henforcer.CodeStructure.Import.Scheme.Scheme
-      Henforcer.CodeStructure.TreeName
+      Henforcer.CodeStructure.ModuleTree
       Henforcer.Config.Config
       Henforcer.Config.ForAnyModule
       Henforcer.Config.ForPatternModule
@@ -122,8 +122,6 @@ library henforcer-internal
     , pollock >= 0.1.0.1 && <0.2
     , text >=1.2 && <2.2
     , tomland >= 1.3.3.2 && < 1.4
-
-  default-extensions: StrictData
   default-language: Haskell2010
 
 library

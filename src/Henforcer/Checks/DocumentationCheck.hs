@@ -86,18 +86,18 @@ formatOverMaximumUndocumentedViolation ::
 formatOverMaximumUndocumentedViolation current rule =
   let beginningDoc =
         CompatGHC.sep
-            [ CompatGHC.hsep
-                [ CompatGHC.text "There were too many undocumented exports."
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The maximum allowed is:"
-                , CompatGHC.ppr rule
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The number undocumented is:"
-                , CompatGHC.ppr current
-                ]
-            ]
+          [ CompatGHC.hsep
+              [ CompatGHC.text "There were too many undocumented exports."
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The maximum allowed is:"
+              , CompatGHC.ppr rule
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The number undocumented is:"
+              , CompatGHC.ppr current
+              ]
+          ]
    in CompatGHC.vcat
         [ beginningDoc
         , CompatGHC.blankLine
@@ -107,19 +107,19 @@ formatOverMaximumWithoutSinceViolation ::
   Rules.MaximumNat -> Rules.MaximumNat -> CompatGHC.SDoc
 formatOverMaximumWithoutSinceViolation current rule =
   let beginningDoc =
-         CompatGHC.sep
-            [ CompatGHC.hsep
-                [ CompatGHC.text "There were too many exports without an @since haddock annotation."
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The maximum allowed is:"
-                , CompatGHC.ppr rule
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The number missing the annotation is:"
-                , CompatGHC.ppr current
-                ]
-            ]
+        CompatGHC.sep
+          [ CompatGHC.hsep
+              [ CompatGHC.text "There were too many exports without an @since haddock annotation."
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The maximum allowed is:"
+              , CompatGHC.ppr rule
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The number missing the annotation is:"
+              , CompatGHC.ppr current
+              ]
+          ]
    in CompatGHC.vcat
         [ beginningDoc
         , CompatGHC.blankLine
@@ -130,18 +130,18 @@ formatUnderMinimumWithSinceViolation ::
 formatUnderMinimumWithSinceViolation current rule =
   let beginningDoc =
         CompatGHC.sep
-            [ CompatGHC.hsep
-                [ CompatGHC.text "There were not enough exports with an @since haddock annotation."
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The minimum allowed is:"
-                , CompatGHC.ppr rule
-                ]
-            , CompatGHC.hsep
-                [ CompatGHC.text "The number with the annotation is:"
-                , CompatGHC.ppr current
-                ]
-            ]
+          [ CompatGHC.hsep
+              [ CompatGHC.text "There were not enough exports with an @since haddock annotation."
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The minimum allowed is:"
+              , CompatGHC.ppr rule
+              ]
+          , CompatGHC.hsep
+              [ CompatGHC.text "The number with the annotation is:"
+              , CompatGHC.ppr current
+              ]
+          ]
    in CompatGHC.vcat
         [ beginningDoc
         , CompatGHC.blankLine

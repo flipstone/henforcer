@@ -20,7 +20,7 @@ import qualified TomlHelper
 
 data ForAnyModule = ForAnyModule
   { anyModuleTreeDependencies :: ![TreeDependency]
-  , anyModuleEncapsulatedTrees :: ![CodeStructure.TreeName]
+  , anyModuleEncapsulatedTrees :: ![CodeStructure.ModuleTree]
   , anyModuleAllowedQualifications :: !CodeStructure.AllowedSchemes
   , anyModuleAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
   , anyModuleAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
@@ -44,7 +44,7 @@ forAnyModuleCodec =
     <*> TomlHelper.addField
       "encapsulatedTrees"
       anyModuleEncapsulatedTrees
-      CodeStructure.treeNameListCodec
+      CodeStructure.moduleTreeListCodec
     <*> TomlHelper.addField
       "allowedQualifications"
       anyModuleAllowedQualifications

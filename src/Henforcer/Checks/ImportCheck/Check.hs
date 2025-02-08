@@ -56,7 +56,7 @@ checkImportAgainstDependency imp dep =
 
 checkImportAgainstEncapsulation ::
   CodeStructure.Import
-  -> CodeStructure.TreeName
+  -> CodeStructure.ModuleTree
   -> [CheckFailure]
 checkImportAgainstEncapsulation imp encapsulatedTree =
   let
@@ -73,7 +73,7 @@ checkImportAgainstEncapsulation imp encapsulatedTree =
 
 data ImportChecks = ImportChecks
   { importChecksTreeDependencies :: !(Maybe (NEL.NonEmpty CheckedDependency)) -- Nothing means we won't even check
-  , importChecksEncapsulatedTrees :: !(Maybe (NEL.NonEmpty CodeStructure.TreeName)) -- Nothing means we won't even check
+  , importChecksEncapsulatedTrees :: !(Maybe (NEL.NonEmpty CodeStructure.ModuleTree)) -- Nothing means we won't even check
   , importChecksAllowedQualifications :: !CodeStructure.AllowedSchemes
   , importChecksAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
   , importChecksAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
@@ -135,7 +135,7 @@ determineTreeDependencies fam fsm =
 determineEncapsulatedTrees ::
   Config.ForAnyModule
   -> Config.ForSpecifiedModule
-  -> Maybe (NEL.NonEmpty CodeStructure.TreeName)
+  -> Maybe (NEL.NonEmpty CodeStructure.ModuleTree)
 determineEncapsulatedTrees fam fsm =
   let
     shouldBeIgnored =

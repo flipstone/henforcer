@@ -24,9 +24,9 @@ import qualified Henforcer.CodeStructure as CodeStructure
 import qualified Henforcer.Rules as Rules
 
 data CheckedDependency = CheckedDependency
-  { dependencySource :: !CodeStructure.TreeName
+  { dependencySource :: !CodeStructure.ModuleTree
   , dependencyNote :: !Rules.UserNote
-  , dependencyTarget :: !CodeStructure.TreeName
+  , dependencyTarget :: !CodeStructure.ModuleTree
   }
   deriving (Eq, Show)
 
@@ -34,7 +34,7 @@ type CheckFailureWithNote = Rules.FailureWithUserNote CheckFailure
 
 data CheckFailure
   = DependencyViolation !CodeStructure.Import !CheckedDependency
-  | EncapsulationViolation !CodeStructure.Import !CodeStructure.TreeName
+  | EncapsulationViolation !CodeStructure.Import !CodeStructure.ModuleTree
   | QualificationViolation !CodeStructure.Import ![CodeStructure.Scheme]
   | OpenImportViolation !(NEL.NonEmpty CodeStructure.Import) !Rules.MaximumNat
   | AliasUniquenessViolation !(NEL.NonEmpty CodeStructure.Import)
@@ -97,13 +97,13 @@ formatDependencyViolation imp dep =
     , CompatGHC.blankLine
     ]
 
-formatEncapsulationViolation :: CodeStructure.Import -> CodeStructure.TreeName -> CompatGHC.SDoc
-formatEncapsulationViolation imp treeName =
+formatEncapsulationViolation :: CodeStructure.Import -> CodeStructure.ModuleTree -> CompatGHC.SDoc
+formatEncapsulationViolation imp moduleTree =
   CompatGHC.sep
     [ CompatGHC.sep
         [ formatImportSubject imp
         , CompatGHC.text "is forbidden because it is an internal module of the encapsulated tree"
-        , CompatGHC.ppr treeName
+        , CompatGHC.ppr moduleTree
         ]
     , CompatGHC.blankLine
     ]

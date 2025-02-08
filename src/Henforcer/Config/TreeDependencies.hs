@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Config.TreeDependencies
 Description : Functionality for specifying module trees that depend on other module trees.
-Copyright   : (c) Flipstone Technology Partners, 2024
+Copyright   : (c) Flipstone Technology Partners, 2024-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -21,14 +21,14 @@ for a relatively compact expression in the user facing TOML. This expression is 
 placed under 'Henforcer.Config' and not elsewhere such as 'Henforcer.Rules'.
 -}
 data TreeDependency = TreeDependency
-  { moduleTree :: CodeStructure.TreeName
-  , treeDependencies :: [CodeStructure.TreeName]
+  { moduleTree :: CodeStructure.ModuleTree
+  , treeDependencies :: [CodeStructure.ModuleTree]
   , treeDependencyNote :: Rules.UserNote
   }
 
 treeDependencyCodec :: Toml.TomlCodec TreeDependency
 treeDependencyCodec =
   TreeDependency
-    <$> TomlHelper.addField "moduleTree" moduleTree CodeStructure.treeNameCodec
-    <*> TomlHelper.addField "dependencies" treeDependencies CodeStructure.treeNameListCodec
+    <$> TomlHelper.addField "moduleTree" moduleTree CodeStructure.moduleTreeCodec
+    <*> TomlHelper.addField "dependencies" treeDependencies CodeStructure.moduleTreeListCodec
     <*> Rules.userNoteField treeDependencyNote
