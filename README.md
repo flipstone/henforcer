@@ -68,8 +68,6 @@ and any `.hs` files contained inside the `src/Foo/MyModule` directory.
 
 #### forAnyModule
 
-Required: Yes
-
 The `forAnyModule` key is a TOML table containing all of the checks that apply when compiling any
 given module. You can think of these as "global" but they do *not* apply to multiple modules at
 once.
