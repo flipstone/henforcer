@@ -104,7 +104,7 @@ forSpecifiedModuleCodec =
     <*> TomlHelper.addField
       "rulesToIgnore"
       specifiedModuleRulesToIgnore
-      (Toml.dioptional . (Toml.table IgnoreRules.rulestoIgnoreCodec))
+      (Toml.dioptional . Toml.table IgnoreRules.rulestoIgnoreCodec)
 
 type ForSpecifiedModules = [(CompatGHC.ModuleName, ForSpecifiedModule)]
 

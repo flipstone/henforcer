@@ -14,10 +14,9 @@ module Henforcer.Config.ForAnyModule
 import qualified Toml
 
 import qualified Henforcer.CodeStructure as CodeStructure
+import Henforcer.Config.TreeDependencies (TreeDependency, treeDependencyCodec)
 import qualified Henforcer.Rules as Rules
 import qualified TomlHelper
-
-import Henforcer.Config.TreeDependencies (TreeDependency, treeDependencyCodec)
 
 data ForAnyModule = ForAnyModule
   { anyModuleTreeDependencies :: ![TreeDependency]

@@ -85,7 +85,7 @@ formatOverMaximumUndocumentedViolation ::
   Rules.MaximumNat -> Rules.MaximumNat -> CompatGHC.SDoc
 formatOverMaximumUndocumentedViolation current rule =
   let beginningDoc =
-        ( CompatGHC.sep
+        CompatGHC.sep
             [ CompatGHC.hsep
                 [ CompatGHC.text "There were too many undocumented exports."
                 ]
@@ -98,7 +98,6 @@ formatOverMaximumUndocumentedViolation current rule =
                 , CompatGHC.ppr current
                 ]
             ]
-        )
    in CompatGHC.vcat
         [ beginningDoc
         , CompatGHC.blankLine
@@ -108,7 +107,7 @@ formatOverMaximumWithoutSinceViolation ::
   Rules.MaximumNat -> Rules.MaximumNat -> CompatGHC.SDoc
 formatOverMaximumWithoutSinceViolation current rule =
   let beginningDoc =
-        ( CompatGHC.sep
+         CompatGHC.sep
             [ CompatGHC.hsep
                 [ CompatGHC.text "There were too many exports without an @since haddock annotation."
                 ]
@@ -121,7 +120,6 @@ formatOverMaximumWithoutSinceViolation current rule =
                 , CompatGHC.ppr current
                 ]
             ]
-        )
    in CompatGHC.vcat
         [ beginningDoc
         , CompatGHC.blankLine
@@ -131,7 +129,7 @@ formatUnderMinimumWithSinceViolation ::
   Rules.MinimumNat -> Rules.MinimumNat -> CompatGHC.SDoc
 formatUnderMinimumWithSinceViolation current rule =
   let beginningDoc =
-        ( CompatGHC.sep
+        CompatGHC.sep
             [ CompatGHC.hsep
                 [ CompatGHC.text "There were not enough exports with an @since haddock annotation."
                 ]
@@ -144,7 +142,6 @@ formatUnderMinimumWithSinceViolation current rule =
                 , CompatGHC.ppr current
                 ]
             ]
-        )
    in CompatGHC.vcat
         [ beginningDoc
         , CompatGHC.blankLine

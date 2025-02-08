@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Config.IgnoreRules
 Description : Functionality for specifying that some rules in TOML configuration file  should be ignored.
-Copyright   : (c) Flipstone Technology Partners, 2023-2024
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -36,7 +36,7 @@ matchSpecificRulesToIgnore (SpecificRulesToIgnore rules) = Just rules
 rulestoIgnoreCodec :: Toml.TomlCodec RulesToIgnore
 rulestoIgnoreCodec =
   Toml.dimatch matchAll All (Toml.bool (String.fromString "all"))
-    <|> Toml.dimatch matchSpecificRulesToIgnore SpecificRulesToIgnore (ignoreRulesCodec)
+    <|> Toml.dimatch matchSpecificRulesToIgnore SpecificRulesToIgnore ignoreRulesCodec
 
 {- | Specify which rules to ignore, note that this is intended to be used when specifying modules in
 some fashion. To ignore rules at the top level would be to simply not enable them.
