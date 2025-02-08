@@ -1,13 +1,14 @@
 {- |
 Module      : Henforcer.Config
 Description : Functionaly around specifying rules that apply to any given module.
-Copyright   : (c) Flipstone Technology Partners, 2023-2024
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Config.ForAnyModule
   ( ForAnyModule (..)
   , forAnyModuleCodec
+  , emptyForAnyModule
   ) where
 
 import qualified Toml
@@ -89,3 +90,21 @@ forAnyModuleCodec =
       "moduleHeaderMaintainerMustExistNonEmpty"
       anyModuleModuleHeaderMaintainerMustExistNonEmpty
       Rules.mustExistNonEmptyCodec
+
+emptyForAnyModule :: ForAnyModule
+emptyForAnyModule =
+  ForAnyModule
+    { anyModuleTreeDependencies = mempty
+    , anyModuleEncapsulatedTrees = mempty
+    , anyModuleAllowedQualifications = mempty
+    , anyModuleAllowedOpenUnaliasedImports = Rules.NotEnforced
+    , anyModuleAllowedAliasUniqueness = Nothing
+    , anyModuleMaximumUndocumentedExports = Rules.NotEnforced
+    , anyModuleMinimumDocumentedExports = Rules.NotEnforced
+    , anyModuleMaximumExportsWithoutSince = Rules.NotEnforced
+    , anyModuleMinimumExportsWithSince = Rules.NotEnforced
+    , anyModuleModuleHeaderCopyrightMustExistNonEmpty = Rules.NotEnforced
+    , anyModuleModuleHeaderDescriptionMustExistNonEmpty = Rules.NotEnforced
+    , anyModuleModuleHeaderLicenseMustExistNonEmpty = Rules.NotEnforced
+    , anyModuleModuleHeaderMaintainerMustExistNonEmpty = Rules.NotEnforced
+    }
