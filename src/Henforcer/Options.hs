@@ -1,7 +1,7 @@
 {- |
 Module      : Henforcer.Options
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023-2024
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -13,9 +13,8 @@ module Henforcer.Options
 
 import qualified Options.Applicative as Opt
 
-data Options = Options
+newtype Options = Options
   { configPath :: FilePath
-  , initialize :: Bool
   }
 
 parseOptions :: IO Options
@@ -41,4 +40,3 @@ optionsParser =
           <> Opt.value "./henforcer.toml"
           <> Opt.showDefault
       )
-    <*> Opt.flag False True (Opt.long "init")

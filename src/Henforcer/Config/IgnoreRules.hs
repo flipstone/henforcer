@@ -22,8 +22,8 @@ import qualified TomlHelper
 the configuration for users easier, as they can quickly turn off all checks for a module.
 -}
 data RulesToIgnore
-  = All Bool
-  | SpecificRulesToIgnore IgnoreRules
+  = All !Bool
+  | SpecificRulesToIgnore !IgnoreRules
 
 matchAll :: RulesToIgnore -> Maybe Bool
 matchAll (All b) = Just b

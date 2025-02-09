@@ -1,9 +1,7 @@
-{-# LANGUAGE Strict #-}
-
 {- |
 Module      : Henforcer
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023
+Copyright   : (c) Flipstone Technology Partners, 2023-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -12,21 +10,13 @@ module Henforcer
   ) where
 
 import qualified Control.Concurrent.MVar as MVar
+import qualified Pollock
 import qualified System.IO.Unsafe as UnsafeIO
 
 import qualified CompatGHC
 import qualified Henforcer.Checks as Checks
 import qualified Henforcer.Config as Config
 import qualified Henforcer.Options as Options
-
-import qualified Pollock
-
--- Using an MVar and unsafePerformIO here is a very ugly hack, but the plugin interface gives us no
--- way to load the configuration once for the entire set of modules being compiled. This is a big
--- enough performance win that the cost seems likely worth it otherwise.
-globalConfigState :: MVar.MVar (Config.Config, CompatGHC.Fingerprint)
-{-# NOINLINE globalConfigState #-}
-globalConfigState = UnsafeIO.unsafePerformIO MVar.newEmptyMVar
 
 plugin :: CompatGHC.Plugin
 plugin =
@@ -36,6 +26,13 @@ plugin =
     , CompatGHC.typeCheckResultAction = typeCheckResultAction
     , CompatGHC.driverPlugin = Pollock.ensureHaddockIsOn
     }
+
+-- Using an MVar and unsafePerformIO here is a very ugly hack, but the plugin interface gives us no
+-- way to load the configuration once for the entire set of modules being compiled. This is a big
+-- enough performance win that the cost seems likely worth it otherwise.
+globalConfigState :: MVar.MVar (Config.Config, CompatGHC.Fingerprint)
+{-# NOINLINE globalConfigState #-}
+globalConfigState = UnsafeIO.unsafePerformIO MVar.newEmptyMVar
 
 {- | During typechecking is when Henforcer performs checks, adding any violations to the error
 messages tracked by GHC.

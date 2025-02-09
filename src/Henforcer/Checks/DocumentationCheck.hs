@@ -50,10 +50,10 @@ instance CompatGHC.Diagnostic CheckFailure where
   diagnosticCode = const Nothing
 
 data CheckFailure
-  = OverMaximumUndocumented Rules.MaximumNat Rules.MaximumNat
-  | UnderMinimumDocumented Rules.MinimumNat Rules.MinimumNat
-  | OverMaximumWithoutSince Rules.MaximumNat Rules.MaximumNat
-  | UnderMinimumWithSince Rules.MinimumNat Rules.MinimumNat
+  = OverMaximumUndocumented !Rules.MaximumNat !Rules.MaximumNat
+  | UnderMinimumDocumented !Rules.MinimumNat !Rules.MinimumNat
+  | OverMaximumWithoutSince !Rules.MaximumNat !Rules.MaximumNat
+  | UnderMinimumWithSince !Rules.MinimumNat !Rules.MinimumNat
   | CopyrightMustBeNonEmpty
   | DescriptionMustBeNonEmpty
   | LicenseMustBeNonEmpty

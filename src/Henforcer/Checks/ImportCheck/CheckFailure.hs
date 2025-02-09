@@ -36,7 +36,7 @@ data CheckFailure
   = DependencyViolation !CodeStructure.Import !CheckedDependency
   | EncapsulationViolation !CodeStructure.Import !CodeStructure.ModuleTree
   | QualificationViolation !CodeStructure.Import ![CodeStructure.Scheme]
-  | OpenImportViolation !(NEL.NonEmpty CodeStructure.Import) !Rules.MaximumNat
+  | OpenImportViolation !Rules.MaximumNat !(NEL.NonEmpty CodeStructure.Import)
   | AliasUniquenessViolation !(NEL.NonEmpty CodeStructure.Import)
 
 instance CompatGHC.Outputable CheckFailure where
@@ -45,7 +45,7 @@ instance CompatGHC.Outputable CheckFailure where
       DependencyViolation i cd -> formatDependencyViolation i cd
       EncapsulationViolation i tn -> formatEncapsulationViolation i tn
       QualificationViolation i s -> formatQualificationViolation i s
-      OpenImportViolation i n -> formatOpenImportViolation i n
+      OpenImportViolation n i -> formatOpenImportViolation i n
       AliasUniquenessViolation is -> formatAliasUniquenssViolation is
 
 {- | Convert a list of 'CheckFailure' to 'CompatGHC.Messages' so we can hand off to GHC printing mechanism
@@ -61,7 +61,7 @@ checkFailureImport :: CheckFailure -> CodeStructure.Import
 checkFailureImport (DependencyViolation i _) = i
 checkFailureImport (EncapsulationViolation i _) = i
 checkFailureImport (QualificationViolation i _) = i
-checkFailureImport (OpenImportViolation (i NEL.:| _) _) = i
+checkFailureImport (OpenImportViolation _ (i NEL.:| _)) = i
 checkFailureImport (AliasUniquenessViolation (i NEL.:| _)) = i
 
 checkFailureLoc :: CheckFailure -> CompatGHC.SrcSpan

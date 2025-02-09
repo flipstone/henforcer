@@ -19,11 +19,13 @@ import qualified TomlHelper
 {- | Type to allow us to specify when a subtree depends on other subtrees. Particularly this allows
 for a relatively compact expression in the user facing TOML. This expression is why the module is
 placed under 'Henforcer.Config' and not elsewhere such as 'Henforcer.Rules'.
+
+@since 1.0.0.0
 -}
 data TreeDependency = TreeDependency
-  { moduleTree :: CodeStructure.ModuleTree
-  , treeDependencies :: [CodeStructure.ModuleTree]
-  , treeDependencyNote :: Rules.UserNote
+  { moduleTree :: !CodeStructure.ModuleTree
+  , treeDependencies :: ![CodeStructure.ModuleTree]
+  , treeDependencyNote :: !Rules.UserNote
   }
 
 treeDependencyCodec :: Toml.TomlCodec TreeDependency

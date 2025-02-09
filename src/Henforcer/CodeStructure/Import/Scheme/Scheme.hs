@@ -45,6 +45,8 @@ data SchemeWithNote = SchemeWithNote
 
 {- | Representation of the structure of on an import, covering the qualification, any aliasing, and
 the safety.
+
+@since 1.0.0.0
 -}
 data Scheme = Scheme
   { qualification :: !CompatGHC.ImportDeclQualifiedStyle
@@ -126,9 +128,7 @@ keepOnlyPackageNameInQualifier s =
     mbGetQualifierText WithoutPackageQualifier = Nothing
 
     newQualifier =
-      case M.join . fmap keepPackageNameOnly . mbGetQualifierText $ packageQualification s of
-        Nothing -> WithoutPackageQualifier
-        Just t -> WithPackageQualifier t
+      maybe WithoutPackageQualifier WithPackageQualifier . M.join . fmap keepPackageNameOnly . mbGetQualifierText $ packageQualification s
    in
     s{packageQualification = newQualifier}
 

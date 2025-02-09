@@ -34,6 +34,55 @@ import qualified Henforcer.CodeStructure as CodeStructure
 import qualified Henforcer.Config as Config
 import qualified Henforcer.Rules as Rules
 
+checkImports ::
+  ImportChecks
+  -> CompatGHC.TcGblEnv
+  -> CompatGHC.Bag CheckFailureWithNote
+checkImports checks tcGblEnv =
+  let
+    imports = CodeStructure.getImports tcGblEnv
+    accumulatedResults = foldr (checkImport checks) (ImportCheckAccum mempty mempty mempty) imports
+    openUnaliasedResults =
+      fmap Rules.failureWithNoNote
+        . Maybe.catMaybes
+        $ Rules.checkMaximum
+          (importChecksAllowedOpenUnaliasedImports checks)
+          (openUnaliasedImports accumulatedResults)
+          (fromIntegral . length . DList.toList)
+          (\dlist nat -> fmap (OpenImportViolation nat) . NEL.nonEmpty $ DList.toList dlist)
+    aliasUniquenessResults =
+      checkAllowedAliasUniquness
+        (importChecksAllowedAliasUniqueness checks)
+        (aliasedImportsByAliasName accumulatedResults)
+   in
+    CompatGHC.listToBag $
+      DList.toList (failures accumulatedResults) <> openUnaliasedResults <> aliasUniquenessResults
+
+determineChecks :: Config.Config -> CompatGHC.ModuleName -> ImportChecks
+determineChecks config modName =
+  let
+    specifiedModule =
+      Maybe.fromMaybe Config.emptyForSpecifiedModule
+        . List.lookup modName
+        $ Config.forSpecifiedModules config
+    patternModule =
+      maybe Config.emptyForSpecifiedModule snd
+        . Config.moduleMatchesPattern (CompatGHC.moduleNameString modName)
+        $ Config.forPatternModules config
+   in
+    determineChecksForModule
+      (Config.forAnyModule config)
+      $ Config.unionPatternAndSpecifiedModule patternModule specifiedModule
+
+data ImportChecks = ImportChecks
+  { importChecksTreeDependencies :: !(Maybe (NEL.NonEmpty CheckedDependency)) -- Nothing means we won't even check
+  , importChecksEncapsulatedTrees :: !(Maybe (NEL.NonEmpty CodeStructure.ModuleTree)) -- Nothing means we won't even check
+  , importChecksAllowedQualifications :: !CodeStructure.AllowedSchemes
+  , importChecksAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
+  , importChecksAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
+  }
+  deriving (Eq, Show)
+
 checkImportAgainstDependency ::
   CodeStructure.Import
   -> CheckedDependency
@@ -70,31 +119,6 @@ checkImportAgainstEncapsulation imp encapsulatedTree =
     if encapsulationViolated
       then pure $ EncapsulationViolation imp encapsulatedTree
       else mempty
-
-data ImportChecks = ImportChecks
-  { importChecksTreeDependencies :: !(Maybe (NEL.NonEmpty CheckedDependency)) -- Nothing means we won't even check
-  , importChecksEncapsulatedTrees :: !(Maybe (NEL.NonEmpty CodeStructure.ModuleTree)) -- Nothing means we won't even check
-  , importChecksAllowedQualifications :: !CodeStructure.AllowedSchemes
-  , importChecksAllowedOpenUnaliasedImports :: !Rules.MaximumAllowed
-  , importChecksAllowedAliasUniqueness :: !(Maybe CodeStructure.AllowedAliasUniqueness)
-  }
-  deriving (Eq, Show)
-
-determineChecks :: Config.Config -> CompatGHC.ModuleName -> ImportChecks
-determineChecks config modName =
-  let
-    specifiedModule =
-      Maybe.fromMaybe Config.emptyForSpecifiedModule
-        . List.lookup modName
-        $ Config.forSpecifiedModules config
-    patternModule =
-      maybe Config.emptyForSpecifiedModule snd
-        . Config.moduleMatchesPattern (CompatGHC.moduleNameString modName)
-        $ Config.forPatternModules config
-   in
-    determineChecksForModule
-      (Config.forAnyModule config)
-      $ Config.unionPatternAndSpecifiedModule patternModule specifiedModule
 
 determineChecksForModule ::
   Config.ForAnyModule
@@ -201,30 +225,6 @@ data ImportCheckAccum = ImportCheckAccum
   , openUnaliasedImports :: !(DList.DList CodeStructure.Import)
   , aliasedImportsByAliasName :: !(Map.Map CompatGHC.ModuleName [CodeStructure.Import])
   }
-
-checkImports ::
-  ImportChecks
-  -> CompatGHC.TcGblEnv
-  -> CompatGHC.Bag CheckFailureWithNote
-checkImports checks tcGblEnv =
-  let
-    imports = CodeStructure.getImports tcGblEnv
-    accumulatedResults = foldr (checkImport checks) (ImportCheckAccum mempty mempty mempty) imports
-    openUnaliasedResults =
-      fmap Rules.failureWithNoNote
-        . Maybe.catMaybes
-        $ Rules.checkMaximum
-          (importChecksAllowedOpenUnaliasedImports checks)
-          (openUnaliasedImports accumulatedResults)
-          (fromIntegral . length . DList.toList)
-          (\dlist nat -> fmap (flip OpenImportViolation nat) . NEL.nonEmpty $ DList.toList dlist)
-    aliasUniquenessResults =
-      checkAllowedAliasUniquness
-        (importChecksAllowedAliasUniqueness checks)
-        (aliasedImportsByAliasName accumulatedResults)
-   in
-    CompatGHC.listToBag $
-      DList.toList (failures accumulatedResults) <> openUnaliasedResults <> aliasUniquenessResults
 
 checkImport ::
   ImportChecks
