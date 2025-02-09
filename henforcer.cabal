@@ -53,15 +53,15 @@ common ci-warnings
       -Wunused-matches
       -Wunused-type-patterns
       -fwrite-ide-info
-  if impl (ghc >= 9.8)
-    ghc-options:
-      -Wincomplete-export-warnings
-      -Wimplicit-rhs-quantification
-      -Wterm-variable-capture
-  if impl (ghc >= 9.10)
-    ghc-options:
-      -Wdeprecated-type-abstractions
-      -Wdefaulted-exception-context
+    if impl (ghc >= 9.8)
+      ghc-options:
+        -Wincomplete-export-warnings
+        -Wimplicit-rhs-quantification
+        -Wterm-variable-capture
+    if impl (ghc >= 9.10)
+      ghc-options:
+        -Wdeprecated-type-abstractions
+        -Wdefaulted-exception-context
 
 library henforcer-internal
   exposed-modules:
