@@ -68,11 +68,11 @@ outdated:
 
 .PHONY: format
 format: setup-extra-tools
-	fourmolu -i app plugin src test
+	fourmolu -i plugin src test
 
 .PHONY: format-check
 format-check:
-	fourmolu -m check app plugin src test
+	fourmolu -m check plugin src test
 
 .PHONY: weeder
 weeder: setup-extra-tools test-stack

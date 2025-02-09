@@ -64,7 +64,10 @@ allowedSchemesCodec =
   Toml.dimap ((fmap . fmap) schemeToToml) (fmap tomlsToSchemes)
     . Toml.map (CompatGHC.moduleNameCodec "module") (Toml.list schemeTomlCodec "importScheme")
 
--- | Compute the 'Scheme' from an import
+{- | Compute the 'Scheme' from an import
+
+@since 1.0.0.0
+-}
 buildScheme :: CompatGHC.ImportDecl CompatGHC.GhcRn -> Scheme
 buildScheme imp =
   Scheme
@@ -74,6 +77,10 @@ buildScheme imp =
     , packageQualification = determinePackageQualifier imp
     }
 
+{- | The Toml verion of an import scheme. This is an intermediate type to facilitate configuration
+
+@since 1.0.0.0
+-}
 data SchemeToml = SchemeToml
   { tomlAlias :: !Alias
   , tomlSafe :: !Safe
@@ -128,11 +135,18 @@ keepOnlyPackageNameInQualifier s =
     mbGetQualifierText WithoutPackageQualifier = Nothing
 
     newQualifier =
-      maybe WithoutPackageQualifier WithPackageQualifier . M.join . fmap keepPackageNameOnly . mbGetQualifierText $ packageQualification s
+      maybe WithoutPackageQualifier WithPackageQualifier
+        . M.join
+        . fmap keepPackageNameOnly
+        . mbGetQualifierText $
+        packageQualification s
    in
     s{packageQualification = newQualifier}
 
--- | Representation of the choices for qualification as it is presented in the toml config.
+{- | Representation of the choices for qualification as it is presented in the toml config.
+
+@since 1.0.0.0
+-}
 data QualificationToml = QualificationToml
   { qualifiedPre :: !Bool
   , qualifiedPost :: !Bool
