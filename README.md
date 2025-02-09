@@ -22,21 +22,6 @@ _Note: `henforcer` requires a handful of packages that are not on stackage as of
 - pollock-0.1.0.1
 ```
 
-## Initialization
-
-Once the `henforcer` command is installed you'll need to initialize henforcer for your project. `cd`
-to your product directory and run the following command:
-
-`henforcer --init`
-
-or
-
-`stack exec henforcer --init`
-
-This will create a default `henforcer` configuration file at `henforcer.toml` in the root of your
-project.
-
-
 ## Execution
 
 `henforcer` is a GHC plugin, thus it is executed during compilation. To enable the plugin during
@@ -48,9 +33,7 @@ it is at `foo/bar/henforcer.toml` this would be as
 
 ## Configuration
 
-`henforcer` uses `TOML` files for configuration. Note that the default `henforcer` configuration
-does not enforce any particular rules, so running `henforcer` immediately after installation and
-initialization will not report errors.
+`henforcer` uses `TOML` files for configuration. You can use a empty toml file as a beginning configuration. Using such and running `henforcer` will not report errors.
 
 Configuration concepts and options are described below. Also the `examples/henforcer.toml` file
 shows a variety of usage possibilities.

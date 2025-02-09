@@ -9,7 +9,7 @@ homepage:       https://github.com/flipstone/henforcer#readme
 bug-reports:    https://github.com/flipstone/henforcer/issues
 author:         Flipstone Technology Partners
 maintainer:     maintainers@flipstone.com
-copyright:      2023-2024 Flipstone Technology Partners
+copyright:      2021-2025 Flipstone Technology Partners
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
@@ -28,11 +28,6 @@ flag ci
   description: More strict ghc options used for development and ci, not intended for end-use.
   manual: True
   default: False
-
-flag executable
-  description: Control building the executable if you only want or need the plugin.
-  manual: True
-  default: True
 
 common ci-warnings
     ghc-options:

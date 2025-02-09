@@ -7,7 +7,6 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Options
   ( Options (..)
-  , parseOptions
   , parseGivenOptions
   ) where
 
@@ -16,10 +15,6 @@ import qualified Options.Applicative as Opt
 newtype Options = Options
   { configPath :: FilePath
   }
-
-parseOptions :: IO Options
-parseOptions =
-  Opt.execParser optionsInfo
 
 parseGivenOptions :: [String] -> IO Options
 parseGivenOptions =
