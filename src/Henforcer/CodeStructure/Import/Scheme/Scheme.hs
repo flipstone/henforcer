@@ -9,8 +9,8 @@ Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure.Import.Scheme.Scheme
   ( Scheme (..)
-  , AllowedSchemes
   , SchemeWithNote (..)
+  , AllowedSchemes
   , buildScheme
   , allowedSchemesCodec
   , keepOnlyPackageNameInQualifier
@@ -37,12 +37,6 @@ import Henforcer.CodeStructure.Import.Scheme.Safe (Safe, determineSafe, safeCode
 import qualified Henforcer.Rules as Rules
 import qualified TomlHelper
 
-data SchemeWithNote = SchemeWithNote
-  { schemeNote :: !Rules.UserNote
-  , underlyingScheme :: !Scheme
-  }
-  deriving (Eq, Show)
-
 {- | Representation of the structure of on an import, covering the qualification, any aliasing, and
 the safety.
 
@@ -56,10 +50,28 @@ data Scheme = Scheme
   }
   deriving (Eq, Show)
 
+{- | The 'Scheme' along with the 'UserNote' that was requested to be printed in the case of failures.
+
+@since 1.0.0.0
+-}
+data SchemeWithNote = SchemeWithNote
+  { schemeNote :: !Rules.UserNote
+  , underlyingScheme :: !Scheme
+  }
+  deriving (Eq, Show)
+
+{- | The 'SchemeWithNote's that should be allowed for each 'CompatGHC.ModuleName'.
+
+@since 1.0.0.0
+-}
 type AllowedSchemes =
   Map.Map CompatGHC.ModuleName [SchemeWithNote]
 
-allowedSchemesCodec :: Toml.Key -> Toml.TomlCodec (Map.Map CompatGHC.ModuleName [SchemeWithNote])
+{- | Conversion for 'AllowedSchemes' that performs conversion through 'SchemeToml'.
+
+@since 1.0.0.0
+-}
+allowedSchemesCodec :: Toml.Key -> Toml.TomlCodec AllowedSchemes
 allowedSchemesCodec =
   Toml.dimap ((fmap . fmap) schemeToToml) (fmap tomlsToSchemes)
     . Toml.map (CompatGHC.moduleNameCodec "module") (Toml.list schemeTomlCodec "importScheme")
@@ -77,7 +89,8 @@ buildScheme imp =
     , packageQualification = determinePackageQualifier imp
     }
 
-{- | The Toml verion of an import scheme. This is an intermediate type to facilitate configuration
+{- | The Toml verion of an import scheme. This is an intermediate type to facilitate configuration in
+   a more ergonomic manner.
 
 @since 1.0.0.0
 -}
@@ -127,6 +140,10 @@ explodeSchemeToml st =
     (tomlPackageQualification st)
     (tomlQualification st)
 
+{- | Filters out version and seperators so we can look only at the package portion for comparsion.
+
+@since 1.0.0.0
+-}
 keepOnlyPackageNameInQualifier :: Scheme -> Scheme
 keepOnlyPackageNameInQualifier s =
   let
@@ -138,8 +155,8 @@ keepOnlyPackageNameInQualifier s =
       maybe WithoutPackageQualifier WithPackageQualifier
         . M.join
         . fmap keepPackageNameOnly
-        . mbGetQualifierText $
-        packageQualification s
+        . mbGetQualifierText
+        $ packageQualification s
    in
     s{packageQualification = newQualifier}
 
