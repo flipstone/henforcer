@@ -23,6 +23,18 @@ import qualified CompatGHC
 import qualified Henforcer.Config as Config
 import qualified Henforcer.Rules as Rules
 
+data DocumentationChecks = DocumentationChecks
+  { maximumUndocumentedExports :: !Rules.MaximumAllowed
+  , minimumDocumentedExports :: !Rules.MinimumAllowed
+  , maximumExportsWithoutSince :: !Rules.MaximumAllowed
+  , minimumExportsWithSince :: !Rules.MinimumAllowed
+  , moduleHeaderCopyrightMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , moduleHeaderDescriptionMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , moduleHeaderLicenseMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  , moduleHeaderMaintainerMustExistNonEmpty :: !Rules.MustExistNonEmpty
+  }
+  deriving (Eq, Show)
+
 instance CompatGHC.Outputable CheckFailure where
   ppr cf =
     case cf of
@@ -166,18 +178,6 @@ mkEnv = CompatGHC.mkErrorMsgEnvelope CompatGHC.generatedSrcSpan CompatGHC.neverQ
 docErrorMessagesFromList :: CompatGHC.Bag CheckFailure -> CompatGHC.Messages CheckFailure
 docErrorMessagesFromList =
   CompatGHC.mkMessages . fmap mkEnv
-
-data DocumentationChecks = DocumentationChecks
-  { maximumUndocumentedExports :: !Rules.MaximumAllowed
-  , minimumDocumentedExports :: !Rules.MinimumAllowed
-  , maximumExportsWithoutSince :: !Rules.MaximumAllowed
-  , minimumExportsWithSince :: !Rules.MinimumAllowed
-  , moduleHeaderCopyrightMustExistNonEmpty :: !Rules.MustExistNonEmpty
-  , moduleHeaderDescriptionMustExistNonEmpty :: !Rules.MustExistNonEmpty
-  , moduleHeaderLicenseMustExistNonEmpty :: !Rules.MustExistNonEmpty
-  , moduleHeaderMaintainerMustExistNonEmpty :: !Rules.MustExistNonEmpty
-  }
-  deriving (Eq, Show)
 
 determineDocumentationChecks ::
   Config.Config

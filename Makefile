@@ -36,7 +36,7 @@ setup-stack:
 setup-extra-tools:
 # Note: We don't actually need n versions of formatting/linting tools though, so only get ones with
 # the default stack.yaml
-	stack install fourmolu weeder
+	stack install fourmolu weeder hlint
 
 .PHONY: build-cabal
 build-cabal:
@@ -77,3 +77,7 @@ format-check:
 .PHONY: weeder
 weeder: setup-extra-tools test-stack
 	stack exec weeder -- --require-hs-files --hie-directory .stack-work/dist/
+
+.PHONY: hlint
+hlint: setup-extra-tools
+	stack exec hlint -- plugin src

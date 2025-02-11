@@ -47,9 +47,9 @@ module (e.g. `Data.Text`) and all the modules are prefixed by it (e.g. `Data.Tex
 `Data.Text.Lazy`). For modules in your project this almost always means a `src/Foo/MyModule.hs` file
 and any `.hs` files contained inside the `src/Foo/MyModule` directory.
 
-### Configuration reference
+## Configuration reference
 
-#### forAnyModule
+### forAnyModule
 
 The `forAnyModule` key is a TOML table containing all of the checks that apply when compiling any
 given module. You can think of these as "global" but they do *not* apply to multiple modules at
@@ -71,7 +71,7 @@ once.
 | `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no       | If the `Haddock` module header field of `Maintainer` must be populated.                                                                                                                                                                                                                   |
 | `treeDependencies`                         | array of TreeDependency       | no       | Declares that one module tree depends on other trees. Declaring such a dependency tells `henforcer` that you don't want the dependency targets to import anything from the dependent tree, which would cause a backwards dependency rendering the two module trees logically inseparable. |
 
-#### forSpecifiedModules
+### forSpecifiedModules
 
 Henforcer allows for certain rules to be overridden on a module by module basis. When provided, the
 most specific rule will be applied.
@@ -91,7 +91,8 @@ most specific rule will be applied.
 | `moduleHeaderLicenseMustExistNonEmpty`     | boolean                       | no       | If the `Haddock` module header field of `License` must be populated.                                                                                              |
 | `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no       | If the `Haddock` module header field of `Maintainer` must be populated.                                                                                           |
 | `rulesToIgnore`                            | RulesToIgnore                 | no       | Specifies what, if any, rules should be ignored for the given module.                                                                                             |
-#### forPatternModules
+
+### forPatternModules
 
 Henforcer supports a limited form of using patterns to match rules against multiple modules, but not any module in a more concise way.
 
@@ -120,14 +121,16 @@ Important items to note:
 | `moduleHeaderMaintainerMustExistNonEmpty`  | boolean                       | no       | If the `Haddock` module header field of `Maintainer` must be populated.                                                                                           |
 | `rulesToIgnore`                            | RulesToIgnore                 | no       | Specifies what, if any, rules should be ignored for the given module.                                                                                             |
 
-#### Shared types
+### Shared types
 
 Below are the reused definitions between some combination of the `forAnyModule`, `forSpecifiedModules` and `forPatternModules` rules.
 
-##### AllowedAliasUniqueness
+#### AllowedAliasUniqueness
+
 This is allowed to take two forms that are both TOML tables.
 
-###### First Form
+##### First Form
+
 This form states that all aliases in a module must be unique with an allow list for those aliases
 that may be repeated.
 
@@ -136,7 +139,8 @@ that may be repeated.
 | `allAliasesUniqueExcept` | array of string | yes      | Aliases that are allowed to be repeated.                                 |
 | `note`                   | string          | no       | User defined message to be displayed with errors for additional context. |
 
-###### Second Form
+##### Second Form
+
 This form states that aliases in a module may repeat with a block list for those aliases
 that must be unique.
 
@@ -145,13 +149,15 @@ that must be unique.
 | `uniqueAliases` | array of string | yes      | Aliases that must be unique.                                             |
 | `note`          | string          | no       | User defined message to be displayed with errors for additional context. |
 
-##### AllowedQualification
+#### AllowedQualification
+
 | fieldName      | type                  | required | description                                                                 |
 |----------------|-----------------------|----------|-----------------------------------------------------------------------------|
 | `module`       | string                | yes      | `module` is a string of the module name.                                    |
 | `importScheme` | array of ImportScheme | yes      | The list of specifications for each way that the given module may imported. |
 
-##### ImportScheme
+#### ImportScheme
+
 | fieldName          | type      | required | description                                                                                                                                                                     |
 |--------------------|-----------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | qualified          | Qualified | yes      | Description of ways the import can be qualified, or not.                                                                                                                        |
@@ -160,7 +166,7 @@ that must be unique.
 | `safe`             | boolean   | no       | Controls if the import is required to use the `safe` keyword. Most users are not expected to need this option.                                                                  |
 | `note`             | string    | no       | User defined message to be displayed with errors for additional context.                                                                                                        |
 
-##### Qualified
+#### Qualified
 
 | fieldName       | type    | required | description                                                                         |
 |-----------------|---------|----------|-------------------------------------------------------------------------------------|
@@ -168,22 +174,26 @@ that must be unique.
 | `qualifiedPost` | boolean | no       | Describes if import can be qualified postpositive like `import UnliftIO qualified`. |
 | `unqualified`   | boolean | no       | Describes if import can be unqualified like `import UnliftIO`.                      |
 
-##### TreeDependency
+#### TreeDependency
+
 | fieldName      | type            | required | description |
 |----------------|-----------------|----------|-------------|
 | `moduleTree`   | string          | yes      | The tree which depends on others. |
 | `dependencies` | array of string | yes      | The trees which are depended upon. |
 | `note`         | string          | no       | User defined message to be displayed with errors for additional context. |
 
-##### RulesToIgnore
+#### RulesToIgnore
+
 This is allowed to take two forms that are both TOML tables.
 
-###### First form
+##### First form
+
 | fieldName | type    | required | description                                |
 |-----------|---------|----------|--------------------------------------------|
 | `all`     | boolean | no       | Controls if *all* rules should be ignored. |
 
-###### Second form
+##### Second form
+
 | fieldName                                  | type    | required | description                             |
 |--------------------------------------------|---------|----------|-----------------------------------------|
 | `allowedAliasUniqueness`                   | boolean | no       | Controls if the rule should be ignored. |

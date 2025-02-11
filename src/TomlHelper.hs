@@ -1,7 +1,7 @@
 {- |
 Module      : TomlHelper
 Description : Helpers to make dealing with toml easier.
-Copyright   : (c) Flipstone Technology Partners, 2024
+Copyright   : (c) Flipstone Technology Partners, 2024-2025
 License     : BSD-3-clause
 Maintainer  : maintainers@flipstone.com
 -}
@@ -13,11 +13,19 @@ module TomlHelper
 import qualified Data.String as String
 import qualified Toml
 
+{- | A convience wrapper for 'Toml..='
+
+@since 1.0.0.0
+-}
 addField ::
   String -> (object -> field) -> (Toml.Key -> Toml.TomlCodec field) -> Toml.Codec object field
 addField fieldName fieldAccessor codec =
   codec (String.fromString fieldName) Toml..= fieldAccessor
 
+{- | Set a default for what would otherwise be an optional.
+
+@since 1.0.0.0
+-}
 setDefault :: a -> (Toml.Key -> Toml.TomlCodec a) -> Toml.Key -> Toml.TomlCodec a
 setDefault defaultVal codec =
   let
