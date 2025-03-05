@@ -44,7 +44,7 @@ forAnyModuleCodec =
     <*> TomlHelper.addField
       "encapsulatedTrees"
       anyModuleEncapsulatedTrees
-      CodeStructure.moduleTreeListCodec
+      (TomlHelper.setDefault [] CodeStructure.moduleTreeListCodec)
     <*> TomlHelper.addField
       "allowedQualifications"
       anyModuleAllowedQualifications
