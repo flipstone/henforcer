@@ -59,7 +59,7 @@ linux_test_task:
 
 freebsd_test_task:
   freebsd_instance:
-    image_family: freebsd-14-1
+    image_family: freebsd-14-2
     cpu: 6
     memory: 6G
   freebsd_stack_cache:
