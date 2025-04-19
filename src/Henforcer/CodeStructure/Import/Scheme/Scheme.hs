@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 {- |
 Module      : Henforcer.CodeStructure.Import.Scheme.Scheme
 Description : Models the style of import including qualification, alias, and safety.
@@ -18,6 +16,7 @@ module Henforcer.CodeStructure.Import.Scheme.Scheme
 
 import qualified Control.Monad as M
 import qualified Data.Map.Strict as Map
+import qualified Data.String as String
 import qualified Data.Text as T
 import qualified Toml
 
@@ -74,7 +73,9 @@ type AllowedSchemes =
 allowedSchemesCodec :: Toml.Key -> Toml.TomlCodec AllowedSchemes
 allowedSchemesCodec =
   Toml.dimap ((fmap . fmap) schemeToToml) (fmap tomlsToSchemes)
-    . Toml.map (CompatGHC.moduleNameCodec "module") (Toml.list schemeTomlCodec "importScheme")
+    . Toml.map
+      (CompatGHC.moduleNameCodec (String.fromString "module"))
+      (Toml.list schemeTomlCodec (String.fromString "importScheme"))
 
 {- | Compute the 'Scheme' from an import
 
