@@ -76,7 +76,7 @@ freebsd_test_task:
       - cat Makefile
     populate_script:
       - pkg install -y hs-stack hs-cabal-install curl
-      - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.30.0/x86_64-portbld-freebsd-ghcup-0.1.30.0
+      - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.50.0/x86_64-portbld-freebsd-ghcup-0.1.50.0
       - chmod +x /usr/local/bin/ghcup
       - export PATH=$PATH:/.local/bin:/.ghcup/bin
       - export GHC_VERSIONS=9.4.8
@@ -86,7 +86,7 @@ freebsd_test_task:
     - freebsd_ghcup
   install_script:
     - pkg install -y hs-stack hs-cabal-install curl
-    - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.30.0/x86_64-portbld-freebsd-ghcup-0.1.30.0
+    - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.50.0/x86_64-portbld-freebsd-ghcup-0.1.50.0
     - chmod +x /usr/local/bin/ghcup
     - export PATH=$PATH:/.local/bin:/.ghcup/bin
     - export GHC_VERSIONS=9.4.8
@@ -103,7 +103,7 @@ freebsd_test_task:
 
 macos_test_task:
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-ventura-base:latest
+    image: ghcr.io/cirruslabs/macos-sequoia-base:latest
     cpu: 6
     memory: 6G
   macos_stack_cache:
