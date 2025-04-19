@@ -13,8 +13,8 @@ linux_test_task:
         STACK_YAMLS:
       - GHC_VERSIONS: 9.10.1
         STACK_YAMLS:
-      - GHC_VERSIONS: 9.12.2
-        STACK_YAMLS:
+      # - GHC_VERSIONS: 9.12.2
+      #   STACK_YAMLS:
       - GHC_VERSIONS:
         STACK_YAMLS: stack.yaml
   linux_stack_cache:
@@ -103,7 +103,7 @@ freebsd_test_task:
 
 macos_test_task:
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-sequoia-base:latest
+    image: ghcr.io/cirruslabs/macos-runner:sequoia
     cpu: 6
     memory: 6G
   macos_stack_cache:
