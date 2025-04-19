@@ -61,7 +61,6 @@ typeCheckResultAction commandLineOpts _modSummary tcGblEnv = do
 
 {- | Determines if recompilation of previous modules should happen. This always gets the fingerprint
 of the configuration so that a cached version does not conflict with the recompilation checks.
-
 -}
 recompile :: [CompatGHC.CommandLineOption] -> IO CompatGHC.PluginRecompile
 recompile =
@@ -92,7 +91,6 @@ loadConfigIfNeeded commandLineOpts = do
 
 {- | Parse the command line options for the path to the config and compute the fingerprint of that
 config.
-
 -}
 getConfigPathAndFingerprint :: [CompatGHC.CommandLineOption] -> IO (FilePath, CompatGHC.Fingerprint)
 getConfigPathAndFingerprint commandLineOpts = do
