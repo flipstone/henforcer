@@ -13,7 +13,7 @@ linux_test_task:
         STACK_YAMLS:
       - GHC_VERSIONS: 9.10.1
         STACK_YAMLS:
-      - GHC_VERSIONS: 9.12.1
+      - GHC_VERSIONS: 9.12.2
         STACK_YAMLS:
       - GHC_VERSIONS:
         STACK_YAMLS: stack.yaml

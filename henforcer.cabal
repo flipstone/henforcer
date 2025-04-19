@@ -18,7 +18,7 @@ extra-source-files:
 extra-doc-files:
     ChangeLog.md
 
-tested-with: GHC == 9.4.8, GHC == 9.6.6, GHC == 9.8.4, GHC == 9.10.1, GHC == 9.12.1
+tested-with: GHC == 9.4.8, GHC == 9.6.6, GHC == 9.8.4, GHC == 9.10.1, GHC == 9.12.2
 
 source-repository head
   type: git
@@ -47,6 +47,11 @@ common ci-warnings
       -Wunused-packages
       -Wunused-matches
       -Wunused-type-patterns
+      -Winvalid-haddock
+      -Wredundant-bang-patterns
+      -Wimplicit-lift
+      -Woperator-whitespace
+      -Wredundant-strictness-flags
       -fwrite-ide-info
     if impl (ghc >= 9.8)
       ghc-options:
@@ -57,6 +62,9 @@ common ci-warnings
       ghc-options:
         -Wdeprecated-type-abstractions
         -Wdefaulted-exception-context
+    if impl (ghc >= 9.12)
+      ghc-options:
+        -Wview-pattern-signatures
 
 library henforcer-internal
   exposed-modules:
