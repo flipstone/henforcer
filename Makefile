@@ -2,7 +2,7 @@
 # default we will format the code, but not run a "check" of it, which is used in CI to fail the
 # running job if code wasn't formatted.
 all: setup format outdated build-cabal build-stack test-cabal
-ci: outdated build-cabal build-stack test-cabal format-check
+ci: outdated build-cabal build-stack test-cabal format-check hlint
 setup: setup-cabal setup-stack setup-extra-tools
 
 # Note that the ghc-versions for cabal and the stack yamls match which version of ghc they end up

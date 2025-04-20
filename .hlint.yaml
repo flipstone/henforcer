@@ -1,0 +1,25 @@
+- extensions:
+  - default: false # Very tightly control extensions
+  - name: [FlexibleInstances,
+           GeneralizedNewtypeDeriving,
+           TypeFamilies, # GHC API uses associated types so we need this
+           TypeOperators
+        ]
+  - {name: CPP, within: CompatGHC} # CPP should only be in the compatibility module
+  - {name: UndecidableInstances, within: CompatGHC} # Similar to CPP, we need this for some compat code, but want to avoid otherwise
+
+- group: {name: future, enabled: true}
+- group: {name: generalise, enabled: true}
+- group: {name: dollar, enabled: true}
+- group: {name: teaching, enabled: true}
+
+- ignore: {name: Use fewer imports} # This has issues with the compat module and the CPP for working across many GHCs.
+
+- ignore: {name: Use record patterns}
+- ignore: {name: Use lambda-case}
+- ignore: {name: Use tuple-section}
+- ignore: {name: Use <$>}
+- ignore: {name: Use =<<}
+- ignore: {name: Use list comprehension}
+- ignore: {name: Use infix}
+- error: { lhs: "x <*> Nothing", rhs: "Nothing" }
