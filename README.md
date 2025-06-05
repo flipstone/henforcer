@@ -1,7 +1,6 @@
 # henforcer
 
-`henforcer` is a `Haskell` enforcer of checks to help keep your forest of Haskell modules organized
-cleanly.
+`henforcer` is a `Haskell` enforcer of project specific code standards.
 
 ## Installation
 
