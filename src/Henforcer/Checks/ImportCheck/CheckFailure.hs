@@ -48,6 +48,16 @@ instance CompatGHC.Outputable CheckFailure where
       OpenImportViolation n i -> formatOpenImportViolation i n
       AliasUniquenessViolation is -> formatAliasUniquenssViolation is
 
+checkFailureDiagnosticCode :: CheckFailure -> CompatGHC.DiagnosticCode
+checkFailureDiagnosticCode cf =
+  CompatGHC.mkHenforcerDiagnosticCode $
+    case cf of
+      DependencyViolation _ _ -> 49096
+      EncapsulationViolation _ _ -> 53012
+      QualificationViolation _ _ -> 12259
+      OpenImportViolation _ _ -> 75306
+      AliasUniquenessViolation _ -> 42555
+
 {- | Convert a list of 'CheckFailure' to 'CompatGHC.Messages' so we can hand off to GHC printing mechanism
  in the plugin.
 -}
@@ -75,7 +85,8 @@ instance CompatGHC.Diagnostic CheckFailureWithNote where
   diagnosticMessage _ = CompatGHC.mkSimpleDecorated . CompatGHC.ppr
   diagnosticReason = const CompatGHC.ErrorWithoutFlag
   diagnosticHints = const []
-  diagnosticCode = const Nothing
+  diagnosticCode =
+    Just . checkFailureDiagnosticCode . Rules.underlyingFailure
 
 mkEnv :: CheckFailureWithNote -> CompatGHC.MsgEnvelope (Rules.FailureWithUserNote CheckFailure)
 mkEnv cf =

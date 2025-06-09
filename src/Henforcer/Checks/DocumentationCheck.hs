@@ -59,7 +59,7 @@ instance CompatGHC.Diagnostic CheckFailure where
   diagnosticMessage _ = CompatGHC.mkSimpleDecorated . CompatGHC.ppr
   diagnosticReason = const CompatGHC.ErrorWithoutFlag
   diagnosticHints = const mempty
-  diagnosticCode = const Nothing
+  diagnosticCode = Just . checkFailureDiagnosticCode
 
 data CheckFailure
   = OverMaximumUndocumented !Rules.MaximumNat !Rules.MaximumNat
@@ -70,6 +70,19 @@ data CheckFailure
   | DescriptionMustBeNonEmpty
   | LicenseMustBeNonEmpty
   | MaintainerMustBeNonEmpty
+
+checkFailureDiagnosticCode :: CheckFailure -> CompatGHC.DiagnosticCode
+checkFailureDiagnosticCode cf =
+  CompatGHC.mkHenforcerDiagnosticCode $
+    case cf of
+      OverMaximumUndocumented _ _ -> 95002
+      UnderMinimumDocumented _ _ -> 73921
+      OverMaximumWithoutSince _ _ -> 6782
+      UnderMinimumWithSince _ _ -> 80933
+      CopyrightMustBeNonEmpty -> 46651
+      DescriptionMustBeNonEmpty -> 40311
+      LicenseMustBeNonEmpty -> 12664
+      MaintainerMustBeNonEmpty -> 88664
 
 formatUnderMinimumDocumentedViolation ::
   Rules.MinimumNat -> Rules.MinimumNat -> CompatGHC.SDoc
