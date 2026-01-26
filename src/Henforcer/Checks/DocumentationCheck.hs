@@ -4,8 +4,8 @@
 {- |
 Module      : Henforcer.Checks.DocumentationCheck
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2023-2025
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2023-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Checks.DocumentationCheck

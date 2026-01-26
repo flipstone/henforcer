@@ -1,8 +1,8 @@
 {- |
 Module      : Henforcer.CodeStructure.Import.Scheme.PackageQualified
 Description : Models the representation of a package qualifier portion of an import statement.
-Copyright   : (c) Flipstone Technology Partners, 2023-2025
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2023-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure.Import.Scheme.PackageQualifier

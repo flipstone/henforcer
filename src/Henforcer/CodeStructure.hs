@@ -3,8 +3,8 @@
 {- |
 Module      : Henforcer.CodeStructure
 Description : All of the internal representations of various forms of source code, such as import statements are defined in submodules of this tree and are re-exported here.
-Copyright   : (c) Flipstone Technology Partners, 2023
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2023-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure

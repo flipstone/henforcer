@@ -1,8 +1,8 @@
 {- |
 Module      : Henforcer.Rules.UserNote
 Description : Generic field for user defined notes
-Copyright   : (c) Flipstone Technology Partners, 2024-2025
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2024-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.UserNote

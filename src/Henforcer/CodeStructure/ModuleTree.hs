@@ -1,8 +1,8 @@
 {- |
 Module      : Henforcer.CodeStructure.ModuleTree
 Description : Definition of 'ModuleTree', parsing, and related functionality.
-Copyright   : (c) Flipstone Technology Partners, 2023-2025
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2023-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.CodeStructure.ModuleTree

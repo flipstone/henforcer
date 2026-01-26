@@ -3,8 +3,8 @@
 {- |
 Module      : Henforcer.Rules.Minimum
 Description : Generic rule for allowing enforcement of a lower bound
-Copyright   : (c) Flipstone Technology Partners, 2023-2025
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2023-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.Minimum

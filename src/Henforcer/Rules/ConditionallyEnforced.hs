@@ -1,8 +1,8 @@
 {- |
 Module      : Henforcer.Rules.ConditionallyEnforced
 Description :
-Copyright   : (c) Flipstone Technology Partners, 2024-2025
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2024-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Rules.ConditionallyEnforced

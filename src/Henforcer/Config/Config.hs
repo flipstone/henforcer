@@ -1,8 +1,8 @@
 {- |
 Module      : Henforcer.Config.Config
 Description : Haskell representation of the toml configuration file that is used to define the checks to be enforced. As well as related functionality.
-Copyright   : (c) Flipstone Technology Partners, 2023-2025
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2023-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Config.Config

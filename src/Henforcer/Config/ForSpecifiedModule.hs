@@ -1,8 +1,8 @@
 {- |
 Module      : Henforcer.Config.ForSpecifiedModule
 Description : Functionality for specifying rules scoped to a particular module.
-Copyright   : (c) Flipstone Technology Partners, 2024
-License     : BSD-3-clause
+Copyright   : (c) Flipstone Technology Partners, 2024-2026
+License     : MIT
 Maintainer  : maintainers@flipstone.com
 -}
 module Henforcer.Config.ForSpecifiedModule
