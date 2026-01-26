@@ -1,14 +1,14 @@
 [forAnyModule]
 allowedOpenUnaliasedImports = 1
-maximumExportsPlusHeaderUndocumented = 1
+maximumExportsPlusHeaderUndocumented = 0
 minimumExportsPlusHeaderDocumented = 0
 maximumExportsWithoutSince = 0
-minimumExportsWithSince = 1
+minimumExportsWithSince = 0
 moduleHeaderCopyrightMustExistNonEmpty = true
 moduleHeaderDescriptionMustExistNonEmpty = true
 moduleHeaderLicenseMustExistNonEmpty = true
 moduleHeaderMaintainerMustExistNonEmpty = false
-encapsulatedTrees = [ "Service.ThirdPartyPetsSite"]
+encapsulatedTrees = [ "Control"]
 treeDependencies = [ {moduleTree = "Control.Monad", dependencies = ["PetStore"], note= "This is nonsensical but shows the kind of things we can here."} ]
 allowedAliasUniqueness = { allAliasesUniqueExcept = [ "Export" ], note = "Only 'Export' is allowed to be repeated so that we can create re-export modules with a single export of the form 'module Export'." } # The 'note' here is arbitrary but shows a real world use case
 
@@ -31,7 +31,7 @@ qualified = { qualifiedPre = true}
 alias = "L"
 note = "List must always be imported as L when prepositive for reasons"
 [[forAnyModule.allowedQualifications.importScheme]]
-qualified = { qualifiedPre = true}
+qualified = { qualifiedPost = true}
 alias = "LPost"
 note = "List must always be imported as LPost when postpositive for reasons"
 
@@ -69,7 +69,7 @@ allowedOpenUnaliasedImports = 5000
 maximumExportsPlusHeaderUndocumented = 5000
 
 [[forPatternModules]]
-pattern = "Pet*.Food.**"
+pattern = "Pet*.Toy.**"
 [forPatternModules.rulesToIgnore]
 allowedOpenUnaliasedImports = true
 

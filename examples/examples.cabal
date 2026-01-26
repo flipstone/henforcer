@@ -58,7 +58,8 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  PetStore.Pet.Handler
+    exposed-modules:  PetStore.Food
+                      PetStore.Pet.Handler
                       PetStore.Pet.Model
                       Service.ThirdPartyPetsSite
                       Service.ThirdPartyPetsSite.Implementation
