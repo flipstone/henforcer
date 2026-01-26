@@ -160,7 +160,7 @@ import qualified GHC
 import qualified Text.Printf as Printf
 #endif
 
-#if __GLASGOW_HASKELL__ >= 906 && __GLASGOW_HASKELL__ <= 912
+#if __GLASGOW_HASKELL__ >= 906 && __GLASGOW_HASKELL__ <= 914
 import GHC (ideclImportList)
 import GHC.Types.Error (Diagnostic(..), NoDiagnosticOpts(NoDiagnosticOpts), DiagnosticCode(..))
 import GHC.Utils.Error (mkErrorMsgEnvelope)
@@ -233,13 +233,29 @@ addMessages =
 
 #endif
 
-#if __GLASGOW_HASKELL__ >= 906
+#if __GLASGOW_HASKELL__ >= 906 && __GLASGOW_HASKELL__ <= 912
 -- | Helper to add messages to the type checking monad so our plugin will print our output and fail
 -- a build.
 addMessages ::
   (Typeable a
   , GHC.Diagnostic a
   , GHC.DiagnosticOpts a ~ GHC.NoDiagnosticOpts
+  ) =>
+  Messages a ->
+  TcM ()
+addMessages =
+  GHC.addMessages . fmap GHC.mkTcRnUnknownMessage
+
+#endif
+
+#if __GLASGOW_HASKELL__ >= 914
+-- | Helper to add messages to the type checking monad so our plugin will print our output and fail
+-- a build.
+addMessages ::
+  (Typeable a
+  , GHC.Diagnostic a
+  , GHC.DiagnosticOpts a ~ GHC.NoDiagnosticOpts
+  , GHC.DiagnosticHint a ~ GHC.GhcHint
   ) =>
   Messages a ->
   TcM ()
