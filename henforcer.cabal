@@ -58,9 +58,11 @@ common ci-warnings
         -Wincomplete-export-warnings
         -Wimplicit-rhs-quantification
         -Wterm-variable-capture
-    if impl (ghc >= 9.10)
+    if impl (ghc >= 9.10) && impl (ghc < 9.14)
       ghc-options:
         -Wdeprecated-type-abstractions
+    if impl (ghc >= 9.10)
+      ghc-options:
         -Wdefaulted-exception-context
     if impl (ghc >= 9.12)
       ghc-options:

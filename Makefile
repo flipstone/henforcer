@@ -10,7 +10,7 @@ setup: setup-cabal setup-stack setup-extra-tools
 # run a subset of them on different platforms. This is particularly helpful when something is
 # unreleased and/or broken upstream. Like not having a proper release for aarch64-darwin or
 # something.
-GHC_VERSIONS ?= 9.4.8 9.6.7 9.8.4 9.10.3 9.12.2 9.14.1
+GHC_VERSIONS ?= 9.4.8 9.6.7 9.8.4 9.10.3 9.12.2
 STACK_YAMLS ?= stack.yaml
 
 .PHONY: setup-ghc
@@ -33,10 +33,11 @@ setup-stack:
 	stack build --only-dependencies --flag henforcer:ci
 
 .PHONY: setup-extra-tools
-setup-extra-tools: setup-weeder
-# Note: We don't actually need n versions of formatting/linting tools though, so only get ones with
-# the default stack.yaml
-	stack install fourmolu hlint
+setup-extra-tools: setup-fourmolu setup-hlint setup-weeder
+
+.PHONY: setup-fourmolu
+setup-fourmolu:
+	 stack install fourmolu
 
 .PHONY: setup-hlint
 setup-hlint:

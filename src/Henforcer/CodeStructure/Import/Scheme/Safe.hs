@@ -44,7 +44,7 @@ safeToBool (Safe b) = b
 
 @since 1.0.0.0
 -}
-determineSafe :: CompatGHC.ImportDecl pass -> Safe
+determineSafe :: CompatGHC.ImportDecl CompatGHC.GhcRn -> Safe
 determineSafe =
   Safe . CompatGHC.ideclSafe
 
