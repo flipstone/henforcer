@@ -17,7 +17,7 @@ STACK_YAMLS ?= stack.yaml
 setup-ghc:
 # This will prefetch/build the required versions of ghc upfront
 .for GHC_VERSION in ${GHC_VERSIONS}
-	ghcup install ghc ${GHC_VERSION}
+	command -v ghc-${GHC_VERSION} || ghcup install ghc ${GHC_VERSION}
 .endfor
 
 .PHONY: setup-cabal
@@ -33,10 +33,18 @@ setup-stack:
 	stack build --only-dependencies --flag henforcer:ci
 
 .PHONY: setup-extra-tools
-setup-extra-tools:
+setup-extra-tools: setup-weeder
 # Note: We don't actually need n versions of formatting/linting tools though, so only get ones with
 # the default stack.yaml
-	stack install fourmolu weeder hlint
+	stack install fourmolu hlint
+
+.PHONY: setup-hlint
+setup-hlint:
+	command -v hlint || stack install hlint
+
+.PHONY: setup-weeder
+setup-weeder:
+	command -v weeder || stack install weeder
 
 .PHONY: build-cabal
 build-cabal:
@@ -75,7 +83,7 @@ format-check:
 	~/.local/bin/fourmolu -m check plugin src test
 
 .PHONY: weeder
-weeder: setup-extra-tools test-stack
+weeder: setup-weeder test-stack
 	stack exec weeder -- --require-hs-files --hie-directory .stack-work/dist/
 
 .PHONY: hlint

@@ -5,12 +5,19 @@
 
 packages:
 - completed:
-    hackage: pollock-0.1.0.1@sha256:36ca228aa40ca6c29b590d16e0e165f2212946882d190e63a20080c6ee449c29,3889
+    hackage: pollock-0.1.0.3@sha256:0c245280f8b7813357c14663b2ab456e3c3998cd6beb2d5cca53741ca9589285,3969
     pantry-tree:
-      sha256: d493bc13938be2303f010b031a7514d7907c726d8ab0a1048772c862931ce152
+      sha256: 88b5bcf2aecd3e3768d5813b80dab7b2d5c19b9a73e6760aec247a6fd19c6ecf
       size: 1182
   original:
-    hackage: pollock-0.1.0.1
+    hackage: pollock-0.1.0.3
+- completed:
+    hackage: Cabal-syntax-3.14.2.0@sha256:16766e2cd18f98bf259d2caf2b507764ebdfff0b16c2fb5b293fc57c1137af6f,7380
+    pantry-tree:
+      sha256: 737f9522e754f8c1610a115a01bb264924a7cde1c931e285f3758ba46f145443
+      size: 10977
+  original:
+    hackage: Cabal-syntax-3.14.2.0@sha256:16766e2cd18f98bf259d2caf2b507764ebdfff0b16c2fb5b293fc57c1137af6f,7380
 snapshots:
 - completed:
     sha256: 72cdd5851794184138551f43f0897c28f1a5acdda303b266aa9e910461103b3c

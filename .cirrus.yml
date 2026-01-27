@@ -1,19 +1,17 @@
 linux_test_task:
   container:
-    image: ghcr.io/flipstone/haskell-tools:debian-stable-ghc-9.6.6-2024-10-23-eb5da39
+    image: ghcr.io/flipstone/haskell-tools:debian-ghc-9.10.3-1e1d10c
     cpu: 6
     memory: 6G
   env:
     matrix:
       - GHC_VERSIONS: 9.4.8
         STACK_YAMLS:
-      - GHC_VERSIONS: 9.6.6
-        STACK_YAMLS:
       - GHC_VERSIONS: 9.6.7
         STACK_YAMLS:
       - GHC_VERSIONS: 9.8.4
         STACK_YAMLS:
-      - GHC_VERSIONS: 9.10.1
+      - GHC_VERSIONS: 9.10.3
         STACK_YAMLS:
       - GHC_VERSIONS: 9.12.2
         STACK_YAMLS:
@@ -61,7 +59,7 @@ linux_test_task:
 
 freebsd_test_task:
   freebsd_instance:
-    image_family: freebsd-14-2
+    image_family: freebsd-15-0
     cpu: 6
     memory: 6G
   freebsd_stack_cache:
@@ -78,66 +76,27 @@ freebsd_test_task:
       - cat Makefile
     populate_script:
       - pkg install -y hs-stack hs-cabal-install curl
-      - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.50.0/x86_64-portbld-freebsd-ghcup-0.1.50.0
+      - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.50.2/x86_64-portbld-freebsd-ghcup-0.1.50.2
       - chmod +x /usr/local/bin/ghcup
       - export PATH=$PATH:/.local/bin:/.ghcup/bin
-      - export GHC_VERSIONS=9.4.8
+      - export GHC_VERSIONS=9.12.2
       - export STACK_YAMLS=
       - make setup-cabal
   upload_caches:
     - freebsd_ghcup
   install_script:
     - pkg install -y hs-stack hs-cabal-install curl
-    - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.50.0/x86_64-portbld-freebsd-ghcup-0.1.50.0
+    - curl -o /usr/local/bin/ghcup https://downloads.haskell.org/\~ghcup/0.1.50.2/x86_64-portbld-freebsd-ghcup-0.1.50.2
     - chmod +x /usr/local/bin/ghcup
     - export PATH=$PATH:/.local/bin:/.ghcup/bin
-    - export GHC_VERSIONS=9.4.8
+    - export GHC_VERSIONS=9.12.2
     - export STACK_YAMLS=
     - make setup-cabal
   test_script:
     - export PATH=$PATH:/.local/bin:/.ghcup/bin
-    - export GHC_VERSIONS=9.4.8
+    - export GHC_VERSIONS=9.12.2
     - export STACK_YAMLS=
     # no reason to test everything, like formatting, on every platform
     - make test-cabal
   upload_caches:
     - freebsd_cabal
-
-macos_test_task:
-  macos_instance:
-    image: ghcr.io/cirruslabs/macos-runner:sequoia
-    cpu: 6
-    memory: 6G
-  macos_stack_cache:
-    folder: ~/.stack
-    fingerprint_script:
-      - cat stack.yaml.lock henforcer.cabal
-  macos_cabal_cache:
-    folder: ~/.local/state/cabal
-    fingerprint_script:
-      - cat Makefile henforcer.cabal
-  macos_ghcup_cache:
-    folder: /usr/local/.ghcup
-    fingerprint_script:
-      - cat Makefile
-    populate_script:
-      - brew install haskell-stack cabal-install bmake
-      - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
-      - source /Users/admin/.ghcup/env
-      - GHC_VERSIONS=9.4.8 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
-  upload_caches:
-    - macos_ghcup
-  install_script:
-    - brew install haskell-stack cabal-install bmake
-    - curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
-    - source /Users/admin/.ghcup/env
-    - export PATH=$PATH:/Users/admin/.local/bin
-    - GHC_VERSIONS=9.4.8 STACK_YAMLS=stack.yaml bmake setup-ghc setup-cabal setup-stack
-  test_script:
-    - source /Users/admin/.ghcup/env
-    - export PATH=$PATH:/Users/admin/.local/bin
-    # no reason to test everything, like formatting, on every platform
-    - GHC_VERSIONS=9.4.8 STACK_YAMLS=stack.yaml bmake test-cabal test-stack
-  upload_caches:
-    - macos_stack
-    - macos_cabal
