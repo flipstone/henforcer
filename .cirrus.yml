@@ -41,7 +41,7 @@ linux_test_task:
       - cat Makefile henforcer.cabal
     populate_script:
       - apt update
-      - apt install bmake
+      - apt install bmake binutils
       - export PATH=$PATH:/root/.local/bin:/root/.ghcup/bin
       - bmake setup-cabal
   install_script:
@@ -59,7 +59,7 @@ linux_test_task:
 
 freebsd_test_task:
   freebsd_instance:
-    image_family: freebsd-15-0
+    image_family: freebsd-15-0-amd64-zfs
     cpu: 6
     memory: 6G
   freebsd_stack_cache:
