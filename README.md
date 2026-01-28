@@ -2,26 +2,7 @@
 
 `henforcer` is a `Haskell` enforcer of project specific code standards.
 
-## Installation
-
-`henforcer` has not yet been released to hackage, so you should install it from source either by
-cloning and building the repo, or adding a extra dep to your `stack.yaml` like below and running
-`stack install henforcer`
-
-```
-extra-deps:
-- git: https://github.com/flipstone/henforcer
-  commit: <SHA of the latest master commit>
-```
-
-_Note: `henforcer` requires a handful of packages that are not on stackage as of lts-23.6. The following is likely to needed in the `extra-deps` section of your `stack.yaml`
-
-```
-# henforcer needs pollock
-- pollock-0.1.0.1
-```
-
-## Execution
+## Installation/Execution
 
 `henforcer` is a GHC plugin, thus it is executed during compilation. To enable the plugin during
 compilation with `cabal` or `stack`, add `henforcer` as a dependency in your cabal file or
@@ -29,6 +10,13 @@ package.yaml as applicable and add `-fplugin Henforcer` to `ghc-flags`. Specifyi
 done with `ghc-flags` as well. Currently only supported is the path to the configuration, which if
 it is at `foo/bar/henforcer.toml` this would be as
 `"-fplugin-opt=Henforcer:-cfoo/bar/henforcer.toml"`.
+
+_Note: `henforcer` requires a handful of packages that are not on stackage as of lts-24.29. The following is likely to needed in the `extra-deps` section of your `stack.yaml`
+
+```
+# henforcer needs pollock
+- pollock-0.1.0.4
+```
 
 ## Configuration
 
