@@ -13,8 +13,10 @@ module Henforcer.CodeStructure.Import.Import
   , importIsOpenWithNoHidingOrAlias
   ) where
 
-import qualified CompatGHC
+import qualified Data.Maybe as Maybe
+
 import Henforcer.CodeStructure.Import.Scheme (Alias (WithoutAlias), Scheme (Scheme), buildScheme)
+import qualified CompatGHC
 
 {- | `Import` is a subset of a CompatGHC.HsModule to be a slightly more ergonomic interface.
 
@@ -47,8 +49,17 @@ getImports :: CompatGHC.TcGblEnv -> [Import]
 getImports tcGblEnv =
   let
     name = CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv
+    sourcedImport =
+      CompatGHC.isGoodSrcSpan . CompatGHC.locA . CompatGHC.getLoc
    in
-    fmap (Import name) $ CompatGHC.tcg_rn_imports tcGblEnv
+    Maybe.mapMaybe
+      (\imp ->
+         -- Remove synthetic imports, e.g. transitively imported Backpack signatures
+         if sourcedImport imp
+           then Just (Import name imp)
+           else Nothing
+      )
+      (CompatGHC.tcg_rn_imports tcGblEnv)
 
 {- | Determine if the import is open, with no qualification, no alias, and no hiding
 
