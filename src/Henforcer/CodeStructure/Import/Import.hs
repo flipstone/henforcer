@@ -15,8 +15,8 @@ module Henforcer.CodeStructure.Import.Import
 
 import qualified Data.Maybe as Maybe
 
-import Henforcer.CodeStructure.Import.Scheme (Alias (WithoutAlias), Scheme (Scheme), buildScheme)
 import qualified CompatGHC
+import Henforcer.CodeStructure.Import.Scheme (Alias (WithoutAlias), Scheme (Scheme), buildScheme)
 
 {- | `Import` is a subset of a CompatGHC.HsModule to be a slightly more ergonomic interface.
 
@@ -51,11 +51,11 @@ getImports tcGblEnv =
     name = CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv
    in
     Maybe.mapMaybe
-      (\imp ->
-         -- Remove synthetic imports, e.g. transitively imported Backpack signatures
-         if CompatGHC.isGoodSrcSpan . CompatGHC.locA $ CompatGHC.getLoc imp
-           then Just (Import name imp)
-           else Nothing
+      ( \imp ->
+          -- Remove synthetic imports, e.g. transitively imported Backpack signatures
+          if CompatGHC.isGoodSrcSpan . CompatGHC.locA $ CompatGHC.getLoc imp
+            then Just (Import name imp)
+            else Nothing
       )
       (CompatGHC.tcg_rn_imports tcGblEnv)
 
