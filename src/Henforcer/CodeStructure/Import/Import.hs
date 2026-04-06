@@ -49,13 +49,11 @@ getImports :: CompatGHC.TcGblEnv -> [Import]
 getImports tcGblEnv =
   let
     name = CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv
-    sourcedImport =
-      CompatGHC.isGoodSrcSpan . CompatGHC.locA . CompatGHC.getLoc
    in
     Maybe.mapMaybe
       (\imp ->
          -- Remove synthetic imports, e.g. transitively imported Backpack signatures
-         if sourcedImport imp
+         if CompatGHC.isGoodSrcSpan . CompatGHC.locA $ CompatGHC.getLoc imp
            then Just (Import name imp)
            else Nothing
       )
