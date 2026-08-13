@@ -1,5 +1,7 @@
 # henforcer
 
+[![CI](https://github.com/flipstone/henforcer/actions/workflows/ci.yaml/badge.svg)](https://github.com/flipstone/henforcer/actions/workflows/ci.yaml)
+
 `henforcer` is a `Haskell` enforcer of project specific code standards.
 
 ## Installation/Execution

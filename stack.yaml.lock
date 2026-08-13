@@ -18,6 +18,13 @@ packages:
       size: 10977
   original:
     hackage: Cabal-syntax-3.14.2.0@sha256:16766e2cd18f98bf259d2caf2b507764ebdfff0b16c2fb5b293fc57c1137af6f,7380
+- completed:
+    hackage: fourmolu-0.19.0.1@sha256:2346f9131042bf3d75d2419661a993ce2475992a80c35f0f0acf978f4fedeb53,6497
+    pantry-tree:
+      sha256: bd7a76ebb08e1475f6709b0b245770157f36533033972bfc36fe78848010fa4b
+      size: 172783
+  original:
+    hackage: fourmolu-0.19.0.1
 snapshots:
 - completed:
     sha256: 72cdd5851794184138551f43f0897c28f1a5acdda303b266aa9e910461103b3c

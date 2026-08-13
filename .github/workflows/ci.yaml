@@ -1,0 +1,175 @@
+name: CI
+
+on: push
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  cache-version: v1
+
+jobs:
+  build-and-test:
+    name: Build and Test (GHC ${{ matrix.ghc }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        ghc: ["9.4.8", "9.6.7", "9.8.4", "9.10.3", "9.12.2"]
+    env:
+      GHC_VERSIONS: ${{ matrix.ghc }}
+      STACK_YAMLS: ""        # keep the stack Makefile loops inert in this job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install bmake
+        run: sudo apt-get update && sudo apt-get install -y bmake
+      - name: Add tool dirs to PATH
+        run: |
+          echo "$HOME/.ghcup/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Cache ghcup (GHC toolchains)
+        uses: actions/cache@v4
+        with:
+          path: ~/.ghcup
+          key: ${{ env.cache-version }}-ghcup-${{ matrix.ghc }}-${{ hashFiles('Makefile') }}
+          restore-keys: ${{ env.cache-version }}-ghcup-${{ matrix.ghc }}-
+      - name: Cache cabal store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/state/cabal
+          key: ${{ env.cache-version }}-cabal-${{ matrix.ghc }}-${{ hashFiles('Makefile', 'henforcer.cabal') }}
+          restore-keys: ${{ env.cache-version }}-cabal-${{ matrix.ghc }}-
+      - name: Install GHC and dependencies (cabal)
+        run: bmake setup-cabal
+      - name: Build (cabal)
+        run: bmake build-cabal
+      - name: Test (cabal)
+        run: bmake test-cabal
+
+  cabal-latest:
+    # GHC 9.14.1 is in henforcer.cabal's tested-with but its dependency set is not always buildable
+    # right after a new GHC release (and is not in the stack resolver). Allow this to fail without
+    # failing the workflow; fold 9.14.1 into the matrix above and delete this job once it is stable.
+    name: Build and Test (latest GHC, allowed to fail)
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    env:
+      GHC_VERSIONS: "9.14.1"
+      STACK_YAMLS: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install bmake
+        run: sudo apt-get update && sudo apt-get install -y bmake
+      - name: Add tool dirs to PATH
+        run: |
+          echo "$HOME/.ghcup/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Cache ghcup (GHC toolchains)
+        uses: actions/cache@v4
+        with:
+          path: ~/.ghcup
+          key: ${{ env.cache-version }}-ghcup-9.14.1-${{ hashFiles('Makefile') }}
+          restore-keys: ${{ env.cache-version }}-ghcup-9.14.1-
+      - name: Cache cabal store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/state/cabal
+          key: ${{ env.cache-version }}-cabal-9.14.1-${{ hashFiles('Makefile', 'henforcer.cabal') }}
+          restore-keys: ${{ env.cache-version }}-cabal-9.14.1-
+      - name: Install GHC and dependencies (cabal)
+        run: bmake setup-cabal
+      - name: Build (cabal)
+        run: bmake build-cabal
+      - name: Test (cabal)
+        run: bmake test-cabal
+
+  stack-build-and-test:
+    name: Build and Test (stack)
+    runs-on: ubuntu-22.04
+    env:
+      GHC_VERSIONS: ""        # keep the cabal Makefile loops inert in this job
+      STACK_YAMLS: stack.yaml
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install bmake
+        run: sudo apt-get update && sudo apt-get install -y bmake
+      - name: Add tool dirs to PATH
+        run: |
+          echo "$HOME/.ghcup/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Cache stack
+        uses: actions/cache@v4
+        with:
+          path: ~/.stack
+          key: ${{ env.cache-version }}-stack-${{ hashFiles('stack.yaml', 'stack.yaml.lock', 'henforcer.cabal') }}
+          restore-keys: ${{ env.cache-version }}-stack-
+      - name: Install dependencies (stack)
+        run: bmake setup-stack
+      - name: Build (stack)
+        run: bmake build-stack
+      - name: Test (stack)
+        run: bmake test-stack
+
+  lint:
+    name: Formatting and HLint
+    runs-on: ubuntu-22.04
+    env:
+      GHC_VERSIONS: ""
+      STACK_YAMLS: stack.yaml
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install bmake
+        run: sudo apt-get update && sudo apt-get install -y bmake
+      - name: Add tool dirs to PATH
+        run: |
+          echo "$HOME/.ghcup/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Cache stack and installed tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.stack
+            ~/.local/bin
+          key: ${{ env.cache-version }}-lint-${{ hashFiles('stack.yaml', 'stack.yaml.lock', 'henforcer.cabal') }}
+          restore-keys: ${{ env.cache-version }}-lint-
+      # Single bmake invocation: `hlint` depends on `setup-extra-tools`, so building these targets in
+      # ONE process installs fourmolu/hlint (and weeder) exactly once, then runs both checks. Running
+      # them as separate `bmake` calls would re-trigger the tool installs each time.
+      - name: Format check and HLint
+        run: bmake setup-extra-tools format-check hlint
+
+  outdated:
+    name: Cabal Outdated
+    runs-on: ubuntu-22.04
+    env:
+      GHC_VERSIONS: "9.12.2"
+      STACK_YAMLS: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install bmake
+        run: sudo apt-get update && sudo apt-get install -y bmake
+      - name: Add tool dirs to PATH
+        run: |
+          echo "$HOME/.ghcup/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Cache ghcup
+        uses: actions/cache@v4
+        with:
+          path: ~/.ghcup
+          key: ${{ env.cache-version }}-outdated-ghcup-${{ hashFiles('Makefile') }}
+          restore-keys: ${{ env.cache-version }}-outdated-ghcup-
+      - name: Install GHC and refresh package index
+        run: bmake setup-ghc && cabal update
+      - name: Outdated check
+        run: bmake outdated
