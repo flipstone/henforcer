@@ -29,6 +29,7 @@ module CompatGHC
   , SrcSpan
   , generatedSrcSpan
   , getLoc
+  , isGoodSrcSpan
   , ideclAs
   , ideclName
   , ideclPkgQual
@@ -110,6 +111,7 @@ import GHC
   , ideclPkgQual
   , ideclQualified
   , ideclSafe
+  , isGoodSrcSpan
   , locA
   , mkModuleName
   , moduleName
