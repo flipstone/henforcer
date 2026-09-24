@@ -48,7 +48,7 @@ maximumAllowedCodec = conditionallyEnforcedCodec maximumNatCodec
 
 -- | A wrapper around 'Nat.Natural' for clarity
 newtype MaximumNat = MaximumNat Nat.Natural
-  deriving (Num, Eq, Ord, Show)
+  deriving (Eq, Num, Ord, Show)
 
 instance CompatGHC.Outputable MaximumNat where
   ppr = CompatGHC.text . show . maximumNatToNatural

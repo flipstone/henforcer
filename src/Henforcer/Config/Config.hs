@@ -12,11 +12,10 @@ module Henforcer.Config.Config
 
 import qualified Toml
 
-import qualified TomlHelper
-
 import Henforcer.Config.ForAnyModule (ForAnyModule, emptyForAnyModule, forAnyModuleCodec)
 import Henforcer.Config.ForPatternModule (ForPatternModules, forPatternModulesCodecField)
 import Henforcer.Config.ForSpecifiedModule (ForSpecifiedModules, forSpecifiedModulesCodecField)
+import qualified TomlHelper
 
 data Config = Config
   { forAnyModule :: !ForAnyModule

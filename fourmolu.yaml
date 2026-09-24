@@ -12,6 +12,7 @@ comma-style: leading
 
 # Styling of import/export lists (choices: leading, trailing, or diff-friendly)
 import-export-style: leading
+import-grouping: by-scope
 
 # Whether to full-indent or half-indent 'where' bindings past the preceding body
 indent-wheres: false
@@ -36,6 +37,8 @@ in-style: right-align
 
 # Whether to put parentheses around a single constraint (choices: auto, always, or never)
 single-constraint-parens: always
+sort-derived-classes: true
+sort-deriving-clauses: true
 
 # Output Unicode syntax (choices: detect, always, or never)
 unicode: never

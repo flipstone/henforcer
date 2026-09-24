@@ -55,7 +55,7 @@ minimumAllowedCodec = conditionallyEnforcedCodec minimumNatCodec
 @since 1.0.0.0
 -}
 newtype MinimumNat = MinimumNat Nat.Natural
-  deriving (Num, Eq, Ord, Show)
+  deriving (Eq, Num, Ord, Show)
 
 {- |
 

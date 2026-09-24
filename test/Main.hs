@@ -4,9 +4,8 @@ module Main
 
 import qualified Test.Tasty as Tasty
 
-import qualified Test.Config as TestConfig
-
 import qualified Henforcer.Config as Config
+import qualified Test.Config as TestConfig
 
 main :: IO ()
 main = do

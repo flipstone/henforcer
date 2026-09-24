@@ -14,9 +14,9 @@ module Henforcer.CodeStructure.Import.Scheme.Safe
   ) where
 
 import qualified Toml
-import qualified TomlHelper
 
 import qualified CompatGHC
+import qualified TomlHelper
 
 {- | Directly represent if an import is 'safe' or not.
 
