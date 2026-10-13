@@ -2,7 +2,8 @@
 # default we will format the code, but not run a "check" of it, which is used in CI to fail the
 # running job if code wasn't formatted.
 all: setup format outdated build-cabal build-stack test-cabal
-ci: outdated build-cabal build-stack test-cabal format-check hlint
+check: outdated format-check hlint cabal-check
+ci: test-stack test-cabal check
 setup: setup-cabal setup-stack setup-extra-tools
 
 # Note that the ghc-versions for cabal and the stack yamls match which version of ghc they end up
@@ -10,7 +11,7 @@ setup: setup-cabal setup-stack setup-extra-tools
 # run a subset of them on different platforms. This is particularly helpful when something is
 # unreleased and/or broken upstream. Like not having a proper release for aarch64-darwin or
 # something.
-GHC_VERSIONS ?= 9.4.8 9.6.7 9.8.4 9.10.3 9.12.2
+GHC_VERSIONS ?= 9.4.8 9.6.7 9.8.4 9.10.3 9.12.4 9.14.1
 STACK_YAMLS ?= stack.yaml
 
 .PHONY: setup-ghc
@@ -60,13 +61,13 @@ build-stack:
 .endfor
 
 .PHONY: test-cabal
-test-cabal:
+test-cabal: build-cabal
 .for GHC_VERSION in ${GHC_VERSIONS}
 	cabal test -j -w ghc-${GHC_VERSION} --flag ci
 .endfor
 
 .PHONY: test-stack
-test-stack:
+test-stack: build-stack
 .for STACK_YAML in ${STACK_YAMLS}
 	stack --stack-yaml ${STACK_YAML} test --flag henforcer:ci
 .endfor
@@ -76,17 +77,21 @@ outdated:
 	cabal outdated --exit-code
 
 .PHONY: format
-format: setup-extra-tools
+format: setup-fourmolu
 	~/.local/bin/fourmolu -i plugin src test
 
 .PHONY: format-check
-format-check:
+format-check: setup-fourmolu
 	~/.local/bin/fourmolu -m check plugin src test
 
 .PHONY: weeder
 weeder: setup-weeder test-stack
-	stack exec weeder -- --require-hs-files --hie-directory .stack-work/dist/
+	stack exec weeder -- -j2 --require-hs-files --hie-directory .stack-work/dist/
 
 .PHONY: hlint
-hlint: setup-extra-tools
-	stack exec hlint -- plugin src
+hlint: setup-hlint
+	stack exec hlint -- -j2 plugin src
+
+.PHONY: cabal-check
+cabal-check:
+	cabal check -i option-o2

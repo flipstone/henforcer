@@ -1,4 +1,4 @@
-roots = ["Main.main","^Paths_.*", "Henforcer.plugin"]
+roots = ["Main.main", "Henforcer.plugin"]
 
 type-class-roots = false
 
