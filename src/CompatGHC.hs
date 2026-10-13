@@ -50,6 +50,7 @@ module CompatGHC
   -- GHC.Plugins
   , CommandLineOption
   , DiagnosticReason (..)
+  , HscEnv
   , Messages
   , Outputable (ppr)
   , Plugin (..)
@@ -124,6 +125,7 @@ import GHC.Fingerprint (Fingerprint, getFileHash)
 import GHC.Plugins
   ( CommandLineOption
   , DiagnosticReason (..)
+  , HscEnv
   , Messages
   , Outputable (ppr)
   , Plugin (..)

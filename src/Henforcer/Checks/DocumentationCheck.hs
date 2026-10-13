@@ -13,6 +13,8 @@ module Henforcer.Checks.DocumentationCheck
   , determineDocumentationChecks
   , checkDocumentation
   , DocumentationChecks (..)
+  , documentationChecksAreEnforced
+  , documentationChecksArePossible
   ) where
 
 import qualified Data.List as List
@@ -209,24 +211,70 @@ determineDocumentationChecks config modName =
         $ Config.forPatternModules config
     forSpecifiedModule = Config.unionPatternAndSpecifiedModule patternModule originalSpecifiedModule
    in
-    DocumentationChecks
-      { maximumUndocumentedExports =
-          determineMaxiumumUndocumentedExports forAnyModule forSpecifiedModule
-      , minimumDocumentedExports =
-          determineMiniumumDocumentedExports forAnyModule forSpecifiedModule
-      , maximumExportsWithoutSince =
-          determineMaxiumumExportsWithoutSince forAnyModule forSpecifiedModule
-      , minimumExportsWithSince =
-          determineMiniumumExportsWithSince forAnyModule forSpecifiedModule
-      , moduleHeaderCopyrightMustExistNonEmpty =
-          determineModuleHeaderCopyrightMustExistNonEmpty forAnyModule forSpecifiedModule
-      , moduleHeaderDescriptionMustExistNonEmpty =
-          determineModuleHeaderDescriptionMustExistNonEmpty forAnyModule forSpecifiedModule
-      , moduleHeaderLicenseMustExistNonEmpty =
-          determineModuleHeaderLicenseMustExistNonEmpty forAnyModule forSpecifiedModule
-      , moduleHeaderMaintainerMustExistNonEmpty =
-          determineModuleHeaderMaintainerMustExistNonEmpty forAnyModule forSpecifiedModule
-      }
+    determineDocumentationChecksForModule forAnyModule forSpecifiedModule
+
+determineDocumentationChecksForModule ::
+  Config.ForAnyModule
+  -> Config.ForSpecifiedModule
+  -> DocumentationChecks
+determineDocumentationChecksForModule forAnyModule forSpecifiedModule =
+  DocumentationChecks
+    { maximumUndocumentedExports =
+        determineMaxiumumUndocumentedExports forAnyModule forSpecifiedModule
+    , minimumDocumentedExports =
+        determineMiniumumDocumentedExports forAnyModule forSpecifiedModule
+    , maximumExportsWithoutSince =
+        determineMaxiumumExportsWithoutSince forAnyModule forSpecifiedModule
+    , minimumExportsWithSince =
+        determineMiniumumExportsWithSince forAnyModule forSpecifiedModule
+    , moduleHeaderCopyrightMustExistNonEmpty =
+        determineModuleHeaderCopyrightMustExistNonEmpty forAnyModule forSpecifiedModule
+    , moduleHeaderDescriptionMustExistNonEmpty =
+        determineModuleHeaderDescriptionMustExistNonEmpty forAnyModule forSpecifiedModule
+    , moduleHeaderLicenseMustExistNonEmpty =
+        determineModuleHeaderLicenseMustExistNonEmpty forAnyModule forSpecifiedModule
+    , moduleHeaderMaintainerMustExistNonEmpty =
+        determineModuleHeaderMaintainerMustExistNonEmpty forAnyModule forSpecifiedModule
+    }
+
+documentationChecksAreEnforced :: DocumentationChecks -> Bool
+documentationChecksAreEnforced checks =
+  or
+    [ Rules.isEnforced (maximumUndocumentedExports checks)
+    , Rules.isEnforced (minimumDocumentedExports checks)
+    , Rules.isEnforced (maximumExportsWithoutSince checks)
+    , Rules.isEnforced (minimumExportsWithSince checks)
+    , Rules.mustExistNonEmptyIsEnforced (moduleHeaderCopyrightMustExistNonEmpty checks)
+    , Rules.mustExistNonEmptyIsEnforced (moduleHeaderDescriptionMustExistNonEmpty checks)
+    , Rules.mustExistNonEmptyIsEnforced (moduleHeaderLicenseMustExistNonEmpty checks)
+    , Rules.mustExistNonEmptyIsEnforced (moduleHeaderMaintainerMustExistNonEmpty checks)
+    ]
+
+{- | Determine if any module in a project could have a documentation check applied to it, for
+callers that must decide before any module is compiled whether the information the checks are made
+against needs to be gathered at all.
+
+Rules that a module declares it ignores are deliberately disregarded here. A rule may be configured
+in one place and ignored in another, so honoring ignores would allow this to report that no check is
+possible while some module still has one.
+-}
+documentationChecksArePossible :: Config.Config -> Bool
+documentationChecksArePossible config =
+  let
+    withoutRulesToIgnore forSpecifiedModule =
+      forSpecifiedModule{Config.specifiedModuleRulesToIgnore = Nothing}
+
+    checksForModule =
+      determineDocumentationChecksForModule (Config.forAnyModule config)
+        . withoutRulesToIgnore
+
+    scopedRules =
+      fmap snd (Config.forSpecifiedModules config)
+        <> fmap snd (Config.forPatternModules config)
+   in
+    any
+      (documentationChecksAreEnforced . checksForModule)
+      (Config.emptyForSpecifiedModule : scopedRules)
 
 determineMaxiumumUndocumentedExports ::
   Config.ForAnyModule

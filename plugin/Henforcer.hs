@@ -10,6 +10,8 @@ module Henforcer
   ) where
 
 import qualified Control.Concurrent.MVar as MVar
+import qualified Control.Exception as Exception
+import qualified Control.Monad as Monad
 import qualified Pollock
 import qualified System.IO.Unsafe as UnsafeIO
 
@@ -24,8 +26,34 @@ plugin =
     { CompatGHC.pluginRecompile = recompile
     , CompatGHC.renamedResultAction = CompatGHC.keepRenamedSource
     , CompatGHC.typeCheckResultAction = typeCheckResultAction
-    , CompatGHC.driverPlugin = Pollock.ensureHaddockIsOn
+    , CompatGHC.driverPlugin = driverPlugin
     }
+
+{- | Haddock parsing is turned on only when the configuration could lead to a documentation check
+being applied, as forcing it on costs every compilation in a project that has no documentation
+rules.
+-}
+driverPlugin :: [CompatGHC.CommandLineOption] -> CompatGHC.HscEnv -> IO CompatGHC.HscEnv
+driverPlugin commandLineOpts hscEnv = do
+  mbConfig <- tryLoadConfigIfNeeded commandLineOpts
+  case mbConfig of
+    Just config
+      | not (Checks.documentationChecksArePossible config) ->
+          pure hscEnv
+    _ ->
+      Pollock.ensureHaddockIsOn commandLineOpts hscEnv
+
+{- | A driver plugin runs outside of the typechecking monad, where GHC turns an exception into a
+panic rather than a compile error. So a configuration that cannot be loaded is reported as 'Nothing'
+here and left for 'typeCheckResultAction' to load again and fail on.
+-}
+tryLoadConfigIfNeeded :: [CompatGHC.CommandLineOption] -> IO (Maybe Config.Config)
+tryLoadConfigIfNeeded =
+  let
+    withoutConfig :: Exception.SomeException -> IO (Maybe Config.Config)
+    withoutConfig _ = pure Nothing
+   in
+    Exception.handle withoutConfig . fmap Just . loadConfigIfNeeded
 
 -- Using an MVar and unsafePerformIO here is a very ugly hack, but the plugin interface gives us no
 -- way to load the configuration once for the entire set of modules being compiled. This is a big
@@ -46,16 +74,18 @@ typeCheckResultAction commandLineOpts _modSummary tcGblEnv = do
   config <- CompatGHC.liftIO $ loadConfigIfNeeded commandLineOpts
   let
     modName = CompatGHC.moduleName $ CompatGHC.tcg_mod tcGblEnv
+    documentationChecks = Checks.determineDocumentationChecks config modName
 
   CompatGHC.addMessages
     . Checks.errorMessagesFromList
     $ Checks.checkImports (Checks.determineChecks config modName) tcGblEnv
 
-  pollockModuleInfo <- CompatGHC.liftIO $ Pollock.processModule tcGblEnv
+  Monad.when (Checks.documentationChecksAreEnforced documentationChecks) $ do
+    pollockModuleInfo <- CompatGHC.liftIO $ Pollock.processModule tcGblEnv
 
-  CompatGHC.addMessages
-    . Checks.docErrorMessagesFromList
-    $ Checks.checkDocumentation (Checks.determineDocumentationChecks config modName) pollockModuleInfo
+    CompatGHC.addMessages
+      . Checks.docErrorMessagesFromList
+      $ Checks.checkDocumentation documentationChecks pollockModuleInfo
 
   pure tcGblEnv
 

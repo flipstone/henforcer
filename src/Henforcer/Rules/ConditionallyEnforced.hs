@@ -8,6 +8,7 @@ Maintainer  : maintainers@flipstone.com
 module Henforcer.Rules.ConditionallyEnforced
   ( ConditionallyEnforced (..)
   , conditionallyEnforcedCodec
+  , isEnforced
   ) where
 
 import qualified Toml
@@ -25,6 +26,10 @@ conditionallyEnforcedCodec underlyingCodec =
   Toml.dimap maybeFromConditionallyEnforced conditionallyEnforcedFromMaybe
     . Toml.dioptional
     . underlyingCodec
+
+isEnforced :: ConditionallyEnforced a -> Bool
+isEnforced NotEnforced = False
+isEnforced (Enforced _) = True
 
 conditionallyEnforcedFromMaybe :: Maybe a -> ConditionallyEnforced a
 conditionallyEnforcedFromMaybe Nothing = NotEnforced

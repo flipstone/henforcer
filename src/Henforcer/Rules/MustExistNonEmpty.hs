@@ -9,6 +9,7 @@ module Henforcer.Rules.MustExistNonEmpty
   ( MustExistNonEmpty
   , mustExistNonEmptyCodec
   , checkExistsAndNonEmptyString
+  , mustExistNonEmptyIsEnforced
   ) where
 
 import qualified Toml
@@ -23,6 +24,13 @@ type MustExistNonEmpty = ConditionallyEnforced Bool
 mustExistNonEmptyCodec :: Toml.Key -> Toml.TomlCodec MustExistNonEmpty
 {-# INLINEABLE mustExistNonEmptyCodec #-}
 mustExistNonEmptyCodec = conditionallyEnforcedCodec Toml.bool
+
+{- | Unlike other rules a 'MustExistNonEmpty' may be enforced but configured not to require
+anything, which performs no check at all.
+-}
+mustExistNonEmptyIsEnforced :: MustExistNonEmpty -> Bool
+mustExistNonEmptyIsEnforced NotEnforced = False
+mustExistNonEmptyIsEnforced (Enforced mustExist) = mustExist
 
 checkExistsAndNonEmptyString ::
   (Applicative m, Monoid (m b)) =>

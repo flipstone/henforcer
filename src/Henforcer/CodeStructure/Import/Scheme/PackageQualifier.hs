@@ -12,6 +12,7 @@ module Henforcer.CodeStructure.Import.Scheme.PackageQualifier
   , keepPackageNameOnly
   ) where
 
+import qualified Data.Char as Char
 import qualified Data.Text as T
 import qualified Toml
 
@@ -46,10 +47,30 @@ determinePackageQualifier idecl =
     CompatGHC.ThisPkg u -> WithPackageQualifier (T.pack $ CompatGHC.unitIdString u)
     CompatGHC.OtherPkg u -> WithPackageQualifier (T.pack $ CompatGHC.unitIdString u)
 
-keepPackageNameOnly :: T.Text -> Maybe T.Text
-keepPackageNameOnly =
-  headMay . T.split (== '-')
+{- | Reduce a unit id to only the package name, so that comparison against user configuration can be
+written in terms of package names.
 
-headMay :: [a] -> Maybe a
-headMay [] = Nothing
-headMay (x : _) = Just x
+GHC gives us unit ids, which take forms such as @text-2.1.3-9f75@,
+@unliftio-core-0.2.1.0-6466GKdRgYQGcOADdkqmLh@, @henforcer-1.0.0.2-inplace-henforcer-internal@, and
+in principle a bare @base@. A package name may itself contain hyphens, so the leading portion cannot
+simply be taken. However each hyphen separated word of a package name is required to contain a
+letter, while a version is built only of digits and dots. So the package name is the longest prefix
+of words that are not a version.
+
+Note that 'Nothing' is only produced for a unit id that has no package name at all, which is not
+expected to happen in practice.
+
+@since 1.0.0.0
+-}
+keepPackageNameOnly :: T.Text -> Maybe T.Text
+keepPackageNameOnly unitId =
+  case takeWhile (not . isVersion) (T.split (== '-') unitId) of
+    [] -> Nothing
+    nameWords -> Just (T.intercalate (T.singleton '-') nameWords)
+
+{- | A hyphen separated word of a unit id is a version when it is built only of digits and dots. A
+word of a package name may never be such, as each is required to contain a letter.
+-}
+isVersion :: T.Text -> Bool
+isVersion =
+  T.all (\c -> Char.isDigit c || c == '.')

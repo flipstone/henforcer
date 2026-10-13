@@ -156,6 +156,10 @@ test-suite spec
     test
 
   other-modules:
+    Test.Checks
+    Test.Checks.DocumentationCheck
+    Test.CodeStructure
+    Test.CodeStructure.PackageQualifier
     Test.Config
     Test.Config.Documentation
     Test.Config.Import
@@ -174,5 +178,6 @@ test-suite spec
     , hedgehog >= 1.2 && < 1.8
     , tasty >= 1.4 && < 1.6
     , tasty-hedgehog >= 1.4 && < 1.5
+    , text >=1.2 && <2.2
 
   default-language: Haskell2010
